@@ -5,7 +5,7 @@ import {
   getArgumentValue, copyDir, symlinkDir,
 } from '../../../lib/sys/sys.js';
 
-const origBase = './node_modules/jrjs-shared/packages';
+const origBase = './node_modules/jrjs/packages';
 const destBase = './packages';
 
 const method = getArgumentValue('symlink') ? symlinkDir : copyDir; // copy, symlink

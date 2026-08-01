@@ -42,7 +42,7 @@ import {
   fileSize, readFile, readStream,
   getEnvironment,
   resolvePath,
-} from '../sys-x.js';
+} from '../sys.js';
 
 /* server core: */
 

@@ -764,7 +764,7 @@ export const importModule = async (url, type) =>
 export const delay = (ms = 0, run = () => {}) => new Promise((s) => setTimeout(() => s(run()), ms));
 
 /** Calls a function when a condition is met. `when(() => globalThis.document?.body, () => console.log('run'));` */
-export const when = (ready = () => 1, run = () => {}) => new Promise((s) => {
+export const when = (ready = () => true, run = () => {}) => new Promise((s) => {
   let l = 50; const t = Date.now() + l * 1e3;
   (function f() { if (ready()) s(run()); else if (Date.now() > t) s(); else setTimeout(f, l *= 1.2); })();
 });

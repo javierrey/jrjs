@@ -1,7 +1,5 @@
-# jrjs-shared library project
+# jrjs library project
 
 The core dependency for all `jrjs-template` derived projects.
 
-It is shared source code available in the target repositiory, so it does not need to build.
-
-The built `dist` output only happens in the target repository, using `jrjs-shared` functionality.
+This repo does not need to be built. The code is copied into the target project source via the `prebuild` command.

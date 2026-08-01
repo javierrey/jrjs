@@ -14,18 +14,18 @@ CLI stdout test examples for each file type, HTML, JS, CSS, XML, except JSON (in
 `node ./packages/imports/sys/dev_modules/min_modules/clean-css/cli.js "./lib/jrjs/mintest/aa-lib.css" "{}"`
 `node ./packages/imports/sys/dev_modules/min_modules/minify_xml_modules/minify-xml/cli.js "./lib/jrjs/mintest/main-logo.svg"`
 */
-// '../../../', 'jrjs-shared'
+// '../../../', 'jrjs'
 import { minify as minify_js } from '../../../imports/sys/dev_modules/min_modules/terser/dist/bundle.min.js';
 import CleanCSS from '../../../imports/sys/dev_modules/min_modules/clean-css/index.js';
 import { minify as minify_html } from '../../../imports/sys/dev_modules/min_modules/html-minifier-terser/dist/htmlminifier.js';
 import { minify as minify_xml } from '../../../imports/sys/dev_modules/min_modules/minify_xml_modules/minify-xml/index.js';
 
-import { clone, merge, parse, fs, fsP, log, getPathCore, getAllFiles, removeDir } from '../../../lib/sys/sys-x.js';
+import { clone, merge, parse, fs, fsP, log, getPathCore, getAllFiles, removeDir } from '../../../lib/sys/sys.js';
 
 const minify_css = CleanCSS.process;
 
 const minify_json = (data, options) => {
-  try { // JSON RegExp: Complex values inducing false positives will use parseObject.
+  try { // JSON RegExp: Complex values inducing false positives will use core's parse.
     const isJson5 = !options?.skipJson5 && /[^"\s]\s*:/g.test(data);
     data = JSON.stringify(isJson5 ? parse(data) : JSON.parse(data)) ?? data;
   } catch (_) {}
