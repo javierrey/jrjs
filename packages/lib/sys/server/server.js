@@ -38,7 +38,7 @@ import https from 'node:https';
 import net from 'node:net';
 import fs from 'node:fs';
 import {
-  Log, toStr, isNul, isJso, isBin, urlComponents, parseQuery, getSample,
+  Log, toStr, isNul, isJso, isBin, toSam, urlComponents, parseQuery,
   fileSize, readFile, readStream,
   getEnvironment,
   resolvePath,
@@ -55,7 +55,7 @@ const getContentType = (filename, content) => {
   content ??= ''; filename ??= '';
   const ext = filename.slice(filename.lastIndexOf('.') + 1 || filename.length);
   if (!ext) {
-    return isBin(content) ? 'application/octet-stream' : isJso(getSample(content)) ? 'application/json' : 'text/html';
+    return isBin(content) ? 'application/octet-stream' : isJso(toSam(content)) ? 'application/json' : 'text/html';
   }
   return /^html?$/i.test(ext) ? 'text/html'
   : /^[mc]?js$/i.test(ext) ? 'application/javascript'
@@ -83,7 +83,7 @@ const getContentType = (filename, content) => {
 
 const logConnection = ({ request, resource, error, status, headers, body }) => {
   if (!log.level || (log.level < 3 && !error)) { return; } // @todo || status === 206:
-  const bodySample = getSample(body, 300, true), payloadSample = getSample(resource.params.payload, 300, true);
+  const bodySample = toSam(body), payloadSample = toSam(resource.params.payload);
   const client = resource.client, remarksLength = Object.keys(client.remarks).length;
   const logArgs = [
     `CLIENT ${client.remoteAddress} (${client.remotePort}/${client.ports.length})`,
