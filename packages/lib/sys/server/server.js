@@ -38,7 +38,7 @@ import https from 'node:https';
 import net from 'node:net';
 import fs from 'node:fs';
 import {
-  Log, toStr, isNul, isJso, isBin, toSam, urlComponents, parseQuery,
+  Log, toStr, isNul, isJso, isBin, urlComponents, parseQuery,
   fileSize, readFile, readStream,
   getEnvironment,
   resolvePath,
@@ -51,11 +51,23 @@ const log = Log({ name: 'server', level: 4 });
 const config = /** @type {PlainObject & ServerConfig & ResolvedServerConfig} */ ({});
 const clients = [];
 
+const getSample = (content, info, size = 300) => {
+  content = toStr(content);
+  const length = content.byteLength ?? content.length ?? 0, range = ~~(size / 3);
+  const r2 = range * 2, l_2 = ~~(length / 2), r_2 = ~~(range / 2);
+  info = info ? `[${content?.constructor?.name} ${length}${isBin(content) ? 'B' : 'C'}] ` : '';
+  return info + (
+    (length > r2 ? content.slice(0, range) : content)
+    + (length > size ? ' ... ' + content.slice(l_2 - r_2, l_2 + r_2) : '')
+    + (length > r2 ? ' ... ' + content.slice(-range) : '')
+  ).replace(/\s+/g, ' ');
+};
+
 const getContentType = (filename, content) => {
   content ??= ''; filename ??= '';
   const ext = filename.slice(filename.lastIndexOf('.') + 1 || filename.length);
   if (!ext) {
-    return isBin(content) ? 'application/octet-stream' : isJso(toSam(content)) ? 'application/json' : 'text/html';
+    return isBin(content) ? 'application/octet-stream' : isJso(getSample(content)) ? 'application/json' : 'text/html';
   }
   return /^html?$/i.test(ext) ? 'text/html'
   : /^[mc]?js$/i.test(ext) ? 'application/javascript'
@@ -83,7 +95,7 @@ const getContentType = (filename, content) => {
 
 const logConnection = ({ request, resource, error, status, headers, body }) => {
   if (!log.level || (log.level < 3 && !error)) { return; } // @todo || status === 206:
-  const bodySample = toSam(body), payloadSample = toSam(resource.params.payload);
+  const bodySample = getSample(body, true), payloadSample = getSample(resource.params.payload, true);
   const client = resource.client, remarksLength = Object.keys(client.remarks).length;
   const logArgs = [
     `CLIENT ${client.remoteAddress} (${client.remotePort}/${client.ports.length})`,
