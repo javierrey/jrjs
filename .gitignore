@@ -14,6 +14,10 @@ temp/
 /packages/*/lib/
 /packages/*/utils/
 
+/packages/tests/*/imports/
+/packages/tests/*/lib/
+/packages/tests/*/utils/
+
 *.cache*
 *.*.map
 *.min.*

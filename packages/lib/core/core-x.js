@@ -21,19 +21,6 @@ export const bufferToArrayBuffer = (buffer) => {
   return arrayBuffer;
 };
 
-/** Builds a string sample from a content start, middle and end, up to a given size approximately. */
-export const getSample = (content, size, info) => {
-  content = toStr(content); size ??= 300;
-  const length = content.byteLength ?? content.length ?? 0, range = ~~(size / 3);
-  const r2 = range * 2, l_2 = ~~(length / 2), r_2 = ~~(range / 2);
-  info = info ? `[${content?.constructor?.name} ${length}${isBin(content) ? 'B' : 'C'}] ` : '';
-  return info + (
-    (length > r2 ? content.slice(0, range) : content)
-    + (length > size ? ' ... ' + content.slice(l_2 - r_2, l_2 + r_2) : '')
-    + (length > r2 ? ' ... ' + content.slice(-range) : '')
-  ).replace(/\s+/g, ' ');
-};
-
 /* String and RegExp transformations: */
 
 /** Extends REX definition. */

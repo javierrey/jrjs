@@ -1,0 +1,14 @@
+{
+  "name": "sys",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "license": "MIT",
+  "description": "sys package",
+  "author": "JR <javier.rey.eu@gmail.com> (https://javierrey.github.io)",
+  "main": "",
+  "dependencies": {},
+  "devDependencies": {},
+  "scripts": {},
+  "ignore": {}
+}

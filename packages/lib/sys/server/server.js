@@ -37,12 +37,15 @@ import http from 'node:http';
 import https from 'node:https';
 import net from 'node:net';
 import fs from 'node:fs';
+import path from 'node:path';
 import {
   Log, toStr, isNul, isJso, isBin, urlComponents, parseQuery,
   fileSize, readFile, readStream,
   getEnvironment,
   resolvePath,
 } from '../sys.js';
+
+const fsP = fs.promises;
 
 /* server core: */
 
@@ -176,6 +179,20 @@ const resolveDownstream = (request, file) => {
   return { status, headers, body: file.content };
 };
 
+
+/** @param {string} urlPath @param {string} viewDir */
+const safePathFromUrl = (urlPath, viewDir = '') => {
+  let decoded = '';
+  try { decoded = decodeURIComponent(urlPath);
+  } catch { return null; }
+  const root = (viewDir || '/').replace(/\\/g, '/').replace(/\/+$/, '') || '/';
+  const normalized = path.posix.normalize('/' + decoded);
+  const target = path.posix.normalize(root + normalized);
+  const rel = path.posix.relative(root, target);
+  if (rel.startsWith('..') || path.posix.isAbsolute(rel)) { return null; }
+  return target;
+};
+
 /**
 Resolves a request resource path by breaking down the request URL
 and returning a resource object with computed request properties.
@@ -194,16 +211,22 @@ const resolveResource = async (request) => {
   const route = resolveRoute(request, urlParts, client.routeProps);
   const params = parseQuery(urlParts.query, true); params.payload = Buffer.from([]);
   const DEFAULT_FILE = 'index', STATIC_EXT = ['.html', '.json'], SERVICE_EXT = ['.js', '.mjs', '.cjs'];
-  const fileRoute = ['_', ...route].filter(Boolean), filename = urlParts.slug?.replace(/^\//, '') ?? '';
+  const publicFolder = config.publicFolder;
+  const baseRoute = route.length ? route : [''];
+  const fileRoute = ['_', ...baseRoute], filename = urlParts.slug?.replace(/^\//, '') ?? '';
   let filepath = '', filesize = -0, isService = false;
-  while (filesize < 1 && fileRoute.length > 1) {
+  while ((isNaN(filesize) || filesize < 1) && fileRoute.length > 1) {
     fileRoute.shift(); let path = fileRoute.join('/');
-    filepath = `/${path}/${filename}`; filesize = fileSize(filepath);
-    for (let i = 0; filesize < 1 && i < STATIC_EXT.length; i++) {
-      filepath = `/${path}/${DEFAULT_FILE}${STATIC_EXT[i]}`; filesize = fileSize(filepath);
+    filepath = safePathFromUrl(`/${path}/${filename}`, publicFolder) ?? '';
+    filesize = filepath ? fileSize(filepath) : NaN;
+    for (let i = 0; (isNaN(filesize) || filesize < 1) && i < STATIC_EXT.length; i++) {
+      filepath = safePathFromUrl(`/${path}/${DEFAULT_FILE}${STATIC_EXT[i]}`, publicFolder) ?? '';
+      filesize = filepath ? fileSize(filepath) : NaN;
     }
-    for (let i = 0; filesize < 1 && i < SERVICE_EXT.length; i++) {
-      filepath = `/${path}${SERVICE_EXT[i]}`; filesize = fileSize(filepath); isService = filesize > 0;
+    for (let i = 0; (isNaN(filesize) || filesize < 1) && i < SERVICE_EXT.length; i++) {
+      filepath = safePathFromUrl(`/${path}${SERVICE_EXT[i]}`, publicFolder) ?? '';
+      filesize = filepath ? fileSize(filepath) : NaN;
+      isService = filesize > 0;
     }
   }
   const resource = { client, filepath, filesize, isService, params, ...urlParts }; setClientRemarks(resource);
@@ -250,7 +273,7 @@ const resolver = async (request, response) => {
   // const stream = resolveDownstream(request, file);
   // if (stream) { return responder(response, stream.status, stream.headers, stream.body); }
   const file = await resolveFile(resource);
-  const error = file.error ?? isNul(file.content) ? { message: 'no content' } : null;
+  const error = file.error ?? (isNul(file.content) ? { message: 'no content' } : null);
   const status = !error ? 200 : error.message.includes('found') || error.code === 'ENOENT' ? 404 : 500; // @ts-expect-error:
   const body = error?.message ?? (file.content?.slice ? file.content : toStr(file.content));
   const headers = { 'content-type': file.type };
@@ -261,7 +284,8 @@ const resolver = async (request, response) => {
 /** @param {ServerConfig} config @return {ServerConfig & ResolvedServerConfig} */
 const resolveConfig = (config) => {
   const env = getEnvironment();
-  const baseFolder = config.baseDir || env.root + env.path;
+  const cwd = process.cwd().replace(/\\/g, '/');
+  const baseFolder = resolvePath(cwd, config.baseDir || '') || (env.root + env.path);
 
   const privateFolder = resolvePath(baseFolder, config.privateDir);
   const publicFolder = resolvePath(baseFolder, config.publicDir);
@@ -290,18 +314,18 @@ Both arguments are optional: `runServer(config)` and `runServer()` are also vali
 @param {(ServerConfig & PlainObject) | undefined} [config]
 @return {Server}
 */
-export const runServer = (listener, config) => {
-  config ??= /** @type {ServerConfig & PlainObject} */ ({});
-  if (!(listener instanceof Function)) { Object.assign(config, listener); listener = resolver;
-  } else { Object.assign(config, listener.config); }
-  config = resolveConfig(config);
-  Object.entries(config.logConfig ?? {}).forEach(([k, v]) => log.config[k] = v);
-  config.isSSL ??= Boolean(config.cert && config.key);
-  config.protocol ??= config.isSSL ? 'https' : 'http';
-  config.host ??= '0.0.0.0'; config.port ??= 3000;
-  config.timeout ??= 50e3; config.clientsSize ??= 1e3; config.clientPortsSize ??= 16;
-  config.largeThreshold ??= 2e6; config.uploadLimit ??= 8e6;
-  Object.assign(config, config);
+export const runServer = (listener, incomingConfig) => {
+  let serverConfig = incomingConfig ?? /** @type {ServerConfig & PlainObject} */ ({});
+  if (!(listener instanceof Function)) { Object.assign(serverConfig, listener); listener = resolver;
+  } else { Object.assign(serverConfig, listener.config); }
+  serverConfig = resolveConfig(serverConfig);
+  Object.entries(serverConfig.logConfig ?? {}).forEach(([k, v]) => log.config[k] = v);
+  serverConfig.isSSL ??= Boolean(serverConfig.cert && serverConfig.key);
+  serverConfig.protocol ??= serverConfig.isSSL ? 'https' : 'http';
+  serverConfig.host ??= '0.0.0.0'; serverConfig.port ??= 3000;
+  serverConfig.timeout ??= 50e3; serverConfig.clientsSize ??= 1e3; serverConfig.clientPortsSize ??= 16;
+  serverConfig.largeThreshold ??= 2e6; serverConfig.uploadLimit ??= 8e6;
+  Object.assign(config, serverConfig);
   const httpModule = config.isSSL ? https : http; // @ts-expect-error:
   const server = /** @type {Server} */ (httpModule.createServer(config, listener));
   server.timeout = config.timeout;

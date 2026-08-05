@@ -5,10 +5,10 @@ import {
   getArgumentValue, copyDir, symlinkDir,
 } from '../../../lib/sys/sys.js';
 
-const origBase = './node_modules/jrjs/packages';
-const destBase = './packages';
-
 const method = getArgumentValue('symlink') ? symlinkDir : copyDir; // copy, symlink
+
+const origBase = getArgumentValue('orig') || './node_modules/jrjs/packages';
+const destBase = getArgumentValue('dest') || './packages';
 
 const importsCore = getArgumentValue('imports-core')?.split(',').filter(Boolean) ?? [];
 const importsView = getArgumentValue('imports-view')?.split(',').filter(Boolean) ?? [];

@@ -17,6 +17,7 @@ import {
 
 export * as fs from 'node:fs';
 export const fsP = fs.promises;
+export * as path from 'node:path';
 export * from '../core/core.js';
 
 /** System primary config. */
