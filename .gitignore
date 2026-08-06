@@ -14,9 +14,9 @@ temp/
 /packages/*/lib/
 /packages/*/utils/
 
-/packages/tests/*/imports/
-/packages/tests/*/lib/
-/packages/tests/*/utils/
+/packages/consumer/*/imports/
+/packages/consumer/*/lib/
+/packages/consumer/*/utils/
 
 *.cache*
 *.*.map
