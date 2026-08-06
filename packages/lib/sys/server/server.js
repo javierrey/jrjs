@@ -214,10 +214,11 @@ const resolveResource = async (request) => {
   const publicFolder = serverConfig.publicFolder;
   const baseRoute = route.length ? route : [''];
   const fileRoute = ['_', ...baseRoute], filename = urlParts.slug?.replace(/^\//, '') ?? '';
-  let filepath = '', filesize = -0, isService = false;
+  let filepath = '', filesize = -0, isService = false, directFilepath = '';
   while ((isNaN(filesize) || filesize < 1) && fileRoute.length > 1) {
     fileRoute.shift(); let path = fileRoute.join('/');
     filepath = safePathFromUrl(`/${path}/${filename}`, publicFolder) ?? '';
+    if (!directFilepath) { directFilepath = filepath; }
     filesize = filepath ? fileSize(filepath) : NaN;
     for (let i = 0; (isNaN(filesize) || filesize < 1) && i < STATIC_EXT.length; i++) {
       filepath = safePathFromUrl(`/${path}/${DEFAULT_FILE}${STATIC_EXT[i]}`, publicFolder) ?? '';
@@ -229,6 +230,7 @@ const resolveResource = async (request) => {
       isService = filesize > 0;
     }
   }
+  if (isNaN(filesize) || filesize < 1) { filepath = directFilepath; }
   const resource = { client, filepath, filesize, isService, params, ...urlParts }; setClientRemarks(resource);
   return resource;
 };
