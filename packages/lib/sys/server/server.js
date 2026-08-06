@@ -51,7 +51,7 @@ const fsP = fs.promises;
 
 const log = Log({ name: 'server', level: 4 });
 
-const config = /** @type {PlainObject & ServerConfig & ResolvedServerConfig} */ ({});
+const serverConfig = /** @type {PlainObject & ServerConfig & ResolvedServerConfig} */ ({});
 const clients = [];
 
 const getSample = (content, info, size = 300) => {
@@ -132,14 +132,14 @@ const resolveClient = (request) => {
   };
   const portIndex = client.ports.findIndex((port) => port === client.remotePort);
   portIndex < 0 && client.ports.push(client.remotePort);
-  if (client.ports.length > config.clientPortsSize / 2) {
+  if (client.ports.length > serverConfig.clientPortsSize / 2) {
     client.remarks['many-ports'] = client.ports.length;
-    if (client.ports.length > config.clientPortsSize) {
+    if (client.ports.length > serverConfig.clientPortsSize) {
       portIndex === 0 ? client.ports.splice(1, 1) : client.ports.shift();
     }
   }
   if (index !== -1) { return Object.assign(clients[index], client); }
-  client.created = client.updated; clients.push(client); clients.length > config.clientsSize && clients.shift();
+  client.created = client.updated; clients.push(client); clients.length > serverConfig.clientsSize && clients.shift();
   return client;
 };
 
@@ -211,7 +211,7 @@ const resolveResource = async (request) => {
   const route = resolveRoute(request, urlParts, client.routeProps);
   const params = parseQuery(urlParts.query, true); params.payload = Buffer.from([]);
   const DEFAULT_FILE = 'index', STATIC_EXT = ['.html', '.json'], SERVICE_EXT = ['.js', '.mjs', '.cjs'];
-  const publicFolder = config.publicFolder;
+  const publicFolder = serverConfig.publicFolder;
   const baseRoute = route.length ? route : [''];
   const fileRoute = ['_', ...baseRoute], filename = urlParts.slug?.replace(/^\//, '') ?? '';
   let filepath = '', filesize = -0, isService = false;
@@ -248,10 +248,10 @@ const resolveFile = async (resource) => {
       const { default: service } = await import(resource.filepath);
       file.content = service(resource.params); file.type = getContentType('', file.content); // @ts-expect-error:
       file.size = file.content?.byteLength ?? file.content?.length ?? -0; // @ts-expect-error:
-      if (file.size > config.largeThreshold) { throw new Error(`service result too large: ${file.size}B`); }
+      if (file.size > serverConfig.largeThreshold) { throw new Error(`service result too large: ${file.size}B`); }
     } catch (error) { file.error = error; }
   } else if (resource.filesize > 0) {
-    const reader = resource.filesize > config.largeThreshold ? readStream : readFile;
+    const reader = resource.filesize > serverConfig.largeThreshold ? readStream : readFile;
     Object.assign(file, await reader(resource.filepath));
     const filename = resource.slug?.slice(1) ?? '';
     file.type = getContentType(filename, file.content);
@@ -314,23 +314,23 @@ Both arguments are optional: `runServer(config)` and `runServer()` are also vali
 @param {(ServerConfig & PlainObject) | undefined} [config]
 @return {Server}
 */
-export const runServer = (listener, incomingConfig) => {
-  let serverConfig = incomingConfig ?? /** @type {ServerConfig & PlainObject} */ ({});
-  if (!(listener instanceof Function)) { Object.assign(serverConfig, listener); listener = resolver;
-  } else { Object.assign(serverConfig, listener.config); }
-  serverConfig = resolveConfig(serverConfig);
-  Object.entries(serverConfig.logConfig ?? {}).forEach(([k, v]) => log.config[k] = v);
-  serverConfig.isSSL ??= Boolean(serverConfig.cert && serverConfig.key);
-  serverConfig.protocol ??= serverConfig.isSSL ? 'https' : 'http';
-  serverConfig.host ??= '0.0.0.0'; serverConfig.port ??= 3000;
-  serverConfig.timeout ??= 50e3; serverConfig.clientsSize ??= 1e3; serverConfig.clientPortsSize ??= 16;
-  serverConfig.largeThreshold ??= 2e6; serverConfig.uploadLimit ??= 8e6;
-  Object.assign(config, serverConfig);
-  const httpModule = config.isSSL ? https : http; // @ts-expect-error:
-  const server = /** @type {Server} */ (httpModule.createServer(config, listener));
-  server.timeout = config.timeout;
-  server.listen(config.port, config.host, () => {
-    log.info(`Server listening on ${config.protocol}://${config.host}:${config.port}`);
+export const runServer = (listener, config) => {
+  config ??= /** @type {ServerConfig & PlainObject} */ ({});
+  if (!(listener instanceof Function)) { Object.assign(config, listener); listener = resolver; }
+  else { Object.assign(config, listener.config); }
+  config = resolveConfig(config);
+  Object.entries(config.logConfig ?? {}).forEach(([k, v]) => log.config[k] = v);
+  config.isSSL ??= Boolean(config.cert && config.key);
+  config.protocol ??= config.isSSL ? 'https' : 'http';
+  config.host ??= '0.0.0.0'; config.port ??= 3000;
+  config.timeout ??= 50e3; config.clientsSize ??= 1e3; config.clientPortsSize ??= 16;
+  config.largeThreshold ??= 2e6; config.uploadLimit ??= 8e6;
+  Object.assign(serverConfig, config);
+  const httpModule = serverConfig.isSSL ? https : http; // @ts-expect-error:
+  const server = /** @type {Server} */ (httpModule.createServer(serverConfig, listener));
+  server.timeout = serverConfig.timeout;
+  server.listen(serverConfig.port, serverConfig.host, () => {
+    log.info(`Server listening on ${serverConfig.protocol}://${serverConfig.host}:${serverConfig.port}`);
   });
   return server;
 };
