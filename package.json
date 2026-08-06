@@ -18,7 +18,7 @@
     "test:lib": "npm -w packages/lib run test",
     "test:utils": "npm -w packages/utils run test",
     "test": "npm run test:lib && npm run test:utils",
-    "prebuild": "node ./packages/utils/sys/build/prebuild.js symlink --orig=\"./packages\" --dest=\"./packages/consumer\" --imports-core=\"\" --imports-view=\"\"",
+    "prebuild": "node ./packages/utils/sys/build/prebuild.js method=symlink --orig=./packages --dest=./packages/consumer --imports-core=\"\" --imports-view=\"\"",
     "start": "npm run prebuild && node --preserve-symlinks --preserve-symlinks-main ./packages/consumer/sys/index.js \"{}\""
   },
   "dependencies": {},
