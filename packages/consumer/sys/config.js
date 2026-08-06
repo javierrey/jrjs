@@ -28,4 +28,4 @@ export default {
 
 // @remove test examples:
 // http://localhost:3000
-// http://localhost:3000/utils/view/mathfun/mathfun-svg.html
+// http://localhost:3000/jrjs/utils/view/mathfun/mathfun-svg.html

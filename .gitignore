@@ -10,13 +10,9 @@ bin/
 logs/
 temp/
 
-/packages/*/imports/
-/packages/*/lib/
-/packages/*/utils/
-
-/packages/consumer/*/imports/
-/packages/consumer/*/lib/
-/packages/consumer/*/utils/
+/packages/**/jrjs/imports/
+/packages/**/jrjs/lib/
+/packages/**/jrjs/utils/
 
 *.cache*
 *.*.map

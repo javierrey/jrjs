@@ -3,7 +3,7 @@
 
 import {
   ge, gt, qs, qa,
-} from './lib/view/view.js';
+} from '/jrjs/lib/view/view.js';
 
 /* * */
 

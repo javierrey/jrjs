@@ -10,17 +10,17 @@
   <link rel="icon" href="data:"/>
   <!--link rel="stylesheet" href="./index.html.css"/-->
   <!--script type="module" src="./index.html.js"></script-->
-  <!--link rel="stylesheet" href="./lib/view/view.css"/-->
-  <!--link rel="stylesheet" href="./lib/view/view-x.css"/-->
+  <!--link rel="stylesheet" href="./jrjs/lib/view/view.css"/-->
+  <!--link rel="stylesheet" href="./jrjs/lib/view/view-x.css"/-->
   <style>
-    /* @import "./lib/view/view-x.css"; /* hide, use <link> */
+    /* @import "./jrjs/lib/view/view-x.css"; /* hide, use <link> */
     .big-text { font-size: calc(var(--htm-size) * 2); }
   </style>
   <script type="module">// _@ts-check 'use strict';
     import {
       ge, gt, qs, qa, when,
       jsonStringify, getEnvironment,
-    } from './lib/view/view.js';
+    } from './jrjs/lib/view/view.js';
     import config from './config.js';
     //
     const appendBr = (el) => el.insertAdjacentHTML('beforeend', `<br/>`);

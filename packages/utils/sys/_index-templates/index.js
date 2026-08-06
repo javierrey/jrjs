@@ -13,8 +13,8 @@ globalThis.globalConfig = {
   },
   serverConfig: {
     baseDir: '',
-    publicDir: '../view',
-    privateDir: '../../_ignore/store',
+    publicDir: 'packages/consumer/view',
+    privateDir: '_ignore/store',
 
     protocol: 'http',
     host: '0.0.0.0', // '0.0.0.0', '127.0.0.1', 'localhost',
