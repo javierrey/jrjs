@@ -1,10 +1,10 @@
 {
-  "name": "sys",
+  "name": "consumer",
   "version": "0.0.0",
   "type": "module",
   "private": true,
   "license": "MIT",
-  "description": "sys package",
+  "description": "consumer package",
   "author": "JR <javier.rey.eu@gmail.com> (https://javierrey.github.io)",
   "main": "",
   "dependencies": {},
