@@ -10,10 +10,6 @@ bin/
 logs/
 temp/
 
-/packages/**/jrjs/imports/
-/packages/**/jrjs/lib/
-/packages/**/jrjs/utils/
-
 *.cache*
 *.*.map
 *.min.*
@@ -38,6 +34,7 @@ ehthumbs.db
 !/.specify/
 !.storybook/
 
+/packages/**/jrjs/
 !/packages/imports/**
 /packages/imports/sys/dev_modules/electron_modules/**
 
