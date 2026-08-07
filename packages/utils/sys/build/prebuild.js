@@ -8,7 +8,7 @@ import {
 const method = getArgumentValue('method') === 'symlink' ? symlinkDir : copyDir; // copy, symlink
 
 const origBase = getArgumentValue('orig') || './node_modules/jrjs/packages';
-const destBase = getArgumentValue('dest') || './packages';
+const destBase = getArgumentValue('dest') || './packages/consumer';
 
 const importsCore = getArgumentValue('imports-core')?.split(',').filter(Boolean) ?? [];
 const importsView = getArgumentValue('imports-view')?.split(',').filter(Boolean) ?? [];
