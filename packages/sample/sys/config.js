@@ -19,7 +19,7 @@ export default {
       state: {},
       config: {
         port: 3000,
-        publicDir: 'packages/consumer/view',
+        publicDir: 'packages/sample/view',
         privateDir: '_ignore/store',
       },
     },
