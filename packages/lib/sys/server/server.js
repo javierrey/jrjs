@@ -37,11 +37,12 @@ import http from 'node:http';
 import https from 'node:https';
 import net from 'node:net';
 import fs from 'node:fs';
-import path from 'node:path';
+import pathmod from 'node:path';
 import {
   Log, toStr, isNul, isJso, isBin, urlComponents, parseQuery,
   fileSize, readFile, readStream,
   getEnvironment,
+  getDistPath,
   resolvePath,
 } from '../sys.js';
 
@@ -186,10 +187,10 @@ const safePathFromUrl = (urlPath, viewDir = '') => {
   try { decoded = decodeURIComponent(urlPath);
   } catch { return null; }
   const root = (viewDir || '/').replace(/\\/g, '/').replace(/\/+$/, '') || '/';
-  const normalized = path.posix.normalize('/' + decoded);
-  const target = path.posix.normalize(root + normalized);
-  const rel = path.posix.relative(root, target);
-  if (rel.startsWith('..') || path.posix.isAbsolute(rel)) { return null; }
+  const normalized = pathmod.posix.normalize('/' + decoded);
+  const target = pathmod.posix.normalize(root + normalized);
+  const rel = pathmod.posix.relative(root, target);
+  if (rel.startsWith('..') || pathmod.posix.isAbsolute(rel)) { return null; }
   return target;
 };
 
@@ -287,10 +288,10 @@ const resolver = async (request, response) => {
 const resolveConfig = (config) => {
   const env = getEnvironment();
   const cwd = process.cwd().replace(/\\/g, '/');
-  const baseFolder = resolvePath(cwd, config.baseDir || '') || (env.root + env.path);
+  const baseFolder = getDistPath(resolvePath(cwd, config.baseDir || '') || (env.root + env.path));
 
-  const privateFolder = resolvePath(baseFolder, config.privateDir);
-  const publicFolder = resolvePath(baseFolder, config.publicDir);
+  const privateFolder = getDistPath(resolvePath(baseFolder, config.privateDir));
+  const publicFolder = getDistPath(resolvePath(baseFolder, config.publicDir));
 
   const isSSL = config.protocol === 'https';
 

@@ -7,7 +7,7 @@
 */
 
 import fs from 'node:fs';
-import path from 'node:path';
+import pathmod from 'node:path';
 import assert from 'node:assert';
 import { spawn } from 'node:child_process';
 
@@ -17,7 +17,7 @@ import {
 
 export * as fs from 'node:fs';
 export const fsP = fs.promises;
-export * as path from 'node:path';
+export * as pathmod from 'node:path';
 export * from '../core/core.js';
 
 /** System primary config. */
@@ -158,10 +158,19 @@ export const copyFileStream = (filePath, uploadPath) => {
 
 /** Create a symbolic link to a directory. */
 export const symlinkDir = (source, target) => {
-  source = path.resolve(source); target = path.resolve(target);
-  fs.mkdirSync(path.dirname(target), { recursive: true });
+  source = pathmod.resolve(source); target = pathmod.resolve(target);
+  fs.mkdirSync(pathmod.dirname(target), { recursive: true });
   fs.rmSync(target, { recursive: true, force: true });
   fs.symlink(source, target, 'dir', (err) => err && log.error('symlink error', err));
+};
+
+/** Get a valid dist path, or return the given path. */
+export const getDistPath = (path, dist = 'dist', packages = 'packages') => {
+  path = path.replace(/\\/g, '/');
+  let distPath = path.replace(new RegExp(`(^|/)${packages}/`), `$1${dist}/`);
+  if (!fileExists(distPath)) distPath = path.replace(new RegExp(`(^|/)${dist}/`), `$1${packages}/`);
+  if (!fileExists(distPath)) distPath = path;
+  return distPath;
 };
 
 /* * */
