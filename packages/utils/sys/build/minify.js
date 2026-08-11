@@ -1,9 +1,9 @@
-// _@ts-check // minify-copy.js, javier.rey.eu@gmail.com, 2022
+// _@ts-check // minify.js, javier.rey.eu@gmail.com, 2022
 // dependencies: 'imports/sys/dev_modules/min_modules/*', 'lib/sys/sys-x.js'
 
 /**
 Minify and copy files from a source directory to a destination directory, preserving the directory structure.
-The minification process is applied to specific file types, while others are copied unmodified.
+const buildMethod = getArgumentValue('method') !== 'copy' ? buildMinify : copyDir; // symlink, copy
 Compressible file types: .html .htm .css .js .mjs .cjs .xml .xhtml .svg .dae .json .json5
 Filenames containing .raw. or .min. are not modified, filenames containing .src., .test. or .spec. are skipped.
 All other files are copied unmodified.
@@ -36,16 +36,20 @@ const minify_json = (data, options) => {
 
 const encoding = 'utf8';
 
-const srcRE = /\.(src|test|spec|assert)\./i;
-const rawRE = /\.(raw|min|bin)\./i;
+const viewRE = /(?:^|\/)view\//i;
+const importsRE = /(?:^|\/)(?:imports|node_modules|local_modules)\//i;
+
+const srcRE = /\.(?:src|test|spec|assert)\./i;
+const rawRE = /\.(?:raw|min|bin)\./i;
 
 const htmlRE = /\.html?$/i;
 const cssRE = /\.css$/i;
 const jsRE = /\.[mc]?js$/i;
-const xmlRE = /\.(xml|xhtml|svg|dae)$/i;
+const xmlRE = /\.(?:xml|xhtml|svg|dae)$/i;
 const jsonRE = /\.json5?$/i;
 
 const defaultConfig = {
+  minifyScope: 1, // 0: none, 1: view (default), 2: skip imports, 3: all
   html: { // html-minifier-terser
     minifyCSS: true,
     minifyJS: true,
@@ -83,16 +87,25 @@ const defaultConfig = {
   },
 };
 
-const config = clone(defaultConfig);
+const minifyConfig = clone(defaultConfig);
 
-export const configMinify = (options) => merge(config, getOptions(options));
-
-export const runMinify = (orig, dest, options) => minifyDir(orig, dest, getOptions(options));
-
-const getOptions = (options) => {
-  if (options?.constructor === String) { options = parse(options); }
-  return merge(clone(config), options);
+const getConfig = (config) => {
+  if (config?.constructor === String) { config = parse(config); }
+  return merge(clone(minifyConfig), config);
 };
+
+const getSkipMinify = (file, scope = minifyConfig.minifyScope) => {
+  switch (scope) {
+    case 0: return true; // minify none (copy all)
+    case 2: return importsRE.test(file); // skip (copy) imports
+    case 3: return false; // minify all
+  }
+  return !viewRE.test(file); // minify view folder only (copy the rest)
+};
+
+export const configMinify = (config) => merge(minifyConfig, getConfig(config));
+
+export const buildMinify = (orig, dest, config) => minifyDir(orig, dest, getConfig(config));
 
 const minifyDir = async (orig, dest, options) => {
   log.info(`minifyDir: "${orig}" > "${dest}"`, options);
@@ -108,7 +121,8 @@ const minifyFile = (file, orig, dest, options) => {
   const target = file.replace(getPathCore(orig), getPathCore(dest));
   log.info(`target: ${target}`);
   fs.mkdirSync(target.slice(0, target.lastIndexOf('/') + 1), { recursive: true });
-  if (rawRE.test(file)) { fsP.copyFile(file, target);
+  const skipMinify = getSkipMinify(file, options.minifyScope);
+  if (skipMinify || rawRE.test(file)) { fsP.copyFile(file, target);
   } else if (htmlRE.test(file)) { minifyHTML(file, target, options.html);
   } else if (cssRE.test(file)) { minifyCSS(file, target, options.css);
   } else if (jsRE.test(file)) { minifyJS(file, target, options.js);

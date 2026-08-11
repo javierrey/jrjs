@@ -19,7 +19,7 @@ export default {
       state: {},
       config: {
         port: 3000,
-        publicDir: 'packages/sample/view',
+        publicDir: 'packages/main/view',
         privateDir: '_ignore/store',
       },
     },
@@ -28,4 +28,4 @@ export default {
 
 // @remove test examples:
 // http://localhost:3000
-// http://localhost:3000/jrjs/utils/view/mathfun/mathfun-svg.html
+// http://localhost:3000/imported/utils/view/mathfun/mathfun-svg.html

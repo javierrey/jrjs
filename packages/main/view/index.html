@@ -10,17 +10,18 @@
   <link rel="icon" href="data:"/>
   <!--link rel="stylesheet" href="./index.html.css"/-->
   <!--script type="module" src="./index.html.js"></script-->
-  <!--link rel="stylesheet" href="./jrjs/lib/view/view.css"/-->
-  <!--link rel="stylesheet" href="./jrjs/lib/view/view-x.css"/-->
+  <!--link rel="stylesheet" href="./imported/lib/view/view.css"/-->
+  <!--link rel="stylesheet" href="./imported/lib/view/view-x.css"/-->
   <style>
-    /* @import "./jrjs/lib/view/view-x.css"; /* hide, use <link> */
+    /* @import "./imported/lib/view/view-x.css"; /* hide, use <link> */
     .big-text { font-size: calc(var(--htm-size) * 2); }
   </style>
   <script type="module">// _@ts-check 'use strict';
     import {
       ge, gt, qs, qa, when,
       jsonStringify, getEnvironment,
-    } from './jrjs/lib/view/view.js';
+    } from './imported/lib/view/view.js';
+    import { dummySharedMethod } from './imported/core/shared.js';
     import config from './config.js';
     //
     const appendBr = (el) => el.insertAdjacentHTML('beforeend', `<br/>`);
@@ -29,6 +30,8 @@
       document.body.append(`config: ${jsonStringify(config)} `);
       appendBr(document.body);
       document.body.append(`getEnvironment: ${jsonStringify(getEnvironment())} `);
+      appendBr(document.body);
+      document.body.append(`dummySharedMethod: ${dummySharedMethod(1, 2, 3)} `);
       appendBr(document.body);
     });
   </script>

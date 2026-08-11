@@ -2,7 +2,7 @@
 // @ts-check
 
 /**
-@typedef {import('./jrjs/lib/view/view.js').PlainObject} PlainObject;
+@typedef {import('./imported/lib/view/view.js').PlainObject} PlainObject;
 */
 
  /** @type {PlainObject} */

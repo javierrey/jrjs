@@ -28,10 +28,8 @@
     "local_modules",
     "dist",
     "gen",
-    "**/*.test.*",
-    "packages/*/imports",
-    "packages/*/lib",
-    "packages/*/utils",
-    "packages/imports"
+    "**/*.{test,spec}.*",
+    "packages/**/jrjs",
+    "packages/imports",
   ]
 }

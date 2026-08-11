@@ -1,10 +1,10 @@
 {
-  "name": "sample",
+  "name": "main",
   "version": "0.0.0",
   "type": "module",
   "private": true,
   "license": "MIT",
-  "description": "sample package",
+  "description": "main app package",
   "author": "JR <javier.rey.eu@gmail.com> (https://javierrey.github.io)",
   "main": "",
   "dependencies": {},

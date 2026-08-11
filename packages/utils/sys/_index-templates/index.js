@@ -13,7 +13,7 @@ globalThis.globalConfig = {
   },
   serverConfig: {
     baseDir: '',
-    publicDir: 'packages/sample/view',
+    publicDir: 'packages/main/view',
     privateDir: '_ignore/store',
 
     protocol: 'http',

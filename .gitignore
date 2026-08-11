@@ -34,7 +34,7 @@ ehthumbs.db
 !/.specify/
 !.storybook/
 
-/packages/**/jrjs/
+/packages/**/imported/
 !/packages/imports/**
 /packages/imports/sys/dev_modules/electron_modules/**
 

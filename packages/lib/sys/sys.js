@@ -111,8 +111,7 @@ export const getAllFiles = async function* (folder) {
 export const removeDir = (dir) => fs.rmSync(dir, { recursive: true, force: true });
 
 /** Copy directory asynchronously. */
-export const copyDir = async (orig, dest) => {
-  log.info(`copyDir: "${orig}" > "${dest}"`);
+export const copyDir = async (orig, dest) => { // log.info(`copyDir: "${orig}" > "${dest}"`);
   removeDir(dest);
   for await (const file of getAllFiles(orig)) {
     copyFile(file, orig, dest);

@@ -1,14 +1,12 @@
 // _@ts-check // build.js
 
-import { copyDir } from '../../../lib/sys/sys.js';
-import { configMinify, runMinify } from './minify-copy.js';
+import { getArgumentValue, copyDir } from '../../../lib/sys/sys.js';
+import { configMinify, buildMinify } from './minify.js';
 
-const argv = process.argv.slice(2);
+const buildMethod = getArgumentValue('method') !== 'copy' ? buildMinify : copyDir; // minify, copy
 
-const base = './';
-const dest = argv[0] ?? 'view'; // view, sys
-const method = argv[1] === 'minify' ? runMinify : copyDir; // copy, minify
+const dirs = getArgumentValue('dirs') || ''; // main/view, main/sys
 
-method === runMinify && configMinify(argv[2]);
+buildMethod === buildMinify && configMinify(getArgumentValue('config') || '{}');
 
-method(base + 'packages/' + dest, base + 'dist/' + dest);
+dirs.split(',').forEach((dir) => buildMethod('./packages/' + dir, './dist/' + dir));
