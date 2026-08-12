@@ -4,6 +4,10 @@ jrjs-code.txt
 ----------------------------------------------------------
 ----------------------------------------------------------
 ----------------------------------------------------------
+// sys/server.js resolveConfig
+
+log.info(`resolveConfig "${import.meta.url}" "${cwd}" "${publicFolder}" "${config.baseDir}" "${config.publicDir}"`);
+
 ----------------------------------------------------------
 
 /** Maximum arguments accepted by functions. Test optionally constrained. */

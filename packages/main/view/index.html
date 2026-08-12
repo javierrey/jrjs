@@ -21,17 +21,14 @@
       ge, gt, qs, qa, when,
       jsonStringify, getEnvironment,
     } from './imported/lib/view/view.js';
-    import { dummySharedMethod } from './imported/core/shared.js';
     import config from './config.js';
     //
     const appendBr = (el) => el.insertAdjacentHTML('beforeend', `<br/>`);
     when(() => document.body, () => {
       console.log(` view qs: ` + qs('#some-id')?.innerHTML);
-      document.body.append(`config: ${jsonStringify(config)} `);
-      appendBr(document.body);
       document.body.append(`getEnvironment: ${jsonStringify(getEnvironment())} `);
       appendBr(document.body);
-      document.body.append(`dummySharedMethod: ${dummySharedMethod(1, 2, 3)} `);
+      document.body.append(`config: ${jsonStringify(config)} `);
       appendBr(document.body);
     });
   </script>

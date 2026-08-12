@@ -289,10 +289,8 @@ const resolveConfig = (config) => {
   const env = getEnvironment();
   const cwd = process.cwd().replace(/\\/g, '/');
   const baseFolder = getDistPath(resolvePath(cwd, config.baseDir || '') || (env.root + env.path));
-
   const privateFolder = getDistPath(resolvePath(baseFolder, config.privateDir));
   const publicFolder = getDistPath(resolvePath(baseFolder, config.publicDir));
-
   const isSSL = config.protocol === 'https';
 
   /** @type {ResolvedServerConfig} */

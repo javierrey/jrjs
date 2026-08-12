@@ -164,13 +164,12 @@ export const symlinkDir = (source, target) => {
   fs.symlink(source, target, 'dir', (err) => err && log.error('symlink error', err));
 };
 
-/** Get a valid dist path, or return the given path. */
-export const getDistPath = (path, dist = 'dist', packages = 'packages') => {
+/** Attempt to get a valid distribution or development path. */
+export const getDistPath = (path, target = 'dist', source = 'packages') => {
   path = path.replace(/\\/g, '/');
-  let distPath = path.replace(new RegExp(`(^|/)${packages}/`), `$1${dist}/`);
-  if (!fileExists(distPath)) distPath = path.replace(new RegExp(`(^|/)${dist}/`), `$1${packages}/`);
-  if (!fileExists(distPath)) distPath = path;
-  return distPath;
+  if (!fileExists(path)) path = path.replace(new RegExp(`(^|/)${source}/`), `$1${target}/`);
+  if (!fileExists(path)) path = path.replace(new RegExp(`(^|/)${target}/`), `$1${source}/`);
+  return path;
 };
 
 /* * */
