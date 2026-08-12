@@ -8,9 +8,12 @@
 
 import { sharedConfig } from '../core/shared.js';
 
+const distFolder = import.meta.url.replace(/\\/g, '/').includes('/dist/') ? 'dist' : 'packages';
+
 /** @type {PlainObject & ClusterConfig} */
 export default {
   ...sharedConfig,
+  distFolder,
   clusterSize: 1, // 0, 1, 2, ... os.cpus().length
   base: '',
   apps: [
@@ -22,7 +25,7 @@ export default {
       state: {},
       config: {
         port: 3000,
-        publicDir: 'packages/main/view',
+        publicDir: `${distFolder}/main/view`,
         privateDir: '_ignore/store',
       },
     },
