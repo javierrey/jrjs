@@ -8,7 +8,7 @@
 
 import { sharedConfig } from '../core/shared.js';
 
-const distFolder = import.meta.url.replace(/\\/g, '/').includes('/dist/') ? 'dist' : 'packages';
+const distFolder = import.meta.url.includes('/dist/') ? 'dist' : 'packages';
 
 /** @type {PlainObject & ClusterConfig} */
 export default {

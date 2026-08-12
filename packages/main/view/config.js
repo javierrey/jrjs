@@ -10,5 +10,5 @@ import { sharedConfig } from './imported/core/shared.js';
  /** @type {PlainObject} */
 export default {
   ...sharedConfig,
-  dummy: 'Dummy value',
+  viewProp: 'View value',
 };

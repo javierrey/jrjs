@@ -3,5 +3,5 @@
 
 export const sharedConfig = {
   __fileurl: import.meta.url,
-  shared: 'Shared value',
+  sharedProp: 'Shared value',
 };
