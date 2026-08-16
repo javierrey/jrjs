@@ -14,48 +14,39 @@ const cloneMethod = getArgumentValue('method') !== 'copy' ? symlinkDir : copyDir
 
 const origBase = getArgumentValue('orig') || 'packages';
 const destBase = getArgumentValue('dest') || 'packages/main';
-
-// Unlike view, sys modules do not need to be copied into the consumer's source.
-const addSys = !!getArgumentValue('add-sys');
-
-const viewImports = getArgumentValue('view-imports')?.split(',').filter(Boolean) ?? [];
-
 const origCore = destBase + '/core'; // Local core source copied to the target folder.
 
-const destView = destBase + '/view/imported';
-removeDir(destView);
+/** @param {string} ctx @param {string[]} imports */
+const processContext = (ctx, imports = []) => {
+  const destCtx = destBase + `/${ctx}/imported`;
+  removeDir(destCtx);
 
-cloneMethod(origBase + '/lib/core', destView + '/lib/core');
-cloneMethod(origBase + '/lib/view', destView + '/lib/view');
-cloneMethod(origBase + '/utils/core', destView + '/utils/core');
-cloneMethod(origBase + '/utils/view', destView + '/utils/view');
-cloneMethod(origCore, destView + '/core');
+  cloneMethod(origBase + '/lib/core', destCtx + '/lib/core');
+  cloneMethod(origBase + `/lib/${ctx}`, destCtx + `/lib/${ctx}`);
+  cloneMethod(origBase + '/utils/core', destCtx + '/utils/core');
+  cloneMethod(origBase + `/utils/${ctx}`, destCtx + `/utils/${ctx}`);
+  cloneMethod(origCore, destCtx + '/core');
 
-viewImports.forEach((folder) => {
-  let orig = origBase + '/imports/view/' + folder;
-  fileExists(orig) && cloneMethod(orig, destView + '/imports/view/' + folder);
-  orig = origBase + '/imports/core/' + folder;
-  fileExists(orig) ? cloneMethod(orig, destView + '/imports/core/' + folder)
-    : log.error(`view-imports not found: ${orig}`);
-});
-
-if (addSys) {
-  const sysImports = getArgumentValue('sys-imports')?.split(',').filter(Boolean) ?? [];
-
-  const destSys = destBase + '/sys/imported';
-  removeDir(destSys);
-
-  cloneMethod(origBase + '/lib/core', destSys + '/lib/core');
-  cloneMethod(origBase + '/lib/sys', destSys + '/lib/sys');
-  cloneMethod(origBase + '/utils/core', destSys + '/utils/core');
-  cloneMethod(origBase + '/utils/sys', destSys + '/utils/sys');
-  cloneMethod(origCore, destSys + '/core');
-
-  sysImports.forEach((folder) => {
-    let orig = origBase + '/imports/sys/' + folder;
-    fileExists(orig) && cloneMethod(orig, destSys + '/imports/sys/' + folder);
-    orig = origBase + '/imports/core/' + folder;
-    fileExists(orig) ? cloneMethod(orig, destSys + '/imports/core/' + folder)
-      : log.error(`sys-imports not found: ${orig}`);
+  imports.forEach((folder) => {
+    let orig = origBase + `/imports/${ctx}/${folder}`;
+    fileExists(orig) && cloneMethod(orig, destCtx + `/imports/${ctx}/${folder}`);
+    orig = origBase + `/imports/core/${folder}`;
+    fileExists(orig) ? cloneMethod(orig, destCtx + `/imports/core/${folder}`)
+      : log.error(`${ctx}-imports not found: ${orig}`);
   });
 }
+
+/** Client `view` dependency links point to the generated `imported` folder. */
+let viewImportsArg = getArgumentValue('view-imports') ?? '';
+const addView = viewImportsArg && !['false', '0', '!1', 'null'].includes(viewImportsArg);
+if (['true', 'false', '1', '0', '!0', '!1', 'null'].includes(viewImportsArg)) viewImportsArg = '';
+addView && processContext('view', viewImportsArg.split(',').filter(Boolean));
+
+/**
+Use only if `sys` dependency links point to the generated `imported` folder.
+Unlike `view`, `sys` modules do not need to be copied into the consumer's source.
+*/
+let sysImportsArg = getArgumentValue('sys-imports') ?? '';
+const addSys = sysImportsArg && !['false', '0', '!1', 'null'].includes(sysImportsArg);
+if (['true', 'false', '1', '0', '!0', '!1', 'null'].includes(sysImportsArg)) sysImportsArg = '';
+addSys && processContext('sys', sysImportsArg.split(',').filter(Boolean));
