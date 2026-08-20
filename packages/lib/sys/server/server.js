@@ -103,7 +103,7 @@ const logConnection = ({ request, resource, error, status, headers, body }) => {
   const client = resource.client, remarksLength = Object.keys(client.remarks).length;
   const logArgs = [
     `CLIENT ${client.remoteAddress} (${client.remotePort}/${client.ports.length})`,
-    `clients ${clients.length}, remarks ${remarksLength}, route "${client.routeProps.topOpen ? '/...' : '.../'}"`,
+    `clients ${clients.length}, remarks ${remarksLength}`,
     `REQUEST ${request.method} "${request.url}"`,
     `headers {${Object.keys(request.headers)}}`,
     `params ${toStr({ ...resource.params, payload: payloadSample })}`,
@@ -127,7 +127,6 @@ const resolveClient = (request) => {
     remotePort: request.client.remotePort,
     requestUrl: request.url,
     ports: clients[index]?.ports ?? [],
-    routeProps: clients[index]?.routeProps ?? { topPath: '', topOpen: 0 },
     remarks: clients[index]?.remarks ?? {},
     updated: Date.now(),
   };
@@ -142,19 +141,6 @@ const resolveClient = (request) => {
   if (index !== -1) { return Object.assign(clients[index], client); }
   client.created = client.updated; clients.push(client); clients.length > serverConfig.clientsSize && clients.shift();
   return client;
-};
-
-const resolveRoute = (request, urlParts, props) => {
-  let route = urlParts.path.split('/').slice(1);
-  if (!props.topPath || (!request.headers.referer && urlParts.open)) {
-    props.topPath = urlParts.path; props.topOpen = urlParts.open;
-  }
-  if (urlParts.path !== props.topPath) {
-    const topRoute = props.topPath.split('/').slice(1); let offset = 0;
-    while (route[offset] === topRoute[offset]) { offset++; }
-    route = [...topRoute.slice(0, offset + props.topOpen), ...route.slice(offset)];
-  }
-  return route;
 };
 
 const resolveEmpty = (request) => (
@@ -184,8 +170,7 @@ const resolveDownstream = (request, file) => {
 /** @param {string} urlPath @param {string} viewDir */
 const safePathFromUrl = (urlPath, viewDir = '') => {
   let decoded = '';
-  try { decoded = decodeURIComponent(urlPath);
-  } catch { return null; }
+  try { decoded = decodeURIComponent(urlPath); } catch { return null; }
   const root = (viewDir || '/').replace(/\\/g, '/').replace(/\/+$/, '') || '/';
   const normalized = pathmod.posix.normalize('/' + decoded);
   const target = pathmod.posix.normalize(root + normalized);
@@ -209,12 +194,12 @@ extensions `.js`, `.mjs` or `.cjs` to the route.
 const resolveResource = async (request) => {
   const client = resolveClient(request);
   const urlParts = urlComponents(request.url);
-  const route = resolveRoute(request, urlParts, client.routeProps);
+  const route = urlParts.path.split('/').slice(1);
   const params = parseQuery(urlParts.query, true); params.payload = Buffer.from([]);
   const DEFAULT_FILE = 'index', STATIC_EXT = ['.html', '.json'], SERVICE_EXT = ['.js', '.mjs', '.cjs'];
   const publicFolder = serverConfig.publicFolder;
-  const baseRoute = route.length ? route : [''];
-  const fileRoute = ['_', ...baseRoute], filename = urlParts.slug?.replace(/^\//, '') ?? '';
+  const fileRoute = ['_', ...(route.length ? route : [''])];
+  const filename = urlParts.slug?.replace(/^\//, '') ?? '';
   let filepath = '', filesize = -0, isService = false, directFilepath = '';
   while ((isNaN(filesize) || filesize < 1) && fileRoute.length > 1) {
     fileRoute.shift(); let path = fileRoute.join('/');

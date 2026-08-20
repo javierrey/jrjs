@@ -17,7 +17,7 @@ const destBase = getArgumentValue('dest') || 'packages/main';
 const origCore = destBase + '/core'; // Local core source copied to the target folder.
 
 /** @param {string} ctx @param {string[]} imports */
-const processContext = (ctx, imports = []) => {
+const generateContext = (ctx, imports = []) => {
   const destCtx = destBase + `/${ctx}/imported`;
   removeDir(destCtx);
 
@@ -36,17 +36,19 @@ const processContext = (ctx, imports = []) => {
   });
 }
 
+/** @param {string} ctxArg */
+const processContextArg = (ctxArg) => {
+  let imports = getArgumentValue(ctxArg) ?? '';
+  const addCtx = imports && !['false', '0', '!1', 'null'].includes(imports);
+  if (['false', '0', '!1', 'null', 'true', '1', '!0'].includes(imports)) imports = '';
+  addCtx && generateContext(ctxArg.replace(/-imports$/, ''), imports.split(',').filter(Boolean));
+};
+
 /** Client `view` dependency links point to the generated `imported` folder. */
-let viewImportsArg = getArgumentValue('view-imports') ?? '';
-const addView = viewImportsArg && !['false', '0', '!1', 'null'].includes(viewImportsArg);
-if (['true', 'false', '1', '0', '!0', '!1', 'null'].includes(viewImportsArg)) viewImportsArg = '';
-addView && processContext('view', viewImportsArg.split(',').filter(Boolean));
+processContextArg('view-imports');
 
 /**
-Use only if `sys` dependency links point to the generated `imported` folder.
+This argument should only be set if `sys` dependency links point to the generated `imported` folder.
 Unlike `view`, `sys` modules do not need to be copied into the consumer's source.
 */
-let sysImportsArg = getArgumentValue('sys-imports') ?? '';
-const addSys = sysImportsArg && !['false', '0', '!1', 'null'].includes(sysImportsArg);
-if (['true', 'false', '1', '0', '!0', '!1', 'null'].includes(sysImportsArg)) sysImportsArg = '';
-addSys && processContext('sys', sysImportsArg.split(',').filter(Boolean));
+processContextArg('sys-imports');

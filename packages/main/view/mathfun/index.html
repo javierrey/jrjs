@@ -6,11 +6,11 @@
   <meta name="mobile-web-app-capable" content="yes"/><meta name="apple-mobile-web-app-capable" content="yes"/>
   <meta name="keywords" content=""/>
   <meta name="description" content=""/>
-  <base href="./"/>
+  <base href="/mathfun/"/>
   <link rel="icon" href="data:"/>
   <!--link rel="stylesheet" href="./main/main.css"/-->
   <!--script _type="module" src="./main/main.js"></script-->
-  <link rel="stylesheet" href="../../../lib/view/view.css"/>
+  <link rel="stylesheet" href="../imported/lib/view/view.css"/>
   <style>
   /* @import "../view.css"; /* hide, use <link> */
   /* * */
@@ -106,11 +106,11 @@
   .margin-block-start { margin-block-start: 8px; }
   </style>
   <script type="module">// _@ts-check 'use strict';
-  import { MathFun } from '../../core/mathfun.js';
   import {
     delay, when, debounce, parse,
     ge, qs, qa, CSSUtil,
-  } from '../view.js';
+  } from '../imported/lib/view/view.js';
+  import { MathFun } from '../imported/core/mathfun.js';
   import {
     addCross, addSvgGrid, addSvgPaths, addSvgText, clearContainer, getViewBox, getViewRect, isPathData, setSvgView,
     roundText, rectCenter, rangeRect, rangeDomain, scaleRect, setViewField,

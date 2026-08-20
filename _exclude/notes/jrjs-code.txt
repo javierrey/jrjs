@@ -3,6 +3,27 @@ jrjs-code.txt
 ----------------------------------------------------------
 ----------------------------------------------------------
 ----------------------------------------------------------
+// core.js rebasers, using rebaseImports for inline scripts.
+
+/** Rebases a URL from the current location base, or optionally from a custom base. */
+export const rebaseUrl = (url, base = null) =>
+  new URL(url ?? '', new URL(base ?? '', globalThis.location ?? 'file:///')).href;
+
+/** Rebases all quoted URLs in a code text, optionally from a custom base. */
+export const rebaseUrls = (code, base = null) =>
+  code.replace(/(?<=["'`(])(?:\.{1,2}\/?|\/{1,2})[^ "'`)]*(?=["'`)])/gi, (m) => rebaseUrl(m, base));
+
+/** Rebases relative module specifiers in import/export statements, optionally from a custom base. */
+export const rebaseImports = (code, base = null) => code.replace(
+  /\b(?:from|import)\s*\(?\s*(["'])((?:\.{1,2}\/?|\/{1,2})[^"'\r\n]*)\1/gi,
+  (m, _q, path) => m.replace(path, rebaseUrl(path, base)),
+);
+
+/** Rebases all links in an HTML, including inline code, optionally from a custom base. */
+export const rebaseLinks = (html, base = null) => html
+  .replace(/(?<=(?:[\s:-](?:href|src|url)\s*[=(]\s*["']))[^"']*(?=["'])/gi, (m) => rebaseUrl(m, base))
+  .replace(/(<script(?:\s[^>]*)?>)([\s\S]*?)(<\/script>)/gi, (_m, a, b, c) => a + rebaseImports(b, base) + c);
+
 ----------------------------------------------------------
 // sys/server.js resolveConfig
 

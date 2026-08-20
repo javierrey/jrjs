@@ -571,16 +571,13 @@ export const rebaseUrl = (url, base = null) =>
   new URL(url ?? '', new URL(base ?? '', globalThis.location ?? 'file:///')).href;
 
 /** Rebases all quoted URLs in a code text, optionally from a custom base. */
-export const rebaseUrls = (code, base = null) => code.replace(
-  /(?<=["'`(])(?:[a-z]+[:\/]|\.{1,2}\/?|\/{1,2})[^ "'`)]*(?=["'`)])/gi,
-  (m) => rebaseUrl(m, base),
-);
+export const rebaseUrls = (code, base = null) => code
+  .replace(/(?<=["'`(])(?:\.{1,2}\/|\/{1,2})(?![\\()[\]{}?*+|.,"'])[^ "'`)]*(?=["'`)])/gi, (m) => rebaseUrl(m, base));
 
-/** Rebases all links in an HTML, optionally from a custom base. */
-export const rebaseLinks = (html, base = null) => html.replace(
-  /(?<=(?:[\s:-](?:href|src|url)\s*[=(]\s*["']))[^"']*(?=["'])/gi,
-  (m) => rebaseUrl(m, base),
-);
+/** Rebases all links in an HTML, including inline code, optionally from a custom base. */
+export const rebaseLinks = (html, base = null) => html
+  .replace(/(?<=(?:[\s:-](?:href|src|url)\s*[=(]\s*["']))[^"']*(?=["'])/gi, (m) => rebaseUrl(m, base))
+  .replace(/(<(script|style)(?:\s[^>]*)?>)([\s\S]*?)(<\/\2>)/gi, (_m, a, _b, c, d) => a + rebaseUrls(c, base) + d);
 
 /**
 Splits a URL or file path into components `{ root, path, slug, query, anchor, open }`.
@@ -813,5 +810,8 @@ export const callFetch = (url, callback = null, resolver = null, options = null)
     .catch((err) => (error = err))
     .finally(() => callback?.(url, content, error));
 };
+
+/** Exposes local members to the specified environment, globalThis by default. Overwrites existing references. */
+export const expose = (props, env = globalThis) => Object.entries(props).forEach(([k, v]) => { env[k] = v; });
 
 /* * */

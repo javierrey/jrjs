@@ -8,7 +8,7 @@
 
 import {
   callFetch,
-  log, mdToHtml, rebaseLinks, 
+  log, mdToHtml, rebaseLinks,
 } from '../core/core.js';
 
 export * from '../core/core.js';
@@ -79,7 +79,12 @@ Loads content from a `url` and inserts it into an HTML parent element.
 New scripts in the content are also loaded and run, unless `norun` is true.
 */
 export const loadHtml = (url, parent = null, position = null, norun = false) => {
+  const dirUri = (uri) => {
+    const path = new URL(uri, location).pathname;
+    return path.endsWith('/') || /\.[^/]*$/.test(path) ? uri : uri.replace(/([?#]|$)/, '/$1');
+  };
   const cb = (uri, cont, err) => {
+    uri = dirUri(uri);
     cont ??= '', cont = `\n<!--loadHtml "${uri}" "${cont.length}B" "${err ?? ''}"-->\n`
       + rebaseLinks(/\.md([?#]|$)/i.test(uri) ? mdToHtml(cont) : cont, uri)
       + `\n<!--/loadHtml-->\n`;
@@ -114,7 +119,7 @@ export const CSSUtil = (() => {
         for (let i = 0; i < (rule.style?.length ?? 0); i++) {
           const style = rule.style[i];
           if (!style.startsWith('--')) { continue; }
-          reg.variables[style] ??= rule;
+          reg.variables[style] = rule; // last rule wins the cascade
           reg.themes.length < themes.length && themes.forEach((theme) => {
             !reg.themes.includes(theme) && style.includes(`-${theme}-`) && reg.themes.push(theme);
           });
