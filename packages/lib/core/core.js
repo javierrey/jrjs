@@ -643,6 +643,12 @@ export const urlCore = (url) => {
   return url;
 };
 
+/** Adds a trailing slash to a URL when it appears to reference a directory. */
+export const closeDirUrl = (url) => {
+  const path = new URL(url, location).pathname;
+  return path.endsWith('/') || /\.[^/]*$/.test(path) ? url : url.replace(/([?#]|$)/, '/$1');
+};
+
 /* Content string functionality: */
 
 /**

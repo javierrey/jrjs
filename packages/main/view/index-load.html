@@ -11,14 +11,16 @@
   <!--link rel="stylesheet" href="./index.html.css"/-->
   <!--script type="module" src="./index.html.js"></script-->
   <link rel="stylesheet" href="./imported/lib/view/view.css"/>
-  <script type="module" src="./load.js"></script>
   <script type="module">// _@ts-check 'use strict';
+    import {
+      log, when,
+      ge, gt, qs, qa, loadHtml,
+    } from './imported/lib/view/view.js';
     import config from './config.js';
-    (function ready(...args) {
-      if (!document.body) return setTimeout(ready, 50, ...args);
-      console.log(`config: `, config);
+    when(() => document.body, () => {
+      log(`config: `, config);
       loadHtml('./content/document.md'); // loadHtml('./mathfun'); // './content/mds/tasks.md' './content/document.html' './content/document.md' '../../../../../www/nn/nnd.htm' '../../../../../simple-3d/index.html'
-    })();
+    });
   </script>
 </head><body bgcolor="#808080">
 </body></html>

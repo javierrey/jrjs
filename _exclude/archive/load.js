@@ -20,7 +20,11 @@ const rebaseUrls = (code, base = null) =>
 const rebaseLinks = (html, base = null) => html
   .replace(/(?<=(?:[\s:-](?:href|src|url)\s*[=(]\s*["']))[^"']*(?=["'])/gi, (m) => rebaseUrl(m, base))
   .replace(/(<(script|style)(?:\s[^>]*)?>)([\s\S]*?)(<\/\2>)/gi, (_m, a, _b, c, d) => a + rebaseUrls(c, base) + d);
-  // from marked.js, nano-markdown.js
+const closeDirUrl = (url) => {
+  const path = new URL(url, location).pathname;
+  return path.endsWith('/') || /\.[^/]*$/.test(path) ? url : url.replace(/([?#]|$)/, '/$1');
+};
+// from marked.js, nano-markdown.js
 // import { mdToHtml } from '../../../../../servers/lib/view/lib/modules/md-html.js';
 // import { mdToHtml } from '../../../../../_exclude/md-html/nano-md/md2html_1_wip.js';
 const mdToHtml = (() => {
@@ -135,12 +139,8 @@ const insertHtml = (html, parent = null, position = null, norun = false) => {
 };
 // view-x.js:
 const loadHtml = (url, parent = null, position = null, norun = false) => {
-  const dirUri = (uri) => {
-    const path = new URL(uri, location).pathname;
-    return path.endsWith('/') || /\.[^/]*$/.test(path) ? uri : uri.replace(/([?#]|$)/, '/$1');
-  };
   const cb = (uri, cont, err) => {
-    uri = dirUri(uri);
+    uri = closeDirUrl(uri);
     cont ??= '', cont = `\n<!--loadHtml "${uri}" "${cont.length}B" "${err ?? ''}"-->\n`
       + rebaseLinks(/\.md([?#]|$)/i.test(uri) ? mdToHtml(cont) : cont, uri)
       + `\n<!--/loadHtml-->\n`;

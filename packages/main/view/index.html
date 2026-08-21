@@ -18,14 +18,15 @@
   </style>
   <script type="module">// _@ts-check 'use strict';
     import {
-      ge, gt, qs, qa, when,
+      log, when,
+      ge, gt, qs, qa,
       jsonStringify, getEnvironment,
     } from './imported/lib/view/view.js';
     import config from './config.js';
     //
     const appendBr = (el) => el.insertAdjacentHTML('beforeend', `<br/>`);
     when(() => document.body, () => {
-      console.log(` view qs: ` + qs('#some-id')?.innerHTML);
+      log(` view qs: ` + qs('#some-id')?.innerHTML);
       document.body.append(`getEnvironment: ${jsonStringify(getEnvironment())} `);
       appendBr(document.body);
       document.body.append(`config: ${jsonStringify(config)} `);
