@@ -28,8 +28,9 @@
   "dependencies": {},
   "devDependencies": {},
   "_ignore": {
-    "jrjs_remote": "https://github.com/javierrey/jrjs",
-    "jrjs_local": "file:../jrjs",
+    "jrjs@github": "github:javierrey/jrjs",
+    "jrjs@http": "https://github.com/javierrey/jrjs",
+    "jrjs@local": "file:../jrjs",
     "local_modules": {
       "dependencies": {},
       "devDependencies": {

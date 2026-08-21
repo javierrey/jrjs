@@ -12,6 +12,7 @@
   baseDir: string;
   publicDir: string;
   privateDir: string;
+  serviceDir: string;
   protocol: string;
   host: string;
   port: number;
@@ -27,6 +28,7 @@
   baseFolder: string;
   privateFolder: string;
   publicFolder: string;
+  serviceFolder: string;
   isSSL: boolean;
   cert: string | null;
   key: string | null;
@@ -38,12 +40,10 @@ import https from 'node:https';
 import net from 'node:net';
 import fs from 'node:fs';
 import pathmod from 'node:path';
+import { pathToFileURL } from 'node:url';
 import {
-  Log, toStr, isNul, isJso, isBin, urlComponents, parseQuery,
-  fileSize, readFile, readStream,
-  getEnvironment,
-  getDistPath,
-  resolvePath,
+  Log, toStr, isNul, isJso, isBin, urlComponents, parseQuery, resolvePath, getEnvironment,
+  fileSize, readFile, readStream, getDistPath,
 } from '../sys.js';
 
 const fsP = fs.promises;
@@ -186,10 +186,10 @@ It builds a `route` array property based on the client's top referrer URL,
 so it behaves the same for both open and closed paths (ending slash '/').
 Resolves the client originating the request.
 Resolves the resource file path and request parameters.
-If the file is not found, it tries to find a default `index.html` or `index.json` in the route.
+For directory requests, it tries to find a default `index.html` or `index.json` in that directory.
 If found, the file static content is read and placed in the file content property.
-If no static file is found, it tries to find a service file by appending
-extensions `.js`, `.mjs` or `.cjs` to the route.
+If no static file is found, it tries to find a service file in the configured service directory.
+Directory service requests also try an `index.js`, `.mjs` or `.cjs` file.
 */
 const resolveResource = async (request) => {
   const client = resolveClient(request);
@@ -198,22 +198,27 @@ const resolveResource = async (request) => {
   const params = parseQuery(urlParts.query, true); params.payload = Buffer.from([]);
   const DEFAULT_FILE = 'index', STATIC_EXT = ['.html', '.json'], SERVICE_EXT = ['.js', '.mjs', '.cjs'];
   const publicFolder = serverConfig.publicFolder;
-  const fileRoute = ['_', ...(route.length ? route : [''])];
+  const serviceFolder = serverConfig.serviceFolder;
   const filename = urlParts.slug?.replace(/^\//, '') ?? '';
-  let filepath = '', filesize = -0, isService = false, directFilepath = '';
-  while ((isNaN(filesize) || filesize < 1) && fileRoute.length > 1) {
-    fileRoute.shift(); let path = fileRoute.join('/');
-    filepath = safePathFromUrl(`/${path}/${filename}`, publicFolder) ?? '';
-    if (!directFilepath) { directFilepath = filepath; }
-    filesize = filepath ? fileSize(filepath) : NaN;
+  const routePath = route.join('/');
+  let filepath = safePathFromUrl(`/${routePath}/${filename}`, publicFolder) ?? '';
+  let filesize = filepath ? fileSize(filepath) : NaN, isService = false;
+  const directFilepath = filepath;
+  if (!filename) {
     for (let i = 0; (isNaN(filesize) || filesize < 1) && i < STATIC_EXT.length; i++) {
-      filepath = safePathFromUrl(`/${path}/${DEFAULT_FILE}${STATIC_EXT[i]}`, publicFolder) ?? '';
+      filepath = safePathFromUrl(`/${routePath}/${DEFAULT_FILE}${STATIC_EXT[i]}`, publicFolder) ?? '';
       filesize = filepath ? fileSize(filepath) : NaN;
     }
-    for (let i = 0; (isNaN(filesize) || filesize < 1) && i < SERVICE_EXT.length; i++) {
-      filepath = safePathFromUrl(`/${path}${SERVICE_EXT[i]}`, publicFolder) ?? '';
-      filesize = filepath ? fileSize(filepath) : NaN;
-      isService = filesize > 0;
+  }
+  if (serviceFolder) {
+    const servicePaths = [`/${routePath}`, ...(!filename ? [`/${routePath}/${DEFAULT_FILE}`] : [])];
+    for (const servicePath of servicePaths) {
+      for (let i = 0; (isNaN(filesize) || filesize < 1) && i < SERVICE_EXT.length; i++) {
+        filepath = safePathFromUrl(servicePath + SERVICE_EXT[i], serviceFolder) ?? '';
+        filesize = filepath ? fileSize(filepath) : NaN;
+        isService = filesize > 0;
+      }
+      if (filesize > 0) { break; }
     }
   }
   if (isNaN(filesize) || filesize < 1) { filepath = directFilepath; }
@@ -233,7 +238,7 @@ const resolveFile = async (resource) => {
   };
   if (resource.isService) {
     try {
-      const { default: service } = await import(resource.filepath);
+      const { default: service } = await import(pathToFileURL(resource.filepath).href);
       file.content = service(resource.params); file.type = getContentType('', file.content); // @ts-expect-error:
       file.size = file.content?.byteLength ?? file.content?.length ?? -0; // @ts-expect-error:
       if (file.size > serverConfig.largeThreshold) { throw new Error(`service result too large: ${file.size}B`); }
@@ -241,8 +246,7 @@ const resolveFile = async (resource) => {
   } else if (resource.filesize > 0) {
     const reader = resource.filesize > serverConfig.largeThreshold ? readStream : readFile;
     Object.assign(file, await reader(resource.filepath));
-    const filename = resource.slug?.slice(1) ?? '';
-    file.type = getContentType(filename, file.content);
+    file.type = getContentType(resource.filepath, file.content);
   } else if (Object.is(resource.filesize, 0)) { file.content = Buffer.alloc(0);
   } else { file.error = { message: `not a content file "${resource.filepath}"` }; }
   return file;
@@ -262,7 +266,8 @@ const resolver = async (request, response) => {
   // if (stream) { return responder(response, stream.status, stream.headers, stream.body); }
   const file = await resolveFile(resource);
   const error = file.error ?? (isNul(file.content) ? { message: 'no content' } : null);
-  const status = !error ? 200 : error.message.includes('found') || error.code === 'ENOENT' ? 404 : 500; // @ts-expect-error:
+  const missing = !Number.isFinite(resource.filesize) || resource.filesize < 0 || error?.code === 'ENOENT';
+  const status = !error ? 200 : missing ? 404 : 500; // @ts-expect-error:
   const body = error?.message ?? (file.content?.slice ? file.content : toStr(file.content));
   const headers = { 'content-type': file.type };
   responder(response, status, headers, body);
@@ -276,6 +281,7 @@ const resolveConfig = (config) => {
   const baseFolder = getDistPath(resolvePath(cwd, config.baseDir || '') || (env.root + env.path));
   const privateFolder = getDistPath(resolvePath(baseFolder, config.privateDir));
   const publicFolder = getDistPath(resolvePath(baseFolder, config.publicDir));
+  const serviceFolder = config.serviceDir ? getDistPath(resolvePath(baseFolder, config.serviceDir)) : '';
   const isSSL = config.protocol === 'https';
 
   /** @type {ResolvedServerConfig} */
@@ -283,6 +289,7 @@ const resolveConfig = (config) => {
     baseFolder,
     privateFolder,
     publicFolder,
+    serviceFolder,
     isSSL,
     cert: isSSL ? fs.readFileSync(privateFolder + config.sslCert, 'utf-8') : null,
     key: isSSL ? fs.readFileSync(privateFolder + config.sslKey, 'utf-8') : null,

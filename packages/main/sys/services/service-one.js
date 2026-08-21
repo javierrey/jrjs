@@ -1,7 +1,5 @@
 
-import { Log } from '../lib/core.js';
-
-const log = Log(0); // Log({ name: 'services', level: 3 });
+import { log } from './shared.js';
 
 const serviceOne = (params) => {
   const result = {

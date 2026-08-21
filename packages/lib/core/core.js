@@ -38,7 +38,7 @@ export const isStr = (v) => v?.constructor === String;
 
 export const isXml = (v) => /^\s*</.test(v) && />\s*$/.test(v);
 export const isJso = (v) => /^\s*\[?\s*\{/.test(v) && /\}\s*\]?\s*$/.test(v);
-export const isBuf = (v) => typeof v?.slice === 'function' && 'byteLength' in v;
+export const isBuf = (v) => v instanceof ArrayBuffer || ArrayBuffer.isView(v);
 export const isKey = (v) =>
   Number.isInteger(v) && v > -1 || typeof v === 'string' && v.length > 0 && v.length < 1025 && !/\s/.test(v);
 
@@ -47,11 +47,11 @@ export const toNum = (v) =>
 export const toSam = (v) => {
   if (!v?.slice) { v = String(v ?? ''); }
   const R = 1e3, c = ~~((v.byteLength ?? v.length ?? 0) / 2), b = Math.max(0, c - R), s = v.slice(b, b + 2 * R);
-  return 'byteLength' in s ? new TextDecoder().decode(s) : s;
+  return isBuf(s) ? new TextDecoder().decode(s) : s;
 };
 
 export const isTra = (v) => isObj(v) || !!(v?.every?.(isObj) && v.length); // isObj(v?.[0]) && isObj(v.at(-1))
-export const isBin = (v) => toSam(v).includes('\x00');
+export const isBin = (v) => isBuf(v) || toSam(v).includes('\x00');
 
 export const toSca = (v) => {
   if (isObj(v) || Array.isArray(v)) try { return JSON.stringify(v); } catch {}

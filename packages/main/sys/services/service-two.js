@@ -1,7 +1,5 @@
 
-import { Log, toStr } from '../lib/core.js';
-
-const log = Log(0); // Log({ name: 'services', level: 3 });
+import { log, toStr } from './shared.js';
 
 const serviceTwo = (params) => {
   const result = `<br/><pre>serviceTwo</pre><br/><pre>${toStr(params)}</pre>`;
