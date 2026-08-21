@@ -7,8 +7,7 @@
 */
 
 import {
-  callFetch, closeDirUrl,
-  log, mdToHtml, rebaseLinks,
+  callFetch, log, mdToHtml, UrlFun,
 } from '../core/core.js';
 
 export * from '../core/core.js';
@@ -80,9 +79,9 @@ New scripts in the content are also loaded and run, unless `norun` is true.
 */
 export const loadHtml = (url, parent = null, position = null, norun = false) => {
   const cb = (uri, cont, err) => {
-    uri = closeDirUrl(uri);
+    uri = UrlFun.closeDirUrl(uri);
     cont ??= '', cont = `\n<!--loadHtml "${uri}" "${cont.length}B" "${err ?? ''}"-->\n`
-      + rebaseLinks(/\.md([?#]|$)/i.test(uri) ? mdToHtml(cont) : cont, uri)
+      + UrlFun.rebaseHtml(/\.md([?#]|$)/i.test(uri) ? mdToHtml(cont) : cont, uri)
       + `\n<!--/loadHtml-->\n`;
     insertHtml(cont, parent, position, norun);
   };
