@@ -32,6 +32,6 @@ export default {
   ],
 };
 
-// @remove test examples:
 // http://localhost:3000
+// http://localhost:3000/index-load.html
 // http://localhost:3000/mathfun
