@@ -3,6 +3,94 @@ jrjs-code.txt
 ----------------------------------------------------------
 ----------------------------------------------------------
 ----------------------------------------------------------
+----------------------------------------------------------
+----------------------------------------------------------
+TS, getProperty, hasProperty
+--------------------------------
+--------------------------------
+
+/**
+Gets a property value in an unknown type object if present, or undefined otherwise.
+Accepts a list of nested keys: `getProperty(object, 'items', 0, 'title', 'en-US')`
+*/
+export const getProperty = (object: unknown, ...keys: PropertyKey[]) => {
+  for (const key of keys) {
+    if (!object || typeof object !== 'object' || !(key in object)) return undefined;
+    object = (object as { [key in PropertyKey]: unknown })[key];
+  }
+  return object;
+};
+
+/** Object shape narrowed by a tuple of nested keys. Required by `hasProperty`. */
+type NestedObject<PKA extends PropertyKey[]> =
+  PKA extends [infer First extends PropertyKey, ...infer Rest extends PropertyKey[]]
+  ? { [key in First]: Rest extends [] ? unknown : NestedObject<Rest> } : unknown;
+
+/**
+Asserts an unknown type object has a nested property key. Accepts a list of nested keys:
+`if (hasProperty(object, 'data', 'count')) { object.data.count = 1; }`
+*/
+export const hasProperty =
+  <PKA extends PropertyKey[]>(object: unknown, ...keys: PKA): object is NestedObject<PKA> => {
+    for (const key of keys) {
+      if (!object || typeof object !== 'object' || !(key in object)) return false;
+      object = (object as { [key in PropertyKey]: unknown })[key];
+    }
+    return true;
+  };
+
+--------------------------------
+// NestedObject JSDoc:
+
+/**
+@template {PropertyKey[]} PKA;
+@typedef {PKA extends [infer First extends PropertyKey, ...infer Rest extends PropertyKey[]]
+  ? { [Key in First]: Rest extends [] ? unknown : NestedObject<Rest> }
+  : unknown} NestedObject;
+*/
+
+// Loose partial version. Shows an error in `PKA extends`, syntax limitation, valid as `d.ts` definition.
+/**
+@template {PropertyKey[]} PKA;
+@typedef {
+  PKA extends [infer First extends PropertyKey, ...infer Rest extends PropertyKey[]]
+    ? { [Key in First]: Rest extends [] ? unknown : NestedObject<Rest> }
+      & Record<PropertyKey, unknown>
+    : Record<PropertyKey, unknown>
+} NestedObject;
+*/
+
+--------------------------------
+original TS (from core.js):
+
+/**
+Gets a property value in an unknown type object if present, or undefined otherwise.
+Accepts a list of nested keys: `getProperty(object, 'items', '0', 'title', 'en-US')`
+In its Typescript version, `getProperty` can be combined with `hasKey`, to quickly
+reach and assert the presence of a property in an `unknown` type, avoiding `any`:
+```typescript
+export const getProperty = (object: unknown, ...keys: PropertyKey[]) => keys.reduce(
+  (acc, key) => acc && typeof acc === 'object' && key in acc ? (acc as { [key in PropertyKey]: unknown })[key] : undefined,
+  object,
+);
+export const hasKey = (object: unknown, key: PropertyKey): object is { [key]: unknown } =>
+  !!object && typeof object === 'object' && key in object;
+```
+
+--------------------------------
+// Using getProperty, hasKey and type NestedObject:
+
+/** Asserts an unknown type object has a nested property key, using `getProperty` and `hasKey`. */
+export const hasPropertyKey =
+  <PKA extends PropertyKey[]>(object: unknown, ...keys: PKA): object is NestedObject<PKA> => {
+    const lastKey = keys.pop()!;
+    const parent = getProperty(object, ...keys);
+    return hasKey(parent, lastKey);
+  };
+
+--------------------------------
+--------------------------------
+----------------------------------------------------------
 // core.js rebasers, using rebaseImports for inline scripts.
 
 /** Rebases a URL from the current location base, or optionally from a custom base. */

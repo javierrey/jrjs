@@ -21,7 +21,10 @@ export const globalContext = /** @type {PlainObject} */ ({});
 /** AsyncFunction constructor (no globalThis.AsyncFunction defined). */
 export const AsyncFunction = (async () => {}).constructor;
 
-/** Quick type checks and casts. Copy inside pure independent functions. */
+/**
+Quick heuristic type checks and casts.
+Short and practical, they can also be copied inside pure independent functions.
+*/
 
 export const isNul = (v) => [undefined, null, NaN].includes(v);
 export const isEmp = (v) => { for (const p in v) return false; return true; };
@@ -46,7 +49,7 @@ export const toNum = (v) =>
   [Number, Boolean, Date].includes(v?.constructor) ? +v : parseFloat(v) === (v = Number(v)) ? v : NaN;
 export const toSam = (v) => {
   if (!v?.slice) { v = String(v ?? ''); }
-  const R = 1e3, c = ~~((v.byteLength ?? v.length ?? 0) / 2), b = Math.max(0, c - R), s = v.slice(b, b + 2 * R);
+  const R = 512, c = ~~((v.byteLength ?? v.length ?? 0) / 2), b = Math.max(0, c - R), s = v.slice(b, b + 2 * R);
   return isBuf(s) ? new TextDecoder().decode(s) : s;
 };
 
@@ -424,20 +427,15 @@ export const hydrate = (tgt, ...srcs) => {
 
 /**
 Gets a property value in an unknown type object if present, or undefined otherwise.
-Accepts a list of nested keys: `getProperty(object, 'items', '0', 'title', 'en-US')`
-In its Typescript version, `getProperty` can be combined with `hasKey`, to quickly
-reach and assert the presence of a property in an `unknown` type, avoiding `any`:
-```typescript
-export const getProperty = (object: unknown, ...keys: PropertyKey[]) => keys.reduce(
-  (acc, key) => acc && typeof acc === 'object' && key in acc ? (acc as { [key in PropertyKey]: unknown })[key] : undefined,
-  object,
-);
-export const hasKey = (object: unknown, key: PropertyKey): object is { [key]: unknown } =>
-  !!object && typeof object === 'object' && key in object;
-```
+Accepts a list of nested keys: `getProperty(object, 'items', 0, 'title', 'en-US')`
 */
-export const getProperty = (object, ...keys) =>
-  keys.reduce((acc, key) => acc && typeof acc === 'object' && key in acc ? acc[key] : undefined, object);
+export const getProperty = (object, ...keys) => {
+  for (const key of keys) {
+    if (!object || typeof object !== 'object' || !(key in object)) return undefined;
+    object = object[key];
+  }
+  return object;
+};
 
 /**
 Compares two type objects by matching one or more nested properties.
@@ -496,10 +494,11 @@ Common valid separators: `.`, `:`, `/`, `\\`, `|`, `&`, `>`, `,`, ...
 export const parseKey = (key, ctx, dot) => {
   ctx ??= globalThis; dot ??= '.';
   if (typeof key === 'string') {
-    if (!dot || !key.includes(dot)) { return ctx[key]; }
+    if (!dot || !key.includes(dot)) return ctx[key];
     key = key.replace(/\[/g, dot).replace(/["'`\]]/g, '').split(dot); // .map((k) => k.trim()); // trim?
   }
-  let value = !key[0] ? undefined : ctx; while (value != null && key[0]) { value = value[key.shift()]; }
+  let value = !key[0] ? undefined : ctx;
+  while (value != null && key[0]) value = value[key.shift()];
   return key.length ? undefined : value;
 };
 
@@ -511,19 +510,19 @@ If `JSON.parse` fails, `parseKey` is called, along with `ctx` and `dot` paramete
 */
 export const parseValue = (value, ctx, dot) => {
   if (typeof value === 'string') {
-    if (!isNaN(Number(value)) && value.trim() || value === 'NaN') { return Number(value); }
+    if (!isNaN(Number(value)) && value.trim() || value === 'NaN') return Number(value);
     if (isJso(value)) try { return JSON.parse(value); } catch {}
-    if (isKey(value)) { return parseKey(value, ctx, dot) ?? value; }
+    if (isKey(value)) return parseKey(value, ctx, dot) ?? value;
   }
   return value;
 };
 
 /**
-Parses a URL-encoded query from a string into a query object, e.g. `a=1&b=2` or `//urlpath?a=1&b=2`,
+Parses a URL-encoded query from a string into a query object, e.g. `//urlpath?a=1&b=2`,
 or from an array of strings with encoded key-value pairs, e.g. `['a=1', 'b=2']`.
 If it is not a string or string array, it returns a copy of the query.
-If a query value is enclosed in `${...}`, the value will be interpreted using `parseValue`,
-together with `options` context `ctx` and key separator `dot`.
+If a query value is enclosed in `${...}`, it is interpreted with `parseValue`,
+using `options` context `ctx` and key separator `dot`.
 */
 export const parseQuery = (query, options) => {
   const object = {}; let aux; query ??= {}; options ??= {};
@@ -568,7 +567,7 @@ export const arrayIndicesOf = (array, match, from, to, not) => {
 
 /** Static URL base functionality for resolving relative URLs. */
 export const UrlFun = (() => {
-  const typename = 'URLBase';
+  const typename = 'UrlFun';
 
   /** Default URL base for resolving relative URLs. */
   const DEFAULT_BASE = globalThis.location ?? 'file:///';

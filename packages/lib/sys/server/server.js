@@ -42,7 +42,8 @@ import fs from 'node:fs';
 import pathmod from 'node:path';
 import { pathToFileURL } from 'node:url';
 import {
-  Log, toStr, isNul, isJso, isBin, urlComponents, parseQuery, resolvePath, getEnvironment,
+  Log, toStr, isNul, isJso, isBin, toSam,
+  urlComponents, parseQuery, resolvePath, getEnvironment,
   fileSize, readFile, readStream, getDistPath,
 } from '../sys.js';
 
@@ -55,6 +56,46 @@ const log = Log({ name: 'server', level: 4 });
 const serverConfig = /** @type {PlainObject & ServerConfig & ResolvedServerConfig} */ ({});
 const clients = [];
 
+const getFileExtension = (filename) => filename.slice(filename.lastIndexOf('.') + 1 || filename.length);
+
+const getContentType = (content, defType = 'text/html') =>
+  isBin(content) ? 'application/octet-stream' : isJso(toSam(content)) ? 'application/json' : defType;
+
+const getFileContentType = (filename, content) => {
+  const ext = getFileExtension(filename ?? ''), type = getContentType(content ?? '');
+  return !ext ? type
+    : /^html?$/i.test(ext) ? 'text/html'
+    : /^[mc]?js$/i.test(ext) ? 'application/javascript'
+    : /^css$/i.test(ext) ? 'text/css'
+    : /^json5?$/i.test(ext) ? 'application/json'
+    : /^md$/i.test(ext) ? 'text/markdown'
+    : /^x(ht)?ml$/i.test(ext) ? 'application/xml'
+    : /^svg$/i.test(ext) ? 'image/svg+xml'
+    : /^jpe?g$/i.test(ext) ? 'image/jpeg'
+    : /^png$/i.test(ext) ? 'image/png'
+    : /^gif$/i.test(ext) ? 'image/gif'
+    : /^(mp3|ogg)$/i.test(ext) ? 'audio/mp3'
+    : /^(mp4|m4v|mpe?g|avi|mov)$/i.test(ext) ? 'video/mp4'
+    : /^wav$/i.test(ext) ? 'audio/wav'
+    : /^webp$/i.test(ext) ? 'image/webp'
+    : /^weba$/i.test(ext) ? 'audio/webm'
+    : /^webm$/i.test(ext) ? 'video/webm'
+    : /^woff2?$/i.test(ext) ? 'font/woff2'
+    : /^vtt$/i.test(ext) ? 'text/vtt'
+    : /^gltf$/i.test(ext) ? 'model/gltf+json'
+    : /^glb$/i.test(ext) ? 'model/gltf-binary'
+    : /^stl$/i.test(ext) ? 'model/stl'
+    : /^3mf$/i.test(ext) ? 'model/3mf'
+    : /^dae$/i.test(ext) ? 'model/vnd.collada+xml'
+    : /^csv$/i.test(ext) ? 'text/csv'
+    : /^pdf$/i.test(ext) ? 'application/pdf'
+    : /^swf$/i.test(ext) ? 'application/x-shockwave-flash'
+    : /^bin$/i.test(ext) ? 'application/octet-stream'
+    : /^(zip|t?gz)$/i.test(ext) ? 'application/zip'
+    : /^(txt|log|lst|srt)$/i.test(ext) ? 'text/plain'
+    : type;
+};
+
 const getSample = (content, info, size = 300) => {
   content = toStr(content);
   const length = content.byteLength ?? content.length ?? 0, range = ~~(size / 3);
@@ -65,43 +106,6 @@ const getSample = (content, info, size = 300) => {
     + (length > size ? ' ... ' + content.slice(l_2 - r_2, l_2 + r_2) : '')
     + (length > r2 ? ' ... ' + content.slice(-range) : '')
   ).replace(/\s+/g, ' ');
-};
-
-const getContentType = (filename, content) => {
-  content ??= ''; filename ??= '';
-  const ext = filename.slice(filename.lastIndexOf('.') + 1 || filename.length);
-  if (!ext) {
-    return isBin(content) ? 'application/octet-stream' : isJso(getSample(content)) ? 'application/json' : 'text/html';
-  }
-  return /^html?$/i.test(ext) ? 'text/html'
-  : /^[mc]?js$/i.test(ext) ? 'application/javascript'
-  : /^css$/i.test(ext) ? 'text/css'
-  : /^json5?$/i.test(ext) ? 'application/json'
-  : /^md$/i.test(ext) ? 'text/markdown'
-  : /^x(ht)?ml$/i.test(ext) ? 'application/xml'
-  : /^svg$/i.test(ext) ? 'image/svg+xml'
-  : /^jpe?g$/i.test(ext) ? 'image/jpeg'
-  : /^png$/i.test(ext) ? 'image/png'
-  : /^gif$/i.test(ext) ? 'image/gif'
-  : /^(mp3|ogg)$/i.test(ext) ? 'audio/mp3'
-  : /^(mp4|m4v|mpe?g|avi|mov)$/i.test(ext) ? 'video/mp4'
-  : /^wav$/i.test(ext) ? 'audio/wav'
-  : /^webp$/i.test(ext) ? 'image/webp'
-  : /^weba$/i.test(ext) ? 'audio/webm'
-  : /^webm$/i.test(ext) ? 'video/webm'
-  : /^woff2?$/i.test(ext) ? 'font/woff2'
-  : /^vtt$/i.test(ext) ? 'text/vtt'
-  : /^gltf$/i.test(ext) ? 'model/gltf+json'
-  : /^glb$/i.test(ext) ? 'model/gltf-binary'
-  : /^stl$/i.test(ext) ? 'model/stl'
-  : /^3mf$/i.test(ext) ? 'model/3mf'
-  : /^dae$/i.test(ext) ? 'model/vnd.collada+xml'
-  : /^csv$/i.test(ext) ? 'text/csv'
-  : /^pdf$/i.test(ext) ? 'application/pdf'
-  : /^bin$/i.test(ext) ? 'application/octet-stream'
-  : /^(zip|tgz)$/i.test(ext) ? 'application/zip'
-  : /^swf$/i.test(ext) ? 'application/x-shockwave-flash'
-  : 'text/plain'
 };
 
 const logConnection = ({ request, resource, error, status, headers, body }) => {
@@ -122,8 +126,8 @@ const logConnection = ({ request, resource, error, status, headers, body }) => {
 };
 
 const setClientRemarks = (resource) => {
-  const { client, params } = resource;
-  if (params.payload?.length > 10e3) { client.remarks['large-payload'] = params.payload.length; }
+  const { client, params } = resource, LARGE_PL_RMK = 10e3;
+  if (params.payload?.length > LARGE_PL_RMK) { client.remarks['large-payload'] = params.payload.length; }
   if (!client.remotePort) { client.remarks['remote-port'] = client.remotePort; }
 };
 
@@ -173,7 +177,6 @@ const resolveDownstream = (request, file) => {
   return { status, headers, body: file.content };
 };
 
-
 /** @param {string} urlPath @param {string} viewDir */
 const safePathFromUrl = (urlPath, viewDir = '') => {
   let decoded = '';
@@ -202,7 +205,7 @@ const resolveResource = async (request) => {
   const client = resolveClient(request);
   const urlParts = urlComponents(request.url);
   const route = urlParts.path.split('/').slice(1);
-  const params = parseQuery(urlParts.query, true); params.payload = Buffer.from([]);
+  const params = parseQuery(urlParts.query); params.payload = Buffer.from([]);
   const DEFAULT_FILE = 'index', STATIC_EXT = ['.html', '.json'], SERVICE_EXT = ['.js', '.mjs', '.cjs'];
   const publicFolder = serverConfig.publicFolder;
   const serviceFolder = serverConfig.serviceFolder;
@@ -246,14 +249,14 @@ const resolveFile = async (resource) => {
   if (resource.isService) {
     try {
       const { default: service } = await import(pathToFileURL(resource.filepath).href);
-      file.content = service(resource.params); file.type = getContentType('', file.content); // @ts-expect-error:
+      file.content = service(resource.params); file.type = getFileContentType('', file.content); // @ts-expect-error:
       file.size = file.content?.byteLength ?? file.content?.length ?? -0; // @ts-expect-error:
       if (file.size > serverConfig.largeThreshold) { throw new Error(`service result too large: ${file.size}B`); }
     } catch (error) { file.error = error; }
   } else if (resource.filesize > 0) {
     const reader = resource.filesize > serverConfig.largeThreshold ? readStream : readFile;
     Object.assign(file, await reader(resource.filepath));
-    file.type = getContentType(resource.filepath, file.content);
+    file.type = getFileContentType(resource.filepath, file.content);
   } else if (Object.is(resource.filesize, 0)) { file.content = Buffer.alloc(0);
   } else { file.error = { message: `not a content file "${resource.filepath}"` }; }
   return file;
