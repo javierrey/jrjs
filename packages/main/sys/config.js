@@ -1,4 +1,4 @@
-// sys/config.js
+// main/sys/config.js
 // @ts-check
 
 /**
@@ -9,6 +9,7 @@
 import { sharedConfig } from '../core/shared.js';
 
 const distFolder = import.meta.url.includes('/dist/') ? 'dist' : 'packages';
+const appName = sharedConfig.appName || 'main';
 
 /** @type {PlainObject & ClusterConfig} */
 export default {
@@ -25,9 +26,9 @@ export default {
       state: {},
       config: {
         port: 3000,
-        publicDir: `${distFolder}/main/view`,
+        publicDir: `${distFolder}/${appName}/view`,
         privateDir: '_ignore/store',
-        serviceDir: `${distFolder}/main/sys/services`,
+        serviceDir: `${distFolder}/${appName}/sys/services`,
       },
     },
   ],

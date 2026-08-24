@@ -356,7 +356,7 @@ export const documentReady = (run) => when(() => document.body, run);
 /** @param {PlainObject} app @return {void} */
 const addAppConfig = (app) => {
   if (app.name && app.config) {
-    globalContext[app.name + 'Config'] = app.config;
+    coreHub[app.name + 'Config'] = app.config;
   }
 };
 

@@ -2,19 +2,17 @@
 // @ts-check
 
 import {
-  getArgumentValue,
-  fileExists,
-  copyDir,
   log,
-  removeDir,
-  symlinkDir
+  getArgumentValue, fileExists,
+  removeDir, copyDir, symlinkDir
 } from '../../../lib/sys/sys.js';
 
-const cloneMethod = getArgumentValue('method') !== 'copy' ? symlinkDir : copyDir; // symlink, copy
+const cloneMethod = getArgumentValue('method') === 'copy' ? copyDir : symlinkDir; // symlink, copy
 
 const origBase = getArgumentValue('orig') || 'packages';
 const destBase = getArgumentValue('dest') || 'packages/main';
-const origCore = destBase + '/core'; // Local core source copied to the target folder.
+
+const origCore = destBase + '/core'; // Target package core folder.
 
 /** @param {string} ctx @param {string[]} imports */
 const generateContext = (ctx, imports = []) => {
@@ -25,7 +23,7 @@ const generateContext = (ctx, imports = []) => {
   cloneMethod(origBase + `/lib/${ctx}`, destCtx + `/lib/${ctx}`);
   cloneMethod(origBase + '/utils/core', destCtx + '/utils/core');
   cloneMethod(origBase + `/utils/${ctx}`, destCtx + `/utils/${ctx}`);
-  cloneMethod(origCore, destCtx + '/core');
+  cloneMethod(origCore, destCtx + `/_self/core`);
 
   imports.forEach((folder) => {
     let orig = origBase + `/imports/${ctx}/${folder}`;

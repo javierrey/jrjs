@@ -1,8 +1,11 @@
+// main/sys/services/service-two
 
 import { log, toStr } from './shared.js';
+import serviceZero from './service-zero/index.js';
 
 const serviceTwo = (params) => {
-  const result = `<br/><pre>serviceTwo</pre><br/><pre>${toStr(params)}</pre>`;
+  params ??= {}; params.name ||= 'serviceTwo';
+  const result = `<h1>serviceTwo</h1><pre>${toStr(serviceZero(params))}</pre>`;
   return result;
 };
 

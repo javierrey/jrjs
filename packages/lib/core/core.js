@@ -15,8 +15,8 @@ author: javier.rey.eu@gmail.com
 
 /* Types functionality: */
 
-/** Global persistence container for clustered environments. */
-export const globalContext = /** @type {PlainObject} */ ({});
+/** Core persistence container available in all contexts. */
+export const coreHub = /** @type {PlainObject} */ ({});
 
 /** AsyncFunction constructor (no globalThis.AsyncFunction defined). */
 export const AsyncFunction = (async () => {}).constructor;
@@ -132,7 +132,7 @@ export const Log = (config = {}) => {
     if (!config.level && level) return;
     const tron = config.trace && (config.trace >= level || level > 3);
     const stack = trace(level), at = (stack[0] ?? '').trim().replace(/\(|.*\/(?=\S+\/\S)|\)/g, '');
-    const wid = globalContext.workerId, worker = isNaN(wid) ? '' : !wid ? ' P0' : ` W${wid}`;
+    const wid = coreHub.workerId, worker = isNaN(wid) ? '' : !wid ? ' P0' : ` W${wid}`;
     const name = config.name ? ` "${config.name}"` : '';
     CONSOLE[method](`\n[${method.toUpperCase()} ${renderUTC()}]${worker}${name} @${at}`); args.forEach(print);
     tron && stack.length > 1 && CONSOLE.log('TRACE:\n' + stack.slice(1).join('\n'));

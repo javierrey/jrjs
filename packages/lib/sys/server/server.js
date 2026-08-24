@@ -92,7 +92,7 @@ const getFileContentType = (filename, content) => {
     : /^swf$/i.test(ext) ? 'application/x-shockwave-flash'
     : /^bin$/i.test(ext) ? 'application/octet-stream'
     : /^(zip|t?gz)$/i.test(ext) ? 'application/zip'
-    : /^(txt|log|lst|srt)$/i.test(ext) ? 'text/plain'
+    : /^(txt|log|lst)$/i.test(ext) ? 'text/plain'
     : type;
 };
 

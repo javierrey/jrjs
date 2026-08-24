@@ -1,13 +1,10 @@
+// main/sys/services/service-one
 
-import { log } from './shared.js';
+import serviceZero from './service-zero/index.js';
 
 const serviceOne = (params) => {
-  const result = {
-    name: 'serviceOne',
-    params,
-    value: Math.random(),
-  }; // log.info(result);
-  return result;
+  params ??= {}; params.name ||= 'serviceOne';
+  return serviceZero(params);
 };
 
 export default serviceOne;

@@ -26,6 +26,7 @@
     //
     const appendBr = (el) => el.insertAdjacentHTML('beforeend', `<br/>`);
     when(() => document.body, () => {
+      log(`config: `, config);
       log(` view qs: ` + qs('#some-id')?.innerHTML);
       document.body.append(`getEnvironment: ${jsonStringify(getEnvironment())} `);
       appendBr(document.body);
