@@ -573,8 +573,7 @@ export const UrlFun = (() => {
   const DEFAULT_BASE = globalThis.location ?? 'file:///';
 
   /** Rebase RegExps. */
-  const REBASE_DOC_RE = /(?<=["'`(])(?:\.{1,2}\/|\/{1,2})(?![\\()[\]{}?*+|.,"'])[^ "'`)]*(?=["'`)])/gi;
-  const REBASE_SCRIPT_RE = /(?<=["'`])(?:\.{1,2}\/|\/{1,2})(?![\\()[\]{}?*+|.,"'])[^ "'`]*(?=["'`])/gi;
+  const REBASE_DOC_RE = /(?<=["'`]|url\()(?:\.{1,2}\/|\/{1,2})(?![\\()[\]{}?*+|.,"'])[^ "'`)]*(?=["'`)])/gi;
   const REBASE_HTML_LINKS_RE = /(?<=(?:[\s:-](?:href|src|url)\s*[=(]\s*["']))[^"']*(?=["'])/gi;
   const REBASE_HTML_DOCS_RE = /(<(script|style)(?:\s[^>]*)?>)([\s\S]*?)(<\/\2>)/gi;
 
@@ -585,14 +584,12 @@ export const UrlFun = (() => {
   const rebaseUrl = (url, base = null) => newUrl(url ?? '', newUrl(base)).href;
 
   /** Rebases all quoted URLs in a text document, optionally from a custom base. */
-  const rebaseDoc = (code, base = null, script = false) => code.replace(
-    script ? REBASE_SCRIPT_RE : REBASE_DOC_RE, (m) => rebaseUrl(m, base)
-  );
+  const rebaseDoc = (code, base = null) => code.replace(REBASE_DOC_RE, (m) => rebaseUrl(m, base));
 
   /** Rebases all links in an HTML document, including inline code, optionally from a custom base. */
   const rebaseHtml = (html, base = null) => html
     .replace(REBASE_HTML_LINKS_RE, (m) => rebaseUrl(m, base))
-    .replace(REBASE_HTML_DOCS_RE, (_m, a, t, c, d) => a + rebaseDoc(c, base, t.toLowerCase() === 'script') + d);
+    .replace(REBASE_HTML_DOCS_RE, (_m, a, _b, c, d) => a + rebaseDoc(c, base) + d);
 
   /** Adds a trailing slash to a URL when it appears to reference a directory. */
   const closeDirUrl = (url) => {
