@@ -3,7 +3,7 @@
   <title>Index</title>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/>
-  <meta name="mobile-web-app-capable" content="yes"/><meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
   <meta name="keywords" content=""/>
   <meta name="description" content=""/>
   <base href="./"/>
@@ -11,14 +11,17 @@
   <!--link rel="stylesheet" href="./index.html.css"/-->
   <!--script type="module" src="./index.html.js"></script-->
   <link rel="stylesheet" href="./imported/lib/view/view.css"/>
-  <script type="module" src="./load.js"></script>
+  <style>
+    /* @import "./imported/lib/view/view.css"; /* hide, use <link> */
+    /* * */
+  </style>
   <script type="module">// _@ts-check 'use strict';
-    import config from './config.js';
-    (function ready(...args) {
-      if (!document.body) return setTimeout(ready, 50, ...args);
-      console.log(`config: `, config);
-      loadHtml('./content/document.md'); // loadHtml('./mathfun'); // './content/mds/tasks.md' './content/document.html' './content/document.md' '../../../../../www/nn/nnd.htm' '../../../../../simple-3d/index.html'
-    })();
+    import {
+      log, when,
+      ge, gt, qs, qa, appendHtml, prependHtml,
+    } from './imported/lib/view/view.js';
+    when(() => document.body, () => { // log('ready!');
+    });
   </script>
 </head><body bgcolor="#808080">
 </body></html>

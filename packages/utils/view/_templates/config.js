@@ -1,4 +1,4 @@
-// view/config.js
+// main/view/config.js
 // @ts-check
 
 /**

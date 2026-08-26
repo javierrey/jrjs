@@ -13,27 +13,20 @@
   <link rel="stylesheet" href="./imported/lib/view/view.css"/>
   <!--link rel="stylesheet" href="./imported/lib/view/view-x.css"/-->
   <style>
-    /* @import "./imported/lib/view/view-x.css"; /* hide, use <link> */
-    .big-text { font-size: calc(var(--htm-size) * 2); }
+    /* @import "./imported/lib/view/view.css"; /* hide, use <link> */
   </style>
   <script type="module">// _@ts-check 'use strict';
     import {
-      log, when,
-      ge, gt, qs, qa,
-      jsonStringify, getEnvironment,
+      log, when, jsonStringify, getEnvironment,
+      ge, gt, qs, qa, appendHtml,
     } from './imported/lib/view/view.js';
     import config from './config.js';
     //
-    const appendBr = (el) => el.insertAdjacentHTML('beforeend', `<br/>`);
     when(() => document.body, () => {
       log(`config: `, config);
-      log(` view qs: ` + qs('#some-id')?.innerHTML);
-      document.body.append(`getEnvironment: ${jsonStringify(getEnvironment())} `);
-      appendBr(document.body);
-      document.body.append(`config: ${jsonStringify(config)} `);
-      appendBr(document.body);
+      appendHtml(document.body, `<div>getEnvironment: ${jsonStringify(getEnvironment())} </div>`);
+      appendHtml(document.body, `<div>config: ${jsonStringify(config)} </div>`);
     });
   </script>
 </head><body bgcolor="#808080">
-  <div id="some-id" style="width: 100%;" class="display-flex justify-center big-text">Hello, world!</div>
 </body></html>

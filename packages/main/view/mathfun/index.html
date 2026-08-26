@@ -390,8 +390,7 @@
     return r * x * x - r + oy;
   };
 
-  (function ready(...args) {
-    if (!document.body) return setTimeout(ready, 50, ...args);
+  when(() => document.body, () => {
     // log('ready', arguments);
     const dbS = CSSUtil.getElementStyle(document.body);
     dbS.set('opacity', '0');
@@ -461,7 +460,7 @@
     CSSUtil.toggleCssTheme(); // @ts-expect-error // @show/hide
     window.CSSUtil = CSSUtil; // @hide/show
     // scheduleRenderSvg();
-  })();
+  });
   </script>
 </head><body>
   <div id="panelDiv">

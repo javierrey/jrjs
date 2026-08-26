@@ -832,6 +832,8 @@ export const callFetch = (url, callback = null, resolver = null, options = null)
     .finally(() => callback?.(url, content, error));
 };
 
+/* * */
+
 /** Exposes local members to the specified environment, globalThis by default. Overwrites existing references. */
 export const expose = (props, env = globalThis) => Object.entries(props).forEach(([k, v]) => { env[k] = v; });
 

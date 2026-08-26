@@ -1,7 +1,73 @@
-// view/load.js
+// index-load/load.js
 // _@ts-check
 
+const log = console.log; // eslint-disable-line
 // core.js:
+const expose = (props, env = globalThis) => Object.entries(props).forEach(([k, v]) => { env[k] = v; });
+const when = (ready = () => true, run = () => {}) => new Promise((s) => {
+  let l = 50; const m = l * 100, t = Date.now() + m * 10, d = () => (l = Math.min(l * 1.2, m));
+  (function f() { ready() ? s(run()) : Date.now() > t ? s() : setTimeout(f, d()); })();
+});
+const parseKey = (key, ctx, dot) => {
+  ctx ??= globalThis; dot ??= '.';
+  if (typeof key === 'string') {
+    if (!dot || !key.includes(dot)) return ctx[key];
+    key = key.replace(/\[/g, dot).replace(/["'`\]]/g, '').split(dot); // .map((k) => k.trim()); // trim?
+  }
+  let value = !key[0] ? undefined : ctx;
+  while (value != null && key[0]) value = value[key.shift()];
+  return key.length ? undefined : value;
+};
+const parseValue = (value, ctx, dot) => {
+  if (typeof value === 'string') {
+    if (!isNaN(Number(value)) && value.trim() || value === 'NaN') return Number(value);
+    if (isJso(value)) try { return JSON.parse(value); } catch {}
+    if (isKey(value)) return parseKey(value, ctx, dot) ?? value;
+  }
+  return value;
+};
+const parseQuery = (query, options) => {
+  const object = {}; let aux; query ??= {}; options ??= {};
+  if (query.constructor === String) {
+    aux = query.indexOf('#'); if (aux !== -1) { query = query.slice(0, aux); }
+    query = query.slice(query.indexOf('?') + 1).trim();
+    query = !query ? [] : query.split('&');
+  } else if (!query.forEach) { return Object.assign(object, query); }
+  query.forEach((item, ind) => {
+    item = String(item ?? ''); aux = item.indexOf('=');
+    const key = decodeURIComponent(item.substring(0, aux)).trim() || String(ind);
+    const value = decodeURIComponent(item.slice(aux + 1)).trim();
+    const pv = value[0] + value[1] + value.at(-1) === '${}';
+    object[key] = pv ? parseValue(value.slice(2, -1), options.ctx, options.dot) : value;
+  });
+  return object;
+};
+const UrlFun = (() => {
+  const typename = 'UrlFun';
+
+  const DEFAULT_BASE = globalThis.location ?? 'file:///';
+
+  const REBASE_DOC_RE = /(?<=["'`(])(?:\.{1,2}\/|\/{1,2})(?![\\()[\]{}?*+|.,"'])[^ "'`)]*(?=["'`)])/gi;
+  const REBASE_HTML_LINKS_RE = /(?<=(?:[\s:-](?:href|src|url)\s*[=(]\s*["']))[^"']*(?=["'])/gi;
+  const REBASE_HTML_DOCS_RE = /(<(script|style)(?:\s[^>]*)?>)([\s\S]*?)(<\/\2>)/gi;
+
+  const newUrl = (url = null, base = null) => new URL(url ?? '', base ?? DEFAULT_BASE);
+
+  const rebaseUrl = (url, base = null) => newUrl(url ?? '', newUrl(base)).href;
+
+  const rebaseDoc = (code, base = null) => code.replace(REBASE_DOC_RE, (m) => rebaseUrl(m, base));
+
+  const rebaseHtml = (html, base = null) => html
+    .replace(REBASE_HTML_LINKS_RE, (m) => rebaseUrl(m, base))
+    .replace(REBASE_HTML_DOCS_RE, (_m, a, _b, c, d) => a + rebaseDoc(c, base) + d);
+
+  const closeDirUrl = (url) => {
+    const path = UrlFun.newUrl(url).pathname;
+    return path.endsWith('/') || /\.[^/]*$/.test(path) ? url : url.replace(/([?#]|$)/, '/$1');
+  };
+
+  return Object.freeze({ typename, newUrl, rebaseUrl, rebaseDoc, rebaseHtml, closeDirUrl }); // static
+})();
 const callFetch = (url, callback = null, resolver = null, options = null) => {
   let content, error;
   return fetch(url, options ?? {})
@@ -13,13 +79,6 @@ const callFetch = (url, callback = null, resolver = null, options = null) => {
     .catch((err) => (error = err))
     .finally(() => callback?.(url, content, error));
 };
-const rebaseUrl = (url, base = null) =>
-  new URL(url ?? '', new URL(base ?? '', globalThis.location ?? 'file:///')).href;
-const rebaseUrls = (code, base = null) =>
-  code.replace(/(?<=["'`(])(?:\.{1,2}\/|\/{1,2})(?![\\()[\]{}?*+|.,"'])[^ "'`)]*(?=["'`)])/gi, (m) => rebaseUrl(m, base));
-const rebaseLinks = (html, base = null) => html
-  .replace(/(?<=(?:[\s:-](?:href|src|url)\s*[=(]\s*["']))[^"']*(?=["'])/gi, (m) => rebaseUrl(m, base))
-  .replace(/(<(script|style)(?:\s[^>]*)?>)([\s\S]*?)(<\/\2>)/gi, (_m, a, _b, c, d) => a + rebaseUrls(c, base) + d);
   // from marked.js, nano-markdown.js
 // import { mdToHtml } from '../../../../../servers/lib/view/lib/modules/md-html.js';
 // import { mdToHtml } from '../../../../../_exclude/md-html/nano-md/md2html_1_wip.js';
@@ -102,16 +161,17 @@ const mdToHtml = (() => {
   });
   return main.href = (a) => a, main.headAttrs = (_a, _b) => '', main;
 })();
-const expose = (props, env = globalThis) => Object.entries(props).forEach(([k, v]) => { env[k] = v; });
 // view.js:
 const ge = (id) => document.getElementById(id);
 const gt = (tag, el = document) => el?.getElementsByTagName?.(tag);
 const qs = (sel, el = document) => { try { return el?.querySelector?.(sel); } catch {} };
 const qa = (sel, el = document) => { try { return el?.querySelectorAll?.(sel); } catch {} };
-const loadScript = (src, content = null, type = null) => {
+const appendHtml = (el, html) => el?.insertAdjacentHTML?.('beforeend', html);
+const prependHtml = (el, html) => el?.insertAdjacentHTML?.('afterbegin', html);
+const loadScript = (src, code = null, type = null) => {
   const script = document.createElement('script');
   script.type = type ?? 'application/javascript';
-  src ? (script.src = src) : (script.textContent = content ?? '');
+  src ? (script.src = src) : (script.textContent = code ?? '');
   document.head.appendChild(script); script.remove();
   return script;
 };
@@ -135,18 +195,14 @@ const insertHtml = (html, parent = null, position = null, norun = false) => {
 };
 // view-x.js:
 const loadHtml = (url, parent = null, position = null, norun = false) => {
-  const dirUri = (uri) => {
-    const path = new URL(uri, location).pathname;
-    return path.endsWith('/') || /\.[^/]*$/.test(path) ? uri : uri.replace(/([?#]|$)/, '/$1');
-  };
   const cb = (uri, cont, err) => {
-    uri = dirUri(uri);
+    uri = UrlFun.closeDirUrl(uri);
     cont ??= '', cont = `\n<!--loadHtml "${uri}" "${cont.length}B" "${err ?? ''}"-->\n`
-      + rebaseLinks(/\.md([?#]|$)/i.test(uri) ? mdToHtml(cont) : cont, uri)
+      + UrlFun.rebaseHtml(/\.md([?#]|$)/i.test(uri) ? mdToHtml(cont) : cont, uri)
       + `\n<!--/loadHtml-->\n`;
     insertHtml(cont, parent, position, norun);
   };
   callFetch(url, cb, 'text');
 };
 // globalize:
-expose({ loadHtml });
+expose({ log, expose, when, parseQuery, loadHtml });

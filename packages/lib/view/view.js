@@ -21,6 +21,12 @@ export const gt = (tag, el = document) => el?.getElementsByTagName?.(tag);
 export const qs = (sel, el = document) => { try { return el?.querySelector?.(sel); } catch {} };
 export const qa = (sel, el = document) => { try { return el?.querySelectorAll?.(sel); } catch {} };
 
+/** Append HTML to a DOM element. */
+export const appendHtml = (el, html) => el?.insertAdjacentHTML?.('beforeend', html);
+
+/** Prepend HTML to a DOM element. */
+export const prependHtml = (el, html) => el?.insertAdjacentHTML?.('afterbegin', html);
+
 /**
 Loads CSS code from a URL `href`, or from a given text, if `code` is not null.
 The `href` is also used to construct the element's `id` and replace the style
