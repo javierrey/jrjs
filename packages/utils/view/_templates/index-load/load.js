@@ -45,29 +45,22 @@ const parseQuery = (query, options) => {
 const UrlFun = (() => {
   const typename = 'UrlFun';
 
-  /** Default URL base for resolving relative URLs. */
   const DEFAULT_BASE = globalThis.location ?? 'file:///';
 
-  /** Rebase RegExps. */
   const REBASE_DOC_RE = /(?<=["'`]|url\()(?:\.{1,2}\/|\/{1,2})(?![\\()[\]{}?*+|.,"'])[^ "'`)]*(?=["'`)])/gi;
   const REBASE_HTML_LINKS_RE = /(?<=(?:[\s:-](?:href|src|url)\s*[=(]\s*["']))[^"']*(?=["'])/gi;
   const REBASE_HTML_DOCS_RE = /(<(script|style)(?:\s[^>]*)?>)([\s\S]*?)(<\/\2>)/gi;
 
-  /** Get a URL base object. */
   const newUrl = (url = null, base = null) => new URL(url ?? '', base ?? DEFAULT_BASE);
 
-  /** Rebases a URL from the current location base, or optionally from a custom base. */
   const rebaseUrl = (url, base = null) => newUrl(url ?? '', newUrl(base)).href;
 
-  /** Rebases all quoted URLs in a text document, optionally from a custom base. */
   const rebaseDoc = (code, base = null) => code.replace(REBASE_DOC_RE, (m) => rebaseUrl(m, base));
 
-  /** Rebases all links in an HTML document, including inline code, optionally from a custom base. */
   const rebaseHtml = (html, base = null) => html
     .replace(REBASE_HTML_LINKS_RE, (m) => rebaseUrl(m, base))
     .replace(REBASE_HTML_DOCS_RE, (_m, a, _b, c, d) => a + rebaseDoc(c, base) + d);
 
-  /** Adds a trailing slash to a URL when it appears to reference a directory. */
   const closeDirUrl = (url) => {
     const path = UrlFun.newUrl(url).pathname;
     return path.endsWith('/') || /\.[^/]*$/.test(path) ? url : url.replace(/([?#]|$)/, '/$1');
