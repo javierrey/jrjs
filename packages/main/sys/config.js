@@ -26,8 +26,8 @@ export default {
       state: {},
       config: {
         port: 3000,
-        publicDir: `${distFolder}/${appName}/view`,
         privateDir: '_ignore/store',
+        publicDir: `${distFolder}/${appName}/view`,
         serviceDir: `${distFolder}/${appName}/sys/services`,
       },
     },

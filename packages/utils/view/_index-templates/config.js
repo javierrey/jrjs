@@ -5,7 +5,7 @@
 @typedef {import('./imported/lib/view/view.js').PlainObject} PlainObject;
 */
 
-import { sharedConfig } from './imported/core/shared.js';
+import { sharedConfig } from './imported/_self/core/shared.js';
 
  /** @type {PlainObject} */
 export default {

@@ -1,14 +1,15 @@
-// sys/config.js
+// main/sys/config.js
 // @ts-check
 
 /**
-@typedef {import('../../lib/sys/sys.js').PlainObject} PlainObject;
-@typedef {import('../../lib/sys/cluster.js').ClusterConfig} ClusterConfig;
+@typedef {import('../../../../jrjs/packages/lib/sys/sys.js').PlainObject} PlainObject;
+@typedef {import('../../../../jrjs/packages/lib/sys/cluster.js').ClusterConfig} ClusterConfig;
 */
 
 import { sharedConfig } from '../core/shared.js';
 
 const distFolder = import.meta.url.includes('/dist/') ? 'dist' : 'packages';
+const appName = sharedConfig.appName || 'main';
 
 /** @type {PlainObject & ClusterConfig} */
 export default {
@@ -19,19 +20,20 @@ export default {
   apps: [
     {
       name: 'server',
-      path: '../../lib/sys/server/run.js',
+      path: '../../../../jrjs/packages/lib/sys/server/run.js',
       primary: false,
       requires: [],
       state: {},
       config: {
         port: 3000,
-        publicDir: `${distFolder}/main/view`,
         privateDir: '_ignore/store',
+        publicDir: `${distFolder}/${appName}/view`,
+        serviceDir: `${distFolder}/${appName}/sys/services`,
       },
     },
   ],
 };
 
-// @remove test examples:
 // http://localhost:3000
+// http://localhost:3000/index-load.html
 // http://localhost:3000/mathfun

@@ -10,8 +10,8 @@
 @typedef {import('../../core/core.js').FunctionObject} FunctionObject;
 @typedef {{
   baseDir: string;
-  publicDir: string;
   privateDir: string;
+  publicDir: string;
   serviceDir: string;
   protocol: string;
   host: string;
@@ -270,6 +270,13 @@ const responder = async (response, status, headers, body) => { // @todo status =
 /** @type {RequestListener} */
 const resolver = async (request, response) => {
   const empty = resolveEmpty(request); if (empty) { return responder(response, empty.status); }
+  const urlParts = urlComponents(request.url);
+  const directory = urlParts.open && urlParts.slug === '/'
+    ? safePathFromUrl(urlParts.path, serverConfig.publicFolder) : null;
+  if (directory && fileSize(directory) < 0 && (request.method === 'GET' || request.method === 'HEAD')) {
+    response.setHeader('location', `${urlParts.path}/${urlParts.query}`);
+    return responder(response, 308);
+  }
   const resource = await resolveResource(request);
   await resolveUpstream(request, resource.params);
   // const stream = resolveDownstream(request, file);
