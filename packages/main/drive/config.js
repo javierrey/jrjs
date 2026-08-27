@@ -6,6 +6,8 @@
 @typedef {import('../../../../jrjs/packages/lib/drive/cluster.js').ClusterConfig} ClusterConfig;
 */
 
+
+import { coreHub } from '../../../../jrjs/packages/lib/core/core.js';
 import { sharedConfig } from '../core/shared.js';
 
 const distFolder = import.meta.url.includes('/dist/') ? 'dist' : 'packages';
@@ -17,6 +19,7 @@ export default {
   distFolder,
   clusterSize: 1, // 0, 1, 2, ... os.cpus().length
   base: '',
+  coreHub,
   apps: [
     {
       name: 'server',
