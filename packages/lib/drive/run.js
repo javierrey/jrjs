@@ -1,11 +1,11 @@
-// sys/run.js (cluster)
+// drive/run.js (cluster)
 // @ts-check
 
 /**
 @typedef {import('./cluster.js').ClusterConfig} ClusterConfig;
 */
 
-import { hydrate, log, sysConfig } from './sys.js';
+import { hydrate, log, sysConfig } from './drive.js';
 import { runCluster } from './cluster.js';
 
 /** @type {ClusterConfig} */
@@ -19,4 +19,4 @@ const clusterConfig = /** @type {ClusterConfig} */ (hydrate(sysConfig, defaults)
 
 runCluster();
 
-log.info(`sys/run ${clusterConfig.clusterSize} workers [${clusterConfig.apps.map((app) => app.name)}]`);
+log.info(`drive/run ${clusterConfig.clusterSize} workers [${clusterConfig.apps.map((app) => app.name)}]`);

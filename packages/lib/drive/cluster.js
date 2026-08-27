@@ -1,4 +1,4 @@
-// sys/cluster.js
+// drive/cluster.js
 // @ts-check
 
 /**
@@ -21,7 +21,7 @@
 */
 
 import cluster from 'node:cluster';
-import { coreHub, log, sysConfig } from './sys.js';
+import { coreHub, log, sysConfig } from './drive.js';
 
 /* Apps functionality: */
 

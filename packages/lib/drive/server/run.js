@@ -17,7 +17,7 @@ const defaults = {
   baseDir: '',
   privateDir: '../../_ignore/store',
   publicDir: '../view',
-  servicesDir: '../sys/services',
+  servicesDir: '../drive/services',
   protocol: 'http',
   host: '0.0.0.0', // '0.0.0.0', '127.0.0.1', 'localhost',
   port: 3000,

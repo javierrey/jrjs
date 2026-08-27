@@ -1,5 +1,5 @@
 // _@ts-check // minify.js, javier.rey.eu@gmail.com, 2022
-// dependencies: 'imports/sys/dev_modules/min_modules/*', 'lib/sys/sys-x.js'
+// dependencies: 'imports/drive/dev_modules/min_modules/*', 'lib/drive/drive-x.js'
 
 /**
 Minify and copy files from a source directory to a destination directory, preserving the directory structure.
@@ -9,18 +9,18 @@ Filenames containing .raw. or .min. are not modified, filenames containing .src.
 All other files are copied unmodified.
 
 CLI stdout test examples for each file type, HTML, JS, CSS, XML, except JSON (internal):
-`node ./packages/imports/sys/dev_modules/min_modules/html-minifier-terser/cli.js --collapse-whitespace --remove-comments --minify-js true --minify-css true  "./lib/jrjs/mintest/index.html"`
-`node ./packages/imports/sys/dev_modules/min_modules/terser/bin/terser "./lib/jrjs/mintest/core.js"`
-`node ./packages/imports/sys/dev_modules/min_modules/clean-css/cli.js "./lib/jrjs/mintest/aa-lib.css" "{}"`
-`node ./packages/imports/sys/dev_modules/min_modules/minify_xml_modules/minify-xml/cli.js "./lib/jrjs/mintest/main-logo.svg"`
+`node ./packages/imports/drive/dev_modules/min_modules/html-minifier-terser/cli.js --collapse-whitespace --remove-comments --minify-js true --minify-css true  "./lib/jrjs/mintest/index.html"`
+`node ./packages/imports/drive/dev_modules/min_modules/terser/bin/terser "./lib/jrjs/mintest/core.js"`
+`node ./packages/imports/drive/dev_modules/min_modules/clean-css/cli.js "./lib/jrjs/mintest/aa-lib.css" "{}"`
+`node ./packages/imports/drive/dev_modules/min_modules/minify_xml_modules/minify-xml/cli.js "./lib/jrjs/mintest/main-logo.svg"`
 */
 // '../../../', 'jrjs'
-import { minify as minify_js } from '../../../imports/sys/dev_modules/min_modules/terser/dist/bundle.min.js';
-import CleanCSS from '../../../imports/sys/dev_modules/min_modules/clean-css/index.js';
-import { minify as minify_html } from '../../../imports/sys/dev_modules/min_modules/html-minifier-terser/dist/htmlminifier.js';
-import { minify as minify_xml } from '../../../imports/sys/dev_modules/min_modules/minify_xml_modules/minify-xml/index.js';
+import { minify as minify_js } from '../../../imports/drive/dev_modules/min_modules/terser/dist/bundle.min.js';
+import CleanCSS from '../../../imports/drive/dev_modules/min_modules/clean-css/index.js';
+import { minify as minify_html } from '../../../imports/drive/dev_modules/min_modules/html-minifier-terser/dist/htmlminifier.js';
+import { minify as minify_xml } from '../../../imports/drive/dev_modules/min_modules/minify_xml_modules/minify-xml/index.js';
 
-import { clone, merge, parse, fs, fsP, log, getPathCore, getAllFiles, removeDir } from '../../../lib/sys/sys.js';
+import { clone, merge, parse, fs, fsP, log, getPathCore, getAllFiles, removeDir } from '../../../lib/drive/drive.js';
 
 const minify_css = CleanCSS.process;
 

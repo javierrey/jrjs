@@ -8,5 +8,4 @@ const appName = (folderAtM3 === '_self' ? __fileurl.split('/').at(-6) : folderAt
 export const sharedConfig = {
   __fileurl,
   appName,
-  sharedProp: 'Shared value',
 };

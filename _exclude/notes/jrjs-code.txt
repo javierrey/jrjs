@@ -113,7 +113,7 @@ export const rebaseLinks = (html, base = null) => html
   .replace(/(<script(?:\s[^>]*)?>)([\s\S]*?)(<\/script>)/gi, (_m, a, b, c) => a + rebaseImports(b, base) + c);
 
 ----------------------------------------------------------
-// sys/server.js resolveConfig
+// drive/server.js resolveConfig
 
 log.info(`resolveConfig "${import.meta.url}" "${cwd}" "${publicFolder}" "${config.baseDir}" "${config.publicDir}"`);
 
@@ -351,7 +351,7 @@ Equivalent to self-invoking ready function here:
 export const documentReady = (run) => when(() => document.body, run);
 
 ----------------------------------------------------------
-// sys/run.js
+// drive/run.js
 
 /** @param {PlainObject} app @return {void} */
 const addAppConfig = (app) => {
@@ -362,7 +362,7 @@ const addAppConfig = (app) => {
 
 ----------------------------------------------------------
 
-// sys/index.js
+// drive/index.js
 // @ts-check
 
 globalThis.globalConfig = {
@@ -370,12 +370,12 @@ globalThis.globalConfig = {
     workerId: NaN,
     clusterSize: 1, // 0, 1, 2, ... os.cpus().length
     primaryApps: [],
-    workerApps: ['jrjs/packages/lib/sys/run.js'],
+    workerApps: ['jrjs/packages/lib/drive/run.js'],
     ...JSON.parse(process.argv.slice(2).at(-1) || '{}'),
   },
 };
 
-import('jrjs/packages/lib/sys/run.js');
+import('jrjs/packages/lib/drive/run.js');
 
 ----------------------------------------------------------
 
@@ -390,7 +390,7 @@ export const importModule = async (url, type) =>
   (await (type ? import(url, { with: { type } }) : import(url))).default;
 
 ----------------------------------------------------------
-// sys.js, original:
+// drive.js, original:
 
 export const getAllFiles = async function* (folder) {
   folder = (folder.replace(/\\/g, '/') + '/').replace(/\/\/+/g, '/');

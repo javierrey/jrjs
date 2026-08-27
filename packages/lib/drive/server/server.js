@@ -45,7 +45,7 @@ import {
   Log, toStr, isNul, isJso, isBin, toSam,
   urlComponents, parseQuery, resolvePath, getEnvironment,
   fileSize, readFile, readStream, getDistPath,
-} from '../sys.js';
+} from '../drive.js';
 
 const fsP = fs.promises;
 

@@ -1,9 +1,9 @@
-// main/sys/config.js
+// main/drive/config.js
 // @ts-check
 
 /**
-@typedef {import('../../../../jrjs/packages/lib/sys/sys.js').PlainObject} PlainObject;
-@typedef {import('../../../../jrjs/packages/lib/sys/cluster.js').ClusterConfig} ClusterConfig;
+@typedef {import('../../../../jrjs/packages/lib/drive/drive.js').PlainObject} PlainObject;
+@typedef {import('../../../../jrjs/packages/lib/drive/cluster.js').ClusterConfig} ClusterConfig;
 */
 
 import { sharedConfig } from '../core/shared.js';
@@ -20,7 +20,7 @@ export default {
   apps: [
     {
       name: 'server',
-      path: '../../../../jrjs/packages/lib/sys/server/run.js',
+      path: '../../../../jrjs/packages/lib/drive/server/run.js',
       primary: false,
       requires: [],
       state: {},
@@ -28,7 +28,7 @@ export default {
         port: 3000,
         privateDir: '_ignore/store',
         publicDir: `${distFolder}/${appName}/view`,
-        servicesDir: `${distFolder}/${appName}/sys/services`,
+        servicesDir: `${distFolder}/${appName}/drive/services`,
       },
     },
   ],

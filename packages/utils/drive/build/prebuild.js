@@ -5,7 +5,7 @@ import {
   log,
   getArgumentValue, fileExists,
   removeDir, copyDir, symlinkDir
-} from '../../../lib/sys/sys.js';
+} from '../../../lib/drive/drive.js';
 
 const cloneMethod = getArgumentValue('method') === 'copy' ? copyDir : symlinkDir; // symlink, copy
 
@@ -46,7 +46,7 @@ const processContextArg = (ctxArg) => {
 processContextArg('view-imports');
 
 /**
-This argument should only be set if `sys` dependency links point to the generated `imported` folder.
-Unlike `view`, `sys` modules do not need to be copied into the consumer's source.
+This argument should only be set if `drive` dependency links point to the generated `imported` folder.
+Unlike `view`, `drive` modules do not need to be copied into the consumer's source.
 */
-processContextArg('sys-imports');
+processContextArg('drive-imports');

@@ -10,4 +10,4 @@ From the repo's top level:
 
 `npm run start`
 
-It will clone shared source code and run `main/sys/index.js`, launching a server, as configured in `main/sys/config.js` by default.
+It will clone shared source code and run `main/drive/index.js`, launching a server, as configured in `main/drive/config.js` by default.

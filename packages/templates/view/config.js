@@ -10,5 +10,5 @@ import { sharedConfig } from './imported/_self/core/shared.js';
  /** @type {PlainObject} */
 export default {
   ...sharedConfig,
-  viewProp: 'View value',
+  href: location.href,
 };
