@@ -34,7 +34,7 @@ export default {
   ],
 };
 
-// http://localhost:3000
-// http://localhost:3000/index-load.html
+// @remove, test examples:
 // http://localhost:3000/mathfun
-// http://localhost:3000/service-one
+// http://localhost:3000/load.html?content=./content/document.md
+// http://localhost:3000/service-one?p1=v%201&p2=v%202
