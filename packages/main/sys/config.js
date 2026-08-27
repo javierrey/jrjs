@@ -28,7 +28,7 @@ export default {
         port: 3000,
         privateDir: '_ignore/store',
         publicDir: `${distFolder}/${appName}/view`,
-        serviceDir: `${distFolder}/${appName}/sys/services`,
+        servicesDir: `${distFolder}/${appName}/sys/services`,
       },
     },
   ],

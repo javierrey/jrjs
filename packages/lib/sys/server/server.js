@@ -12,7 +12,7 @@
   baseDir: string;
   privateDir: string;
   publicDir: string;
-  serviceDir: string;
+  servicesDir: string;
   protocol: string;
   host: string;
   port: number;
@@ -28,7 +28,7 @@
   baseFolder: string;
   privateFolder: string;
   publicFolder: string;
-  serviceFolder: string;
+  servicesFolder: string;
   isSSL: boolean;
   cert: string | null;
   key: string | null;
@@ -208,7 +208,7 @@ const resolveResource = async (request) => {
   const params = parseQuery(urlParts.query); params.payload = Buffer.from([]);
   const DEFAULT_FILE = 'index', STATIC_EXT = ['.html', '.json'], SERVICE_EXT = ['.js', '.mjs', '.cjs'];
   const publicFolder = serverConfig.publicFolder;
-  const serviceFolder = serverConfig.serviceFolder;
+  const servicesFolder = serverConfig.servicesFolder;
   const filename = urlParts.slug?.replace(/^\//, '') ?? '';
   const routePath = route.join('/');
   let filepath = safePathFromUrl(`/${routePath}/${filename}`, publicFolder) ?? '';
@@ -220,11 +220,11 @@ const resolveResource = async (request) => {
       filesize = filepath ? fileSize(filepath) : NaN;
     }
   }
-  if (serviceFolder) {
+  if (servicesFolder) {
     const servicePaths = [`/${routePath}`, ...(!filename ? [`/${routePath}/${DEFAULT_FILE}`] : [])];
     for (const servicePath of servicePaths) {
       for (let i = 0; (isNaN(filesize) || filesize < 1) && i < SERVICE_EXT.length; i++) {
-        filepath = safePathFromUrl(servicePath + SERVICE_EXT[i], serviceFolder) ?? '';
+        filepath = safePathFromUrl(servicePath + SERVICE_EXT[i], servicesFolder) ?? '';
         filesize = filepath ? fileSize(filepath) : NaN;
         isService = filesize > 0;
       }
@@ -298,7 +298,7 @@ const resolveConfig = (config) => {
   const baseFolder = getDistPath(resolvePath(cwd, config.baseDir || '') || (env.root + env.path));
   const privateFolder = getDistPath(resolvePath(baseFolder, config.privateDir));
   const publicFolder = getDistPath(resolvePath(baseFolder, config.publicDir));
-  const serviceFolder = config.serviceDir ? getDistPath(resolvePath(baseFolder, config.serviceDir)) : '';
+  const servicesFolder = config.servicesDir ? getDistPath(resolvePath(baseFolder, config.servicesDir)) : '';
   const isSSL = config.protocol === 'https';
 
   /** @type {ResolvedServerConfig} */
@@ -306,7 +306,7 @@ const resolveConfig = (config) => {
     baseFolder,
     privateFolder,
     publicFolder,
-    serviceFolder,
+    servicesFolder,
     isSSL,
     cert: isSSL ? fs.readFileSync(privateFolder + config.sslCert, 'utf-8') : null,
     key: isSSL ? fs.readFileSync(privateFolder + config.sslKey, 'utf-8') : null,
