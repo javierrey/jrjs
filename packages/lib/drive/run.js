@@ -5,7 +5,7 @@
 @typedef {import('./cluster.js').ClusterConfig} ClusterConfig;
 */
 
-import { hydrate, log, sysConfig } from './drive.js';
+import { hydrate, log, driveConfig } from './drive.js';
 import { runCluster } from './cluster.js';
 
 /** @type {ClusterConfig} */
@@ -15,7 +15,7 @@ const defaults = {
   apps: [],
 };
 
-const clusterConfig = /** @type {ClusterConfig} */ (hydrate(sysConfig, defaults));
+const clusterConfig = /** @type {ClusterConfig} */ (hydrate(driveConfig, defaults));
 
 runCluster();
 

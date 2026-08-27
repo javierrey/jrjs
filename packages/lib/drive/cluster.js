@@ -21,13 +21,13 @@
 */
 
 import cluster from 'node:cluster';
-import { coreHub, log, sysConfig } from './drive.js';
+import { coreHub, log, driveConfig } from './drive.js';
 
 /* Apps functionality: */
 
-const config = /** @type {ClusterConfig} */ (sysConfig);
+const config = /** @type {ClusterConfig} */ (driveConfig);
 
-/** Get sysConfig app runner. @param {string} name @return {AppLoader} */
+/** Get driveConfig app runner. @param {string} name @return {AppLoader} */
 export const getAppLoader = (name) =>
   config.apps.find((app) => app.name === name) ?? { name, path: '', config: {} };
 

@@ -3,7 +3,7 @@
 
 /**
 @typedef {import('../core/core.js').PlainObject} PlainObject;
-@typedef {typeof globalThis} SysContext;
+@typedef {typeof globalThis} DriveContext;
 */
 
 import fs from 'node:fs';
@@ -20,8 +20,8 @@ export const fsP = fs.promises;
 export * as pathmod from 'node:path';
 export * from '../core/core.js';
 
-/** System primary config. */
-export const sysConfig = /** @type {PlainObject} */ ({});
+/** Drive system primary config. */
+export const driveConfig = /** @type {PlainObject} */ ({});
 
 /** Process Arguments functionality: */
 

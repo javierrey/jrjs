@@ -3,7 +3,7 @@
 
 /**
 @typedef {import('./drive.js').PlainObject} PlainObject;
-@typedef {import('./drive.js').SysContext} SysContext;
+@typedef {import('./drive.js').DriveContext} DriveContext;
 */
 
 import {
