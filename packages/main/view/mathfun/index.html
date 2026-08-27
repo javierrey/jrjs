@@ -353,14 +353,14 @@
 
   const renderButtonClick = (ev) => {
     const on = ev.currentTarget.classList.contains('selected-back');
-    if (ev.ctrlKey) { on && removeField(ev); }
+    if (ev.ctrlKey || ev.metaKey) { on && removeField(ev); }
     else { on ? removePath(ev) : addPath(ev); }
   };
 
   const svgClick = (ev) => {
     if (ev.detail > 2) { return; }
     if (ev.detail > 1) { return; } // dbl // console.log(`!!!!!!!! svgClick click`, ev);
-    const out = ev.ctrlKey, into = ev.shiftKey;
+    const out = ev.ctrlKey || ev.metaKey, into = ev.shiftKey;
     let pointer = getPointer(ev, ev.currentTarget);
     out || into ? zoomOnSvgPointer(pointer, out, into) : updatePointerCross(pointer), updateCaption();
   };
