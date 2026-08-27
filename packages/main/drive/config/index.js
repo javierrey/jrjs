@@ -1,21 +1,20 @@
-// main/drive/config.js
+// main/drive/config/index.js
 // @ts-check
 
 /**
-@typedef {import('../../../../jrjs/packages/lib/drive/drive.js').PlainObject} PlainObject;
-@typedef {import('../../../../jrjs/packages/lib/drive/cluster.js').ClusterConfig} ClusterConfig;
+@typedef {import('../../../../../jrjs/packages/lib/drive/drive.js').PlainObject} PlainObject;
+@typedef {import('../../../../../jrjs/packages/lib/drive/cluster.js').ClusterConfig} ClusterConfig;
 */
 
-
-import { coreHub } from '../../../../jrjs/packages/lib/core/core.js';
-import { sharedConfig } from '../core/shared.js';
+import { coreHub } from '../../../../../jrjs/packages/lib/core/core.js';
+import coreConfig from '../../core/config/index.js';
 
 const distFolder = import.meta.url.includes('/dist/') ? 'dist' : 'packages';
-const appName = sharedConfig.appName || 'main';
+const appName = coreConfig.appName || 'main';
 
 /** @type {PlainObject & ClusterConfig} */
 export default {
-  ...sharedConfig,
+  ...coreConfig,
   distFolder,
   clusterSize: 1, // 0, 1, 2, ... os.cpus().length
   base: '',
