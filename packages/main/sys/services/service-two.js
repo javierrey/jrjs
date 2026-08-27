@@ -8,7 +8,7 @@ const serviceTwo = (params) => {
   const result = `
     <link rel="stylesheet" href="./imported/lib/view/view.css"/>
     <style>body { margin: 1rem; }</style>
-    <h1>serviceTwo</h1>
+    <h1>${params.name}</h1>
     <pre>${jsonStringify(serviceZero(params), null, 2)}</pre>
   `;
   return result;

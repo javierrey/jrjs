@@ -3,10 +3,11 @@
 import { log } from '../shared.js';
 
 const serviceZero = (params) => {
+  params ??= {}; params.name ||= 'serviceZero';
   const result = {
-    name: params.name || 'serviceZero',
+    name: params.name,
     params,
-    value: Math.random(),
+    random: Math.random(),
   }; // log.info(result);
   return result;
 };
