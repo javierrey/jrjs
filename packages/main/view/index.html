@@ -14,18 +14,18 @@
   <!--link rel="stylesheet" href="./imported/lib/view/view-x.css"/-->
   <style>
     /* @import "./imported/lib/view/view.css"; /* hide, use <link> */
+    body { margin: 1rem; }
   </style>
   <script type="module">// _@ts-check 'use strict';
     import {
-      log, when, jsonStringify, getEnvironment,
-      ge, gt, qs, qa, appendHtml,
+      when, jsonStringify, getEnvironment,
+      ge, gt, qs, qa, appendHtml, viewConfig,
     } from './imported/lib/view/view.js';
-    import config from './config/index.js';
+    import './index.js';
     //
     when(() => document.body, () => {
-      log(`config: `, config);
-      appendHtml(document.body, `<div>getEnvironment: ${jsonStringify(getEnvironment())} </div>`);
-      appendHtml(document.body, `<div>config: ${jsonStringify(config)} </div>`);
+      appendHtml(document.body, `<pre>getEnvironment: ${jsonStringify(getEnvironment(), null, 2)}</pre>`);
+      appendHtml(document.body, `<pre>config: ${jsonStringify(viewConfig, null, 2)}</pre>`);
     });
   </script>
 </head><body bgcolor="#808080">

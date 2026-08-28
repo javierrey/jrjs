@@ -86,7 +86,6 @@
     const qs = (sel, el = document) => { try { return el?.querySelector?.(sel); } catch {} };
     const qa = (sel, el = document) => { try { return el?.querySelectorAll?.(sel); } catch {} };
     const appendHtml = (el, html) => el?.insertAdjacentHTML?.('beforeend', html);
-    const prependHtml = (el, html) => el?.insertAdjacentHTML?.('afterbegin', html);
   </script>
   <script>// _@ts-check 'use strict';
     (function ready(...args) {

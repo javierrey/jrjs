@@ -13,13 +13,11 @@
   <link rel="stylesheet" href="./imported/lib/view/view.css"/>
   <script type="module">// _@ts-check 'use strict';
     import {
-      log, when, parseQuery,
-      ge, gt, qs, qa, loadHtml,
+      when, ge, gt, qs, qa, loadHtml, viewConfig,
     } from './imported/lib/view/view.js';
-    import config from './config/index.js';
+    import './index.js';
     when(() => document.body, () => {
-      log(`config: `, config);
-      const content = parseQuery(location.search).content || './content/document.md';
+      const content = viewConfig.content || './content/document.md';
       loadHtml(content); // loadHtml('./mathfun'); // './content/mds/tasks.md' './content/document.html' './content/document.md' '../../../../../www/nn/nnd.htm' '../../../../../simple-3d/index.html'
     });
   </script>

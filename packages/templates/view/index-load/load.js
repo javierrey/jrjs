@@ -167,7 +167,6 @@ const gt = (tag, el = document) => el?.getElementsByTagName?.(tag);
 const qs = (sel, el = document) => { try { return el?.querySelector?.(sel); } catch {} };
 const qa = (sel, el = document) => { try { return el?.querySelectorAll?.(sel); } catch {} };
 const appendHtml = (el, html) => el?.insertAdjacentHTML?.('beforeend', html);
-const prependHtml = (el, html) => el?.insertAdjacentHTML?.('afterbegin', html);
 const loadScript = (src, code = null, type = null) => {
   const script = document.createElement('script');
   script.type = type ?? 'application/javascript';
@@ -193,7 +192,6 @@ const insertHtml = (html, parent = null, position = null, norun = false) => {
     (script) => !scripts.includes(script) && loadScript(script.src, script.textContent, script.type)
   );
 };
-// view-x.js:
 const loadHtml = (url, parent = null, position = null, norun = false) => {
   const cb = (uri, cont, err) => {
     uri = UrlFun.closeDirUrl(uri);
@@ -204,5 +202,8 @@ const loadHtml = (url, parent = null, position = null, norun = false) => {
   };
   callFetch(url, cb, 'text');
 };
+const viewConfig = {
+  content: parseQuery(location.search).content || '',
+};
 // globalize:
-expose({ log, expose, when, parseQuery, loadHtml });
+expose({ log, expose, when, loadHtml, viewConfig });

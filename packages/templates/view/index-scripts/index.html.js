@@ -2,9 +2,10 @@
 // @ts-check
 
 import {
-  log, when,
-  ge, gt, qs, qa, appendHtml, prependHtml,
+  log, when, parseQuery,
+  ge, gt, qs, qa, appendHtml, viewConfig,
 } from './imported/lib/view/view.js';
+import './index.js';
 
 /* * */
 

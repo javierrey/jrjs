@@ -82,7 +82,7 @@
   <script type="module" src="./load.js"></script>
   <script type="module">// _@ts-check 'use strict'; 
     when(() => document.body, () => { // log('ready!');
-      const content = parseQuery(location.search).content || './content/document.md';
+      const content = viewConfig.content || './content/document.md';
       loadHtml(content); // loadHtml('./mathfun'); // './content/mds/tasks.md' './content/document.html' './content/document.md' '../../../../../www/nn/nnd.htm' '../../../../../simple-3d/index.html'
     });
   </script>
