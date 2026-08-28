@@ -12,7 +12,7 @@ import assert from 'node:assert';
 import { spawn } from 'node:child_process';
 
 import {
-  log,
+  log, coreHub,
 } from '../core/core.js';
 
 export * as fs from 'node:fs';
@@ -21,7 +21,7 @@ export * as pathmod from 'node:path';
 export * from '../core/core.js';
 
 /** Drive system primary config. */
-export const driveConfig = /** @type {PlainObject} */ ({});
+export const driveHub = /** @type {PlainObject} */ (coreHub);
 
 /** Process Arguments functionality: */
 

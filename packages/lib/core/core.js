@@ -406,9 +406,9 @@ export const merge = (tgt, ...srcs) => {
 };
 
 /**
-Populates an object with default values from other objects, when they are absent
-or less curated than the source defaults: undefined, null, NaN, '', [] and {}.
-Nested objects are extended recursively with the corresponding default values.
+Populates an object with default values from other objects recursively,
+as long as they are absent or less curated than the source defaults:
+undefined, null, NaN, '', [] and {}.
 */
 export const hydrate = (tgt, ...srcs) => {
   const set = (o, k, v) => v !== undefined && v !== o[k] && (

@@ -6,21 +6,24 @@
 @typedef {import('../../../../jrjs/packages/lib/drive/cluster.js').ClusterConfig} ClusterConfig;
 */
 
-import { log, coreHub, hydrate, jsonParse, jsonStringify,
-  driveConfig,
+import {
+  log, driveHub, hydrate, jsonParse, jsonStringify,
 } from '../../../../jrjs/packages/lib/drive/drive.js';
-import { coreConfig } from '../core/index.js';
+import { coreProps } from '../core/index.js';
 
-const distFolder = import.meta.url.includes('/dist/') ? 'dist' : 'packages';
-const params = jsonParse(process.argv.slice(2).at(-1) || '{}');
-const appName = coreConfig.appName || 'main';
+const _fileurl = import.meta.url;
+const distFolder = _fileurl.includes('/dist/') ? 'dist' : 'packages';
+const appName = _fileurl.split('/').at(-3) ?? '';
+
+const _inputarg = process.argv.slice(2).at(-1) || '{}';
+const params = jsonParse(_inputarg) ?? {};
 
 /** @type {PlainObject & ClusterConfig} */
 const config = {
   distFolder,
+  appName,
   clusterSize: 1, // 0, 1, 2, ... os.cpus().length
   base: '',
-  coreHub,
   apps: [
     {
       name: 'server',
@@ -38,9 +41,9 @@ const config = {
   ],
 };
 
-hydrate(driveConfig, coreConfig, config, params);
+hydrate(driveHub, coreProps, config, params);
 
-log.info(`config: ${jsonStringify(driveConfig, null, 2)}`);
+log.info(`hub: ${jsonStringify(driveHub, null, 2)}`);
 
 import('../../../../jrjs/packages/lib/drive/run.js');
 

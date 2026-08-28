@@ -202,8 +202,8 @@ const loadHtml = (url, parent = null, position = null, norun = false) => {
   };
   callFetch(url, cb, 'text');
 };
-const viewConfig = {
+const viewHub = {
   content: parseQuery(location.search).content || '',
 };
 // globalize:
-expose({ log, expose, when, loadHtml, viewConfig });
+expose({ log, expose, when, loadHtml, viewHub });

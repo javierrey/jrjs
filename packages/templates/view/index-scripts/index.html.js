@@ -3,7 +3,7 @@
 
 import {
   log, when, parseQuery,
-  ge, gt, qs, qa, appendHtml, viewConfig,
+  ge, gt, qs, qa, appendHtml, viewHub,
 } from './imported/lib/view/view.js';
 import './index.js';
 

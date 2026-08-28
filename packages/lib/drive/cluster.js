@@ -21,20 +21,20 @@
 */
 
 import cluster from 'node:cluster';
-import { coreHub, log, driveConfig } from './drive.js';
+import { coreHub, log, driveHub } from './drive.js';
 
 /* Apps functionality: */
 
-const config = /** @type {ClusterConfig} */ (driveConfig);
+const config = /** @type {ClusterConfig} */ (driveHub);
 
-/** Get driveConfig app runner. @param {string} name @return {AppLoader} */
+/** Get driveHub app runner. @param {string} name @return {AppLoader} */
 export const getAppLoader = (name) =>
   config.apps.find((app) => app.name === name) ?? { name, path: '', config: {} };
 
 /** Get app runners for the cluster type. @param {boolean} primary @return {AppLoader[]} */
 const getAppLoaders = (primary = false) => config.apps.filter((app) => primary ? app.primary : !app.primary);
 
-/** Import apps from app runners. @param {AppLoader[]} imports @returns {Promise<void>} */
+/** Import apps from app runners. @param {AppLoader[]} imports @return {Promise<void>} */
 const importApps = async (imports) => {
   try {
     for (const app of imports) {

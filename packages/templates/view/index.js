@@ -6,19 +6,17 @@
 */
 
 import {
-  log, coreHub, hydrate,
-  parseQuery, jsonStringify, viewConfig,
+  log, viewHub, hydrate, parseQuery, jsonStringify,
 } from './imported/lib/view/view.js';
-import { coreConfig } from './imported/_self/core/index.js';
+import { coreProps } from './imported/_self/core/index.js';
 
 const params = parseQuery(location.search);
 
  /** @type {PlainObject} */
 const config = {
   href: location.href,
-  coreHub,
 };
 
-hydrate(viewConfig, coreConfig, config, params);
+hydrate(viewHub, coreProps, config, params);
 
-log.info(`config: ${jsonStringify(viewConfig, null, 2)}`);
+log.info(`hub: ${jsonStringify(viewHub, null, 2)}`);
