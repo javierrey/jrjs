@@ -199,7 +199,7 @@ Resolves the resource file path and request parameters.
 For directory requests, it tries to find a default `index.html` or `index.json` in that directory.
 If found, the file static content is read and placed in the file content property.
 If no static file is found, it tries to find a service file in the configured service directory.
-Directory service requests also try an `index.js`, `.mjs` or `.cjs` file.
+For services, only `/<servicename>/` is accessible publicly.
 */
 const resolveResource = async (request) => {
   const client = resolveClient(request);
@@ -215,23 +215,20 @@ const resolveResource = async (request) => {
   let filesize = filepath ? fileSize(filepath) : NaN, isService = false;
   const directFilepath = filepath;
   if (!filename) {
-    for (let i = 0; (isNaN(filesize) || filesize < 1) && i < STATIC_EXT.length; i++) {
+    for (let i = 0; (isNaN(filesize) || filesize < 0) && i < STATIC_EXT.length; i++) {
       filepath = safePathFromUrl(`/${routePath}/${DEFAULT_FILE}${STATIC_EXT[i]}`, publicFolder) ?? '';
       filesize = filepath ? fileSize(filepath) : NaN;
     }
-  }
-  if (servicesFolder) {
-    const servicePaths = [`/${routePath}`, ...(!filename ? [`/${routePath}/${DEFAULT_FILE}`] : [])];
-    for (const servicePath of servicePaths) {
-      for (let i = 0; (isNaN(filesize) || filesize < 1) && i < SERVICE_EXT.length; i++) {
-        filepath = safePathFromUrl(servicePath + SERVICE_EXT[i], servicesFolder) ?? '';
-        filesize = filepath ? fileSize(filepath) : NaN;
-        isService = filesize > 0;
+    if (servicesFolder && (isNaN(filesize) || filesize < 0)) {
+      let serviceSize = NaN, servicePath = ''; // fileSize() may legitimately be 0 for an empty file, still found
+      for (let i = 0; (isNaN(serviceSize) || serviceSize < 0) && i < SERVICE_EXT.length; i++) {
+        servicePath = safePathFromUrl(`/${routePath}/${DEFAULT_FILE}${SERVICE_EXT[i]}`, servicesFolder) ?? '';
+        serviceSize = servicePath ? fileSize(servicePath) : NaN;
       }
-      if (filesize > 0) { break; }
+      if (!isNaN(serviceSize) && serviceSize >= 0) { filepath = servicePath; filesize = serviceSize; isService = true; }
     }
   }
-  if (isNaN(filesize) || filesize < 1) { filepath = directFilepath; }
+  if (isNaN(filesize) || filesize < 0) { filepath = directFilepath; }
   const resource = { client, filepath, filesize, isService, params, ...urlParts }; setClientRemarks(resource);
   return resource;
 };
