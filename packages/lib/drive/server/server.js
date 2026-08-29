@@ -189,6 +189,9 @@ const safePathFromUrl = (urlPath, viewDir = '') => {
   return target;
 };
 
+/** Size is not from a valid file. @param {number} size @return {boolean} */
+const nonFileSize = (size) => isNaN(size) || size < 0;
+
 /**
 Resolves a request resource path by breaking down the request URL
 and returning a resource object with computed request properties.
@@ -215,21 +218,22 @@ const resolveResource = async (request) => {
   let filesize = filepath ? fileSize(filepath) : NaN, isService = false;
   const directFilepath = filepath;
   if (!filename) {
-    for (let i = 0; (isNaN(filesize) || filesize < 0) && i < STATIC_EXT.length; i++) {
+    for (let i = 0; nonFileSize(filesize) && i < STATIC_EXT.length; i++) {
       filepath = safePathFromUrl(`/${routePath}/${DEFAULT_FILE}${STATIC_EXT[i]}`, publicFolder) ?? '';
       filesize = filepath ? fileSize(filepath) : NaN;
     }
-    if (servicesFolder && (isNaN(filesize) || filesize < 0)) {
-      let serviceSize = NaN, servicePath = ''; // fileSize() may legitimately be 0 for an empty file, still found
-      for (let i = 0; (isNaN(serviceSize) || serviceSize < 0) && i < SERVICE_EXT.length; i++) {
+    if (servicesFolder && nonFileSize(filesize)) {
+      let serviceSize = NaN, servicePath = '';
+      for (let i = 0; nonFileSize(serviceSize) && i < SERVICE_EXT.length; i++) {
         servicePath = safePathFromUrl(`/${routePath}/${DEFAULT_FILE}${SERVICE_EXT[i]}`, servicesFolder) ?? '';
         serviceSize = servicePath ? fileSize(servicePath) : NaN;
       }
-      if (!isNaN(serviceSize) && serviceSize >= 0) { filepath = servicePath; filesize = serviceSize; isService = true; }
+      if (!nonFileSize(serviceSize)) { filepath = servicePath; filesize = serviceSize; isService = true; }
     }
   }
-  if (isNaN(filesize) || filesize < 0) { filepath = directFilepath; }
-  const resource = { client, filepath, filesize, isService, params, ...urlParts }; setClientRemarks(resource);
+  if (nonFileSize(filesize)) { filepath = directFilepath; }
+  const resource = { client, filepath, filesize, isService, params, ...urlParts };
+  setClientRemarks(resource);
   return resource;
 };
 
@@ -246,7 +250,8 @@ const resolveFile = async (resource) => {
   if (resource.isService) {
     try {
       const { default: service } = await import(pathToFileURL(resource.filepath).href);
-      file.content = service(resource.params); file.type = getFileContentType('', file.content); // @ts-expect-error:
+      file.content = await service(resource.params);
+      file.type = getFileContentType('', file.content); // @ts-expect-error:
       file.size = file.content?.byteLength ?? file.content?.length ?? -0; // @ts-expect-error:
       if (file.size > serverConfig.largeThreshold) { throw new Error(`service result too large: ${file.size}B`); }
     } catch (error) { file.error = error; }

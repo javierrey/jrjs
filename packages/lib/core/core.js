@@ -757,17 +757,18 @@ Builds an environment descriptor for both browser and nodejs contexts.
 Typically called once at the begining of a main thread process, worker or frame.
 */
 export const getEnvironment = () => {
-  const env = {}, glob = globalThis;
-  env.isBrowser = !glob.process?.argv; // not nodejs
-  env.isWindow = typeof Window !== 'undefined' && glob.window === glob; // not worker
-  let aux; aux = glob.parent?.frames?.[0]; env.isFrame = !!aux && Object(aux) !== glob; // not top
+  const env = {}, glo = globalThis;
+  env.isBrowser = !glo.process?.argv; // not nodejs
+  env.isWindow = typeof Window !== 'undefined' && glo.window === glo; // not worker
+  let aux; aux = glo.parent?.frames?.[0]; env.isFrame = !!aux && Object(aux) !== glo; // not top
   if (env.isBrowser) {
     aux = location.pathname; env.root = location.origin;
     env.params = location.search.slice(1); env.params = !env.params ? [] : env.params.split('&');
     if (aux.lastIndexOf('.') <= aux.lastIndexOf('/')) { aux += '/'; }
   } else {
-    aux = process.env.PWD ?? ''; env.root = aux.substring(0, aux.indexOf('/'));
-    aux = aux.slice(env.root.length); env.params = glob.process.argv.slice(2);
+    aux = (process.env.PWD || process.cwd() || '').replace(/\\/g, '/');
+    env.root = aux.substring(0, aux.indexOf('/')); aux = aux.slice(env.root.length);
+    env.params = glo.process.argv.slice(2);
   }
   env.slug = aux.substring(aux.lastIndexOf('/')); env.path = aux.slice(0, -env.slug.length);
   env.slug ||= '/'; env.path = env.path.replace(/\/$/, '');

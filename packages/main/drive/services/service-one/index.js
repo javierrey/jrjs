@@ -1,10 +1,15 @@
 // main/drive/services/service-one/index.js
 
+/**
+@typedef {import('../hub.js').PlainObject} PlainObject;
+*/
+
 import { serviceBase } from '../hub.js';
 
-const serviceOne = (params) => {
+/** @param {PlainObject} params @return {Promise<PlainObject>} */
+const serviceOne = async (params) => {
   params ??= {}; params.name ||= 'serviceOne';
-  return serviceBase(params);
+  return await serviceBase(params);
 };
 
 export default serviceOne;
