@@ -12,12 +12,10 @@ export const log = Log({ name: 'services', level: 3 });
 
 /** @param {PlainObject} params @return {Promise<PlainObject>} */
 export const serviceBase = async (params) => {
-  await delay(1);
   params ??= {}; params.name ||= 'serviceBase';
-  const result = {
+  return await delay(1).then(() => ({
     name: params.name,
     params,
-    random: Math.random(),
-  }; // log.info(result);
-  return result;
+    updated: Date.now(),
+  }));
 };

@@ -25,28 +25,35 @@ const generateContext = (ctx, imports = []) => {
   cloneMethod(origBase + `/utils/${ctx}`, destCtx + `/utils/${ctx}`);
   cloneMethod(origCore, destCtx + `/_self/core`);
 
+  /** @type {string[]} */ const errors = [];
   imports.forEach((folder) => {
     let orig = origBase + `/imports/${ctx}/${folder}`;
     fileExists(orig) && cloneMethod(orig, destCtx + `/imports/${ctx}/${folder}`);
     orig = origBase + `/imports/core/${folder}`;
     fileExists(orig) ? cloneMethod(orig, destCtx + `/imports/core/${folder}`)
-      : log.error(`${ctx}-imports not found: ${orig}`);
+      : errors.push(`${ctx}-imports not found: ${orig}`);
   });
-}
+  errors.length && log.error(...errors);
+};
 
 /** @param {string} ctxArg */
-const processContextArg = (ctxArg) => {
-  let imports = getArgumentValue(ctxArg) ?? '';
-  const addCtx = imports && !['false', '0', '!1', 'null'].includes(imports);
-  if (['false', '0', '!1', 'null', 'true', '1', '!0'].includes(imports)) imports = '';
+const processContextArg = (ctxArg, dfault = '') => {
+  let imports = getArgumentValue(ctxArg) ?? dfault;
+  const addCtx = !['', 'null', 'false', '0', '!1'].includes(imports);
+  if (['null', 'false', '0', '!1', 'true', '1', '!0'].includes(imports)) imports = '';
   addCtx && generateContext(ctxArg.replace(/-imports$/, ''), imports.split(',').filter(Boolean));
 };
 
-/** Client `view` dependency links point to the generated `imported` folder. */
-processContextArg('view-imports');
+/**
+Clones `view` dependencies into a generated `imported` subfolder, based on the argument value: default 'true'.
+Public `view` dependencies must point to the `imported` subfolder, so they are available on the client side.
+The value can also be a comma-separated list of additional modules from the `imports/view` context.
+*/
+processContextArg('view-imports', '1');
 
 /**
-This argument should only be set if `drive` dependency links point to the generated `imported` folder.
-Unlike `view`, `drive` modules do not need to be copied into the consumer's source.
+Clones `drive` dependencies into a generated `imported` subfolder, based on the argument value: default 'false'.
+Unlike `view`, the `drive` folder is not public and its dependencies can be referenced directly.
+The value can also be a comma-separated list of additional modules from the `imports/drive` context.
 */
 processContextArg('drive-imports');

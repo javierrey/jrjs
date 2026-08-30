@@ -15,6 +15,7 @@ const params = parseQuery(location.search);
  /** @type {PlainObject} */
 const config = {
   href: location.href,
+  updated: Date.now(),
 };
 
 hydrate(viewHub, coreProps, config, params);

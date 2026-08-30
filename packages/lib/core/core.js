@@ -27,8 +27,7 @@ Short and practical, they can also be copied inside pure independent functions.
 */
 
 export const isNul = (v) => [undefined, null, NaN].includes(v);
-export const isEmp = (v) => { for (const p in v) return false; return true; };
-
+export const isEmp = (v) => { if (v) for (const p in v) return false; return true; };
 export const isObj = (v) => !!v && [Object, undefined].includes(v.constructor);
 export const isArr = (v) => !!v?.[Symbol.iterator] && v.constructor !== String;
 export const isSca = (v) => !v || [Boolean, Number, String, BigInt].includes(v.constructor);

@@ -24,6 +24,7 @@ const config = {
   appName,
   clusterSize: 1, // 0, 1, 2, ... os.cpus().length
   base: '',
+  updated: Date.now(),
   apps: [
     {
       name: 'server',
