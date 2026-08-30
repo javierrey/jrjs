@@ -1,7 +1,7 @@
 // main/drive/services/service-one/index.js
 
 /**
-@typedef {import('../services.js').PlainObject} PlainObject;
+@typedef {import('../hub.js').PlainObject} PlainObject;
 */
 
 import { serviceBase } from '../hub.js';

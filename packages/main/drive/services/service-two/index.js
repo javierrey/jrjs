@@ -1,7 +1,7 @@
 // main/drive/services/service-two/index.js
 
 /**
-@typedef {import('../services.js').PlainObject} PlainObject;
+@typedef {import('../hub.js').PlainObject} PlainObject;
 */
 
 import { log, jsonStringify, serviceBase } from '../hub.js';
