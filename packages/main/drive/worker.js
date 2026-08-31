@@ -1,9 +1,9 @@
 // main/drive/worker.js
 // @ts-check
 
-import { hydrate, driveHub, jsonParse, getLatestDriveHubName } from './hub.js';
+import { hydrate, coreHub, jsonParse, getEnvHubName } from './hub.js';
 
-/** Populate latest driveHub from environment if available. */
-hydrate(driveHub, jsonParse(process.env[getLatestDriveHubName()] ?? ''));
+/** Populate latest coreHub store in environment variable, if available. */
+hydrate(coreHub, jsonParse(process.env[getEnvHubName()] ?? ''));
 
 import('../../../../jrjs/packages/lib/drive/run.js');

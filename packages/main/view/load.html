@@ -13,11 +13,11 @@
   <link rel="stylesheet" href="./imported/lib/view/view.css"/>
   <script type="module">// _@ts-check 'use strict';
     import {
-      when, ge, gt, qs, qa, loadHtml, viewHub,
+      when, ge, gt, qs, qa, loadHtml, coreHub,
     } from './imported/lib/view/view.js';
-    import './index.js';
+    import './hub.js';
     when(() => document.body, () => {
-      const content = viewHub.content || './content/document.md';
+      const content = coreHub.content || './content/document.md';
       loadHtml(content); // loadHtml('./mathfun'); // './content/mds/tasks.md' './content/document.html' './content/document.md' '../../../../../www/nn/nnd.htm' '../../../../../simple-3d/index.html'
     });
   </script>

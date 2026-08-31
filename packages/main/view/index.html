@@ -19,13 +19,14 @@
   <script type="module">// _@ts-check 'use strict';
     import {
       when, jsonStringify, getEnvironment,
-      ge, gt, qs, qa, appendHtml, viewHub,
+      ge, gt, qs, qa, appendHtml, coreHub,
     } from './imported/lib/view/view.js';
-    import './index.js';
+    import './hub.js';
     //
     when(() => document.body, () => {
+      appendHtml(document.body, `<h1>${coreHub.moduleName ?? 'Index'}</h1>`);
       appendHtml(document.body, `<pre>getEnvironment: ${jsonStringify(getEnvironment(), null, 2)}</pre>`);
-      appendHtml(document.body, `<pre>hub: ${jsonStringify(viewHub, null, 2)}</pre>`);
+      appendHtml(document.body, `<pre>hub: ${jsonStringify(coreHub, null, 2)}</pre>`);
     });
   </script>
 </head><body bgcolor="#808080">

@@ -15,8 +15,8 @@ author: javier.rey.eu@gmail.com
 
 /* Types functionality: */
 
-/** Core persistence container available in all contexts. */
-export const coreHub = /** @type {PlainObject} */ ({});
+/** Core persistence container available in all contexts. @type {PlainObject} */
+export const coreHub = {};
 
 /** AsyncFunction constructor (no globalThis.AsyncFunction defined). */
 export const AsyncFunction = (async () => {}).constructor;

@@ -22,24 +22,25 @@
 
 import cluster from 'node:cluster';
 import { fileURLToPath } from 'node:url';
-import { driveHub, jsonStringify, log } from './drive.js';
+import { coreHub, jsonStringify, log } from './drive.js';
 
 /* Apps functionality: */
 
-const config = /** @type {ClusterConfig} */ (driveHub);
+const clusterConfig = /** @type {ClusterConfig} */ (coreHub);
 
-/** Get driveHub app runner. @param {string} name @return {AppLoader} */
+/** Get coreHub app runner. @param {string} name @return {AppLoader} */
 export const getAppLoader = (name) =>
-  config.apps.find((app) => app.name === name) ?? { name, path: '', config: {} };
+  clusterConfig.apps.find((app) => app.name === name) ?? { name, path: '', config: {} };
 
 /** Get app runners for the cluster type. @param {boolean} primary @return {AppLoader[]} */
-const getAppLoaders = (primary = false) => config.apps.filter((app) => primary ? app.primary : !app.primary);
+const getAppLoaders = (primary = false) =>
+  clusterConfig.apps.filter((app) => primary ? app.primary : !app.primary);
 
 /** Import apps from app runners. @param {AppLoader[]} imports @return {Promise<void>} */
 const importApps = async (imports) => {
   try {
     for (const app of imports) {
-      if (app.path) { await import(config.base + app.path); }
+      if (app.path) { await import(clusterConfig.base + app.path); }
     }
   } catch (err) { log.error(`Error in importApps`, err); }
 };
@@ -47,18 +48,19 @@ const importApps = async (imports) => {
 /* Cluster functionality: */
 
 /** @param {number} id @return {void} */
-const updateWorkerId = (id) => { driveHub.workerId = id; };
-updateWorkerId(driveHub.workerId ?? NaN);
+const updateWorkerId = (id) => { coreHub.workerId = id; };
+updateWorkerId(coreHub.workerId ?? NaN);
 
 /** @param {number} id @return {void} */
-const updateLatestWorkerId = (id) => { driveHub.latestWorkerId = id; };
-updateLatestWorkerId(driveHub.latestWorkerId ?? NaN);
+const updateLatestWorkerId = (id) => { coreHub.latestWorkerId = id; };
+updateLatestWorkerId(coreHub.latestWorkerId ?? NaN);
 
 /** @param {number} id @return {number} */
 // const getWorkerPid = (id) => cluster.workers?.[id]?.process?.pid ?? -1;
 
 /** @param {number} pid @return {number} */
-const getWorkerId = (pid) => Object.values(cluster.workers ?? {}).find((worker) => worker?.process.pid === pid)?.id ?? -1;
+const getWorkerId = (pid) =>
+  Object.values(cluster.workers ?? {}).find((worker) => worker?.process.pid === pid)?.id ?? -1;
 
 /** @param {number} pid @return {Worker | undefined} */
 // const getWorker = (pid) => cluster.workers?.[getWorkerId(pid)];
@@ -100,14 +102,18 @@ const onMessage = (wrk = process, msg = '') => {
 
 /** Primary method to be used in the cluster script for `cluster.isPrimary`. */
 const clusterPrimary = () => {
-  const clusterSize = /** @type {number} */ (config.clusterSize);
+  const clusterSize = /** @type {number} */ (clusterConfig.clusterSize);
   updateWorkerId(clusterSize ? 0 : NaN);
   const imports = getAppLoaders(true);
   !clusterSize && imports.push(...getAppLoaders(false));
 
-  log.info(`Primary id ${driveHub.workerId}, pid ${process.pid}, clusterSize ${clusterSize}, [${imports.map(app => app.name)}]`);
+  log.info([
+    `Primary id ${coreHub.workerId}`,
+    `pid ${process.pid}, clusterSize ${clusterSize}`,
+    `[${imports.map(app => app.name)}]`,
+  ].join(', '));
 
-  const fork = () => cluster.fork({ [getLatestDriveHubName()]: jsonStringify(driveHub) });
+  const fork = () => cluster.fork({ [getEnvHubName()]: jsonStringify(coreHub) });
   for (let i = 0; i < clusterSize; i++) { fork(); }
 
   cluster.on('online', (worker) => {
@@ -132,7 +138,7 @@ const clusterPrimary = () => {
 const clusterWorker = () => {
   updateWorkerId(cluster.worker?.id ?? -1);
   const imports = getAppLoaders(false);
-  log.info(`Worker id ${driveHub.workerId}, pid ${process.pid}, [${imports.map(app => app.name)}]`);
+  log.info(`Worker id ${coreHub.workerId}, pid ${process.pid}, [${imports.map(app => app.name)}]`);
 
   importApps(imports);
 };
@@ -145,7 +151,7 @@ export const runCluster = () => cluster.isPrimary ? clusterPrimary() : clusterWo
 /** Configure the worker entry module before the primary forks workers. @param {string | URL} workerUrl */
 export const setupClusterWorker = (workerUrl) => cluster.setupPrimary({ exec: fileURLToPath(workerUrl) });
 
-/** Latest driveHub name from appName to use as an environment constant. */
-export const getLatestDriveHubName = () => (driveHub.appName || '').toUpperCase() + '_LATEST_DRIVE_HUB';
+/** Latest coreHub name from moduleName to use as an environment constant. */
+export const getEnvHubName = () => (coreHub.moduleName || '').toUpperCase() + '_LATEST_HUB';
 
 /* * */

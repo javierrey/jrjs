@@ -3,9 +3,9 @@
 
 import {
   log, when, parseQuery,
-  ge, gt, qs, qa, appendHtml, viewHub,
+  ge, gt, qs, qa, appendHtml, coreHub,
 } from './imported/lib/view/view.js';
-import './index.js';
+import './hub.js';
 
 /* * */
 

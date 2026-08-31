@@ -91,7 +91,7 @@
     const qs = (sel, el = document) => { try { return el?.querySelector?.(sel); } catch {} };
     const qa = (sel, el = document) => { try { return el?.querySelectorAll?.(sel); } catch {} };
     const appendHtml = (el, html) => el?.insertAdjacentHTML?.('beforeend', html);
-    expose({ log, expose, when, ge, gt, qs, qa, appendHtml, prependHtml });
+    expose({ log, expose, when, ge, gt, qs, qa, appendHtml });
   </script>
   <script type="module">// _@ts-check 'use strict'; 
     when(() => document.body, () => { // log('ready!');

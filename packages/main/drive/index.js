@@ -1,11 +1,11 @@
 // main/drive/index.js
 // @ts-check
 
-import { log, driveHub, jsonStringify, setupClusterWorker } from './hub.js';
+import { log, coreHub, jsonStringify, setupClusterWorker } from './hub.js';
 
-log.info(`hub: ${jsonStringify(driveHub, null, 2)}`);
+log.info(`hub: ${jsonStringify(coreHub, null, 2)}`);
 
-driveHub.clusterSize && setupClusterWorker(new URL('./worker.js', import.meta.url));
+coreHub.clusterSize && setupClusterWorker(new URL('./worker.js', import.meta.url));
 
 import('../../../../jrjs/packages/lib/drive/run.js');
 
@@ -13,4 +13,4 @@ import('../../../../jrjs/packages/lib/drive/run.js');
 // http://localhost:3000/mathfun
 // http://localhost:3000/load.html?content=./content/document.md
 // http://localhost:3000/service-one?p1=v%201&p2=v%202
-// http://localhost:3000/break-process
+// http://localhost:3000/exit-process

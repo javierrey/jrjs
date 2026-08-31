@@ -7,13 +7,10 @@
 */
 
 import {
-  log, coreHub, callFetch, mdToHtml, UrlFun,
+  log, callFetch, mdToHtml, UrlFun,
 } from '../core/core.js';
 
 export * from '../core/core.js';
-
-/** View primary config. */
-export const viewHub = /** @type {PlainObject} */ (coreHub);
 
 /** Safe element selector shortcuts. */
 export const ge = (id) => document.getElementById(id);
