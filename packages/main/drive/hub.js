@@ -12,11 +12,11 @@ import {
 import { coreProps } from '../core/index.js';
 
 export * from '../../../../jrjs/packages/lib/drive/drive.js';
-export { setupClusterWorker } from '../../../../jrjs/packages/lib/drive/cluster.js';
+export { getLatestDriveHubName, setupClusterWorker } from '../../../../jrjs/packages/lib/drive/cluster.js';
 
 const _fileurl = import.meta.url;
 const distFolder = _fileurl.includes('/dist/') ? 'dist' : 'packages';
-const appName = _fileurl.split('/').at(-3) ?? '';
+const appName = _fileurl.split('/').at(-3) ?? 'main';
 
 const _inputarg = process.argv.slice(2).at(-1) || '{}';
 const params = jsonParse(_inputarg) ?? {};

@@ -22,7 +22,7 @@
 
 import cluster from 'node:cluster';
 import { fileURLToPath } from 'node:url';
-import { coreHub, log, driveHub } from './drive.js';
+import { driveHub, jsonStringify, log } from './drive.js';
 
 /* Apps functionality: */
 
@@ -47,12 +47,12 @@ const importApps = async (imports) => {
 /* Cluster functionality: */
 
 /** @param {number} id @return {void} */
-const updateWorkerId = (id) => { coreHub.workerId = id; };
-updateWorkerId(coreHub.workerId ?? NaN);
+const updateWorkerId = (id) => { driveHub.workerId = id; };
+updateWorkerId(driveHub.workerId ?? NaN);
 
 /** @param {number} id @return {void} */
-const updateLatestWorkerId = (id) => { coreHub.latestWorkerId = id; };
-updateLatestWorkerId(coreHub.latestWorkerId ?? NaN);
+const updateLatestWorkerId = (id) => { driveHub.latestWorkerId = id; };
+updateLatestWorkerId(driveHub.latestWorkerId ?? NaN);
 
 /** @param {number} id @return {number} */
 // const getWorkerPid = (id) => cluster.workers?.[id]?.process?.pid ?? -1;
@@ -105,9 +105,9 @@ const clusterPrimary = () => {
   const imports = getAppLoaders(true);
   !clusterSize && imports.push(...getAppLoaders(false));
 
-  log.info(`Primary id ${coreHub.workerId}, pid ${process.pid}, clusterSize ${clusterSize}, [${imports.map(app => app.name)}]`);
+  log.info(`Primary id ${driveHub.workerId}, pid ${process.pid}, clusterSize ${clusterSize}, [${imports.map(app => app.name)}]`);
 
-  const fork = () => cluster.fork();
+  const fork = () => cluster.fork({ [getLatestDriveHubName()]: jsonStringify(driveHub) });
   for (let i = 0; i < clusterSize; i++) { fork(); }
 
   cluster.on('online', (worker) => {
@@ -132,7 +132,7 @@ const clusterPrimary = () => {
 const clusterWorker = () => {
   updateWorkerId(cluster.worker?.id ?? -1);
   const imports = getAppLoaders(false);
-  log.info(`Worker id ${coreHub.workerId}, pid ${process.pid}, [${imports.map(app => app.name)}]`);
+  log.info(`Worker id ${driveHub.workerId}, pid ${process.pid}, [${imports.map(app => app.name)}]`);
 
   importApps(imports);
 };
@@ -144,5 +144,8 @@ export const runCluster = () => cluster.isPrimary ? clusterPrimary() : clusterWo
 
 /** Configure the worker entry module before the primary forks workers. @param {string | URL} workerUrl */
 export const setupClusterWorker = (workerUrl) => cluster.setupPrimary({ exec: fileURLToPath(workerUrl) });
+
+/** Latest driveHub name from appName to use as an environment constant. */
+export const getLatestDriveHubName = () => (driveHub.appName || '').toUpperCase() + '_LATEST_DRIVE_HUB';
 
 /* * */
