@@ -6,6 +6,8 @@
 @typedef {import('../../../../jrjs/packages/lib/drive/cluster.js').ClusterConfig} ClusterConfig;
 */
 
+import cluster from 'node:cluster';
+import { fileURLToPath } from 'node:url';
 import {
   log, driveHub, hydrate, jsonParse, jsonStringify,
 } from '../../../../jrjs/packages/lib/drive/drive.js';
@@ -45,6 +47,8 @@ const config = {
 hydrate(driveHub, coreProps, config, params);
 
 log.info(`hub: ${jsonStringify(driveHub, null, 2)}`);
+
+cluster.setupPrimary({ exec: fileURLToPath(new URL('./worker.js', import.meta.url)) });
 
 import('../../../../jrjs/packages/lib/drive/run.js');
 

@@ -21,7 +21,7 @@
 */
 
 import cluster from 'node:cluster';
-import { coreHub, log, driveHub } from './drive.js';
+import { coreHub, jsonStringify, log, driveHub } from './drive.js';
 
 /* Apps functionality: */
 
@@ -106,7 +106,8 @@ const clusterPrimary = () => {
 
   log.info(`Primary id ${coreHub.workerId}, pid ${process.pid}, clusterSize ${clusterSize}, [${imports.map(app => app.name)}]`);
 
-  for (let i = 0; i < clusterSize; i++) { cluster.fork(); }
+  const fork = () => cluster.fork({ DRIVE_HUB_JSON: jsonStringify(driveHub) });
+  for (let i = 0; i < clusterSize; i++) { fork(); }
 
   cluster.on('online', (worker) => {
     updateLatestWorkerId(worker.id); // log.info(`worker online, id ${worker.id}, pid ${worker.process.pid}`);
@@ -116,7 +117,7 @@ const clusterPrimary = () => {
     log.warn(`worker ${worker.id} (${worker.process.pid}, ${signal ?? code}) ${
       worker.exitedAfterDisconnect ? 'disconnected' : 'crashed, restarting...'
     }`);
-    !worker.exitedAfterDisconnect && cluster.fork();
+    !worker.exitedAfterDisconnect && fork();
   });
 
   cluster.on('message', (worker, message, _handle) => {
