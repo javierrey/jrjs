@@ -21,7 +21,8 @@
 */
 
 import cluster from 'node:cluster';
-import { coreHub, jsonStringify, log, driveHub } from './drive.js';
+import { fileURLToPath } from 'node:url';
+import { coreHub, log, driveHub } from './drive.js';
 
 /* Apps functionality: */
 
@@ -106,7 +107,7 @@ const clusterPrimary = () => {
 
   log.info(`Primary id ${coreHub.workerId}, pid ${process.pid}, clusterSize ${clusterSize}, [${imports.map(app => app.name)}]`);
 
-  const fork = () => cluster.fork({ DRIVE_HUB_JSON: jsonStringify(driveHub) });
+  const fork = () => cluster.fork();
   for (let i = 0; i < clusterSize; i++) { fork(); }
 
   cluster.on('online', (worker) => {
@@ -138,3 +139,10 @@ const clusterWorker = () => {
 
 /** Cluster method. */
 export const runCluster = () => cluster.isPrimary ? clusterPrimary() : clusterWorker();
+
+/* utilities: */
+
+/** Configure the worker entry module before the primary forks workers. @param {string | URL} workerUrl */
+export const setupClusterWorker = (workerUrl) => cluster.setupPrimary({ exec: fileURLToPath(workerUrl) });
+
+/* * */
