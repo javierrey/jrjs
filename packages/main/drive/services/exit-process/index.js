@@ -1,4 +1,4 @@
-// main/drive/services/break-process/index.js
+// main/drive/services/exit-process/index.js
 // @ts-check
 
 /**
@@ -9,14 +9,14 @@ import { coreHub, delay, log } from '../hub.js';
 
 /** @param {PlainObject} [params] @return {Promise<PlainObject>} */
 export default async (params = {}) => {
-  params.name ||= 'breakProcess';
+  params.name ||= 'exitProcess';
   delay(1, () => {
-    log.warn(`break-process exiting worker ${coreHub.workerId} (${process.pid})`);
+    log.warn(`exiting process ${process.pid} (worker ${coreHub.workerId})`);
     process.exit(1);
   });
   return {
-    workerId: coreHub.workerId,
     pid: process.pid,
+    workerId: coreHub.workerId,
     params,
     updated: Date.now(),
     status: 'worker exit scheduled',

@@ -115,7 +115,7 @@ const clusterPrimary = () => {
   });
 
   cluster.on('exit', (worker, code, signal) => {
-    log.warn(`worker ${worker.id} (${worker.process.pid}, ${signal ?? code}) ${
+    log.warn(`worker ${worker.id} (process ${worker.process.pid}, code ${signal ?? code}) ${
       worker.exitedAfterDisconnect ? 'disconnected' : 'crashed, restarting...'
     }`);
     !worker.exitedAfterDisconnect && fork();
