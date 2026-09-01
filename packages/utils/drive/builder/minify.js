@@ -1,18 +1,19 @@
-// _@ts-check // minify.js, javier.rey.eu@gmail.com, 2022
-// dependencies: 'imports/drive/dev_modules/min_modules/*', 'lib/drive/drive-x.js'
+// minify.js, javier.rey.eu@gmail.com, 2022
+// dependencies: 'imports/drive/dev_modules/min_modules/*', 'lib/drive/drive.js'
+// _@ts-check
 
 /**
 Minify and copy files from a source directory to a destination directory, preserving the directory structure.
-const buildMethod = getArgumentValue('method') !== 'copy' ? buildMinify : copyDir; // symlink, copy
+const buildMethod = getArgumentValue('method') === 'copy' ? copyDir : minifyBuild; // symlink, copy
 Compressible file types: .html .htm .css .js .mjs .cjs .xml .xhtml .svg .dae .json .json5
 Filenames containing .raw. or .min. are not modified, filenames containing .src., .test. or .spec. are skipped.
 All other files are copied unmodified.
 
 CLI stdout test examples for each file type, HTML, JS, CSS, XML, except JSON (internal):
-`node ./packages/imports/drive/dev_modules/min_modules/html-minifier-terser/cli.js --collapse-whitespace --remove-comments --minify-js true --minify-css true  "./lib/jrjs/mintest/index.html"`
-`node ./packages/imports/drive/dev_modules/min_modules/terser/bin/terser "./lib/jrjs/mintest/core.js"`
-`node ./packages/imports/drive/dev_modules/min_modules/clean-css/cli.js "./lib/jrjs/mintest/aa-lib.css" "{}"`
-`node ./packages/imports/drive/dev_modules/min_modules/minify_xml_modules/minify-xml/cli.js "./lib/jrjs/mintest/main-logo.svg"`
+`node ./packages/imports/drive/dev_modules/min_modules/html-minifier-terser/cli.js --collapse-whitespace --remove-comments --minify-js true --minify-css true  "./packages/main/view/mintest/index.html"`
+`node ./packages/imports/drive/dev_modules/min_modules/terser/bin/terser "./packages/main/view/mintest/core.js"`
+`node ./packages/imports/drive/dev_modules/min_modules/clean-css/cli.js "./packages/main/view/mintest/aa-lib.css" "{}"`
+`node ./packages/imports/drive/dev_modules/min_modules/minify_xml_modules/minify-xml/cli.js "./packages/main/view/mintest/main-logo.svg"`
 */
 // '../../../', 'jrjs'
 import { minify as minify_js } from '../../../imports/drive/dev_modules/min_modules/terser/dist/bundle.min.js';
@@ -105,7 +106,7 @@ const getSkipMinify = (file, scope = minifyConfig.minifyScope) => {
 
 export const configMinify = (config) => merge(minifyConfig, getConfig(config));
 
-export const buildMinify = (orig, dest, config) => minifyDir(orig, dest, getConfig(config));
+export const minifyBuild = (orig, dest, config) => minifyDir(orig, dest, getConfig(config));
 
 const minifyDir = async (orig, dest, options) => {
   log.info(`minifyDir: "${orig}" > "${dest}"`, options);

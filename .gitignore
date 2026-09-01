@@ -35,7 +35,6 @@ ehthumbs.db
 !.storybook/
 
 /packages/**/imported/
-!/packages/imports/**
 /packages/imports/drive/dev_modules/electron_modules/**
 
 # !_exclude
