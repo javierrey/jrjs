@@ -12,17 +12,21 @@ import {
 
 export * from '../core/core.js';
 
-/** Safe element selector shortcuts. */
+/**
+Quick HTML selection and manipulation methods.
+They can also be copied inside pure independent functions.
+*/
+
 export const ge = (id) => document.getElementById(id);
 export const gt = (tag, el = document) => el?.getElementsByTagName?.(tag);
 export const qs = (sel, el = document) => { try { return el?.querySelector?.(sel); } catch {} };
 export const qa = (sel, el = document) => { try { return el?.querySelectorAll?.(sel); } catch {} };
 
-/** Append HTML to a DOM element. */
-export const appendHtml = (el, html) => el?.insertAdjacentHTML?.('beforeend', html);
-
-/** Prepend HTML to a DOM element. */
-export const prependHtml = (el, html) => el?.insertAdjacentHTML?.('afterbegin', html);
+export const appendHtml = (parent, html) => parent?.insertAdjacentHTML?.('beforeend', html);
+export const prependHtml = (parent, html) => parent?.insertAdjacentHTML?.('afterbegin', html);
+export const replaceHtml = (parent, html) => { if (parent) parent.innerHTML = html; };
+export const insertHtmlBefore = (elem, html) => elem?.insertAdjacentHTML?.('beforebegin', html);
+export const insertHtmlAfter = (elem, html) => elem?.insertAdjacentHTML?.('afterend', html);
 
 /**
 Loads CSS code from a URL `href`, or from a given text, if `code` is not null.
@@ -53,25 +57,24 @@ export const loadScript = (src, code = null, type = null) => {
 };
 
 /**
-Inserts content into an HTML parent element.
-Using `position` empty `''` replaces the parent's content. Default is `beforeend`.
+Inserts content into an HTML element, document.body by default.
+Position is 'beforeend', 'afterbegin', 'beforebegin', 'afterend', or '' (default) to replace content.
 New scripts in the content are also loaded and run, unless `norun` is true.
 */
-export const insertHtml = (html, parent = null, position = null, norun = false) => {
-  html = ((doc) => {
-    const ind = doc.search(/<\/head>/i); if (ind < 1) return doc;
-    const div = document.createElement('div');
-    div.insertAdjacentHTML('beforeend', doc.slice(0, ind));
+export const insertHtml = (html, elem = document.body, position = '', norun = false) => {
+  html = ((text) => {
+    const ind = text.search(/<\/head>/i); if (ind < 0) return text;
+    const div = document.createElement('div'), tag = '</head>';
+    div.insertAdjacentHTML('beforeend', text.slice(0, ind));
     div.replaceChildren(...div.querySelectorAll('script, style, link'));
-    div.insertAdjacentHTML('beforeend', doc.slice(ind));
+    div.insertAdjacentHTML('beforeend', text.slice(ind + tag.length));
     return div.innerHTML;
   })(html ?? '');
-  parent = (typeof parent === 'string' ? qs(parent) : parent) ?? document.body;
-  position = position === 'all' ? '' : position ?? 'beforeend';
+  if (!['beforeend', 'afterbegin', 'beforebegin', 'afterend'].includes(position)) position = '';
   const getScripts = norun ? (_) => [] : (el) => [...el.getElementsByTagName('script')];
-  const scripts = getScripts(parent);
-  position ? parent.insertAdjacentHTML(position, html) : (parent.innerHTML = html);
-  getScripts(parent).forEach(
+  const scripts = getScripts(elem);
+  position ? elem.insertAdjacentHTML(position, html) : (elem.innerHTML = html);
+  getScripts(elem).forEach(
     (script) => !scripts.includes(script) && loadScript(script.src, script.textContent, script.type)
   );
 };
@@ -80,13 +83,13 @@ export const insertHtml = (html, parent = null, position = null, norun = false) 
 Loads content from a `url` and inserts it into an HTML parent element.
 New scripts in the content are also loaded and run, unless `norun` is true.
 */
-export const loadHtml = (url, parent = null, position = null, norun = false) => {
+export const loadHtml = (url, elem, position, norun) => {
   const cb = (uri, cont, err) => {
     uri = UrlFun.closeDirUrl(uri);
     cont ??= '', cont = `\n<!--loadHtml "${uri}" "${cont.length}B" "${err ?? ''}"-->\n`
-      + UrlFun.rebaseHtml(/\.md([?#]|$)/i.test(uri) ? mdToHtml(cont) : cont, uri)
+      + UrlFun.rebaseHtml(/[^?#]+\.md([?#]|$)/i.test(uri) ? mdToHtml(cont) : cont, uri)
       + `\n<!--/loadHtml-->\n`;
-    insertHtml(cont, parent, position, norun);
+    insertHtml(cont, elem, position, norun);
   };
   callFetch(url, cb, 'text');
 };

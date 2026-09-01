@@ -13,12 +13,13 @@
   <link rel="stylesheet" href="./imported/lib/view/view.css"/>
   <script type="module">// _@ts-check 'use strict';
     import {
-      when, ge, gt, qs, qa, loadHtml, coreHub,
+      contextHub, when, ge, gt, qs, qa, loadHtml, insertHtml,
     } from './imported/lib/view/view.js';
     import './hub.js';
     when(() => document.body, () => {
-      const content = coreHub.content || './content/document.md';
-      loadHtml(content); // loadHtml('./mathfun'); // './content/mds/tasks.md' './content/document.html' './content/document.md' '../../../../../www/nn/nnd.htm' '../../../../../simple-3d/index.html'
+      contextHub.content
+        ? loadHtml(contextHub.content)
+        : insertHtml(`<style>body { margin: 16px; }</style><p>Use: "${location.pathname}?content=..." in URL</p>`);
     });
   </script>
 </head><body bgcolor="#808080">

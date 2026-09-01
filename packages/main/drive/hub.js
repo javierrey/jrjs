@@ -12,7 +12,7 @@
 */
 
 import {
-  coreHub, hydrate, jsonParse,
+  contextHub, hydrate, jsonParse,
 } from '../../../../jrjs/packages/lib/drive/drive.js';
 import { coreProps } from '../core/index.js';
 
@@ -50,4 +50,4 @@ const driveConfig = {
   ],
 };
 
-hydrate(coreHub, coreProps, driveConfig, params);
+hydrate(contextHub, coreProps, driveConfig, params);

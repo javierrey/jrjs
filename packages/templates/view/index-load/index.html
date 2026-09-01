@@ -81,9 +81,10 @@
   </style>
   <script type="module" src="./load.js"></script>
   <script type="module">// _@ts-check 'use strict'; 
-    when(() => document.body, () => { // log('ready!');
-      const content = coreHub.content || './content/document.md';
-      loadHtml(content); // loadHtml('./mathfun'); // './content/mds/tasks.md' './content/document.html' './content/document.md' '../../../../../www/nn/nnd.htm' '../../../../../simple-3d/index.html'
+    when(() => document.body, () => {
+      contextHub.content
+        ? loadHtml(contextHub.content)
+        : insertHtml(`<style>body { margin: 16px; }</style><p>Use: "${location.pathname}?content=..." in URL</p>`);
     });
   </script>
 </head><body bgcolor="#808080">

@@ -12,7 +12,7 @@ export default async (params = {}) => {
   params.name ||= 'serviceTwo';
   return `
     <link rel="stylesheet" href="/imported/lib/view/view.css"/>
-    <style>body { margin: 1rem; }</style>
+    <style>body { margin: 16px; }</style>
     <h1>${params.name}</h1>
     <pre>${jsonStringify(await serviceBase(params), null, 2)}</pre>
   `;

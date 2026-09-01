@@ -14,19 +14,18 @@
   <!--link rel="stylesheet" href="./imported/lib/view/view-x.css"/-->
   <style>
     /* @import "./imported/lib/view/view.css"; /* hide, use <link> */
-    body { margin: 1rem; }
+    body { margin: 16px; }
   </style>
   <script type="module">// _@ts-check 'use strict';
     import {
-      when, jsonStringify, getEnvironment,
-      ge, gt, qs, qa, appendHtml, coreHub,
+      contextHub, when, jsonStringify, getEnvironment,
+      ge, gt, qs, qa, appendHtml,
     } from './imported/lib/view/view.js';
     import './hub.js';
-    //
     when(() => document.body, () => {
-      appendHtml(document.body, `<h1>${coreHub.moduleName ?? 'Index'}</h1>`);
+      appendHtml(document.body, `<h1>${contextHub.moduleName ?? 'Index'}</h1>`);
       appendHtml(document.body, `<pre>getEnvironment: ${jsonStringify(getEnvironment(), null, 2)}</pre>`);
-      appendHtml(document.body, `<pre>hub: ${jsonStringify(coreHub, null, 2)}</pre>`);
+      appendHtml(document.body, `<pre>hub: ${jsonStringify(contextHub, null, 2)}</pre>`);
     });
   </script>
 </head><body bgcolor="#808080">

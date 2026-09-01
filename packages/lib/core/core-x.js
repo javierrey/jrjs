@@ -236,7 +236,7 @@ export const assignReadonly = (t, s) => Object.entries(s).forEach(([k, v]) =>
 /* Content string functionality: */
 
 /** Appends content to an HTML string container and returns the result string. */
-export const appendHTML = (content, parent, tag) => {
+export const appendHTMLContent = (parent, content, tag) => {
   let end = -1;
   if (tag) {
     end = parent.lastIndexOf('<!--/' + tag + '-->');

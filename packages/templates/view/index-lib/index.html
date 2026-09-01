@@ -17,8 +17,9 @@
   </style>
   <script type="module">// _@ts-check 'use strict';
     import {
-      log, when,
-      ge, gt, qs, qa, appendHtml, coreHub,
+      contextHub, log, when,
+      ge, gt, qs, qa,
+      appendHtml, prependHtml, replaceHtml, insertHtmlBefore, insertHtmlAfter,
     } from './imported/lib/view/view.js';
     when(() => document.body, () => { // log('ready!');
     });

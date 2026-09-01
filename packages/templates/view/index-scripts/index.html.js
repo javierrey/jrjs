@@ -2,8 +2,8 @@
 // @ts-check
 
 import {
-  log, when, parseQuery,
-  ge, gt, qs, qa, appendHtml, coreHub,
+  contextHub, log, when, parseQuery,
+  ge, gt, qs, qa, appendHtml,
 } from './imported/lib/view/view.js';
 import './hub.js';
 

@@ -11,7 +11,7 @@
 */
 
 import {
-  log, coreHub, hydrate, parseQuery, jsonStringify,
+  contextHub, log, hydrate, parseQuery, jsonStringify,
 } from './imported/lib/view/view.js';
 import { coreProps } from './imported/_self/core/index.js';
 
@@ -24,6 +24,6 @@ const viewConfig = {
   updated: Date.now(),
 };
 
-hydrate(coreHub, coreProps, viewConfig, params);
+hydrate(contextHub, coreProps, viewConfig, params);
 
-log.info(`hub: ${jsonStringify(coreHub, null, 2)}`);
+log.info(`hub: ${jsonStringify(contextHub, null, 2)}`);

@@ -5,7 +5,7 @@
 @typedef {import('./cluster.js').ClusterConfig} ClusterConfig;
 */
 
-import { hydrate, log, coreHub } from './drive.js';
+import { hydrate, log, contextHub } from './drive.js';
 import { runCluster } from './cluster.js';
 
 /** @type {ClusterConfig} */
@@ -15,7 +15,7 @@ const defaults = {
   apps: [],
 };
 
-const clusterConfig = /** @type {ClusterConfig} */ (hydrate(coreHub, defaults));
+const clusterConfig = /** @type {ClusterConfig} */ (hydrate(contextHub, defaults));
 
 runCluster();
 

@@ -22,13 +22,13 @@
 
 import cluster from 'node:cluster';
 import { fileURLToPath } from 'node:url';
-import { coreHub, jsonStringify, log } from './drive.js';
+import { contextHub, jsonStringify, log } from './drive.js';
 
 /* Apps functionality: */
 
-const clusterConfig = /** @type {ClusterConfig} */ (coreHub);
+const clusterConfig = /** @type {ClusterConfig} */ (contextHub);
 
-/** Get coreHub app runner. @param {string} name @return {AppLoader} */
+/** Get contextHub app runner. @param {string} name @return {AppLoader} */
 export const getAppLoader = (name) =>
   clusterConfig.apps.find((app) => app.name === name) ?? { name, path: '', config: {} };
 
@@ -48,12 +48,12 @@ const importApps = async (imports) => {
 /* Cluster functionality: */
 
 /** @param {number} id @return {void} */
-const updateWorkerId = (id) => { coreHub.workerId = id; };
-updateWorkerId(coreHub.workerId ?? NaN);
+const updateWorkerId = (id) => { contextHub.workerId = id; };
+updateWorkerId(contextHub.workerId ?? NaN);
 
 /** @param {number} id @return {void} */
-const updateLatestWorkerId = (id) => { coreHub.latestWorkerId = id; };
-updateLatestWorkerId(coreHub.latestWorkerId ?? NaN);
+const updateLatestWorkerId = (id) => { contextHub.latestWorkerId = id; };
+updateLatestWorkerId(contextHub.latestWorkerId ?? NaN);
 
 /** @param {number} id @return {number} */
 // const getWorkerPid = (id) => cluster.workers?.[id]?.process?.pid ?? -1;
@@ -108,12 +108,12 @@ const clusterPrimary = () => {
   !clusterSize && imports.push(...getAppLoaders(false));
 
   log.info([
-    `Primary id ${coreHub.workerId}`,
+    `Primary id ${contextHub.workerId}`,
     `pid ${process.pid}, clusterSize ${clusterSize}`,
     `[${imports.map(app => app.name)}]`,
   ].join(', '));
 
-  const fork = () => cluster.fork({ [getEnvHubName()]: jsonStringify(coreHub) });
+  const fork = () => cluster.fork({ [getEnvHubName()]: jsonStringify(contextHub) });
   for (let i = 0; i < clusterSize; i++) { fork(); }
 
   cluster.on('online', (worker) => {
@@ -138,7 +138,7 @@ const clusterPrimary = () => {
 const clusterWorker = () => {
   updateWorkerId(cluster.worker?.id ?? -1);
   const imports = getAppLoaders(false);
-  log.info(`Worker id ${coreHub.workerId}, pid ${process.pid}, [${imports.map(app => app.name)}]`);
+  log.info(`Worker id ${contextHub.workerId}, pid ${process.pid}, [${imports.map(app => app.name)}]`);
 
   importApps(imports);
 };
@@ -151,7 +151,7 @@ export const runCluster = () => cluster.isPrimary ? clusterPrimary() : clusterWo
 /** Configure the worker entry module before the primary forks workers. @param {string | URL} workerUrl */
 export const setupClusterWorker = (workerUrl) => cluster.setupPrimary({ exec: fileURLToPath(workerUrl) });
 
-/** Latest coreHub name from moduleName to use as an environment constant. */
-export const getEnvHubName = () => (coreHub.moduleName || '').toUpperCase() + '_LATEST_HUB';
+/** Latest contextHub name from moduleName to use as an environment constant. */
+export const getEnvHubName = () => (contextHub.moduleName || '').toUpperCase() + '_LATEST_HUB';
 
 /* * */

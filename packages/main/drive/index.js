@@ -1,11 +1,11 @@
 // main/drive/index.js
 // @ts-check
 
-import { log, coreHub, jsonStringify, setupClusterWorker } from './hub.js';
+import { contextHub, log, jsonStringify, setupClusterWorker } from './hub.js';
 
-log.info(`hub: ${jsonStringify(coreHub, null, 2)}`);
+log.info(`hub: ${jsonStringify(contextHub, null, 2)}`);
 
-coreHub.clusterSize && setupClusterWorker(new URL('./worker.js', import.meta.url));
+contextHub.clusterSize && setupClusterWorker(new URL('./worker.js', import.meta.url));
 
 import('../../../../jrjs/packages/lib/drive/run.js');
 
