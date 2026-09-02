@@ -1,3 +1,0 @@
-# Package templates
-
-Package templates.
