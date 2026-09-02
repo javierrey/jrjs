@@ -49,14 +49,17 @@ getProperty(data, 'count');                         // 0
 getProperty(data, 'missing');                       // undefined
 getProperty(data, 'user', 'profile', 'name');       // 'Ana'
 getProperty(data, 'user', 'profile', 'age');        // undefined
-getProperty(data, 'user', 'settings', 'name');      // undefined
+getProperty(data, 'user', 'missing', 'name');       // undefined
 getProperty(data, 'user', 'profile', 'tags', 1);    // 'y'
+getProperty(data, 'user', 'profile', 'tags', 1);    // 'y'
+getProperty(data, 'user', 'profile', 'tags', 2);    // undefined
 
 hasProperty(data);                                  // true
 if (hasProperty(data, 'count')) data.count = 1;     // true // narrowed to { count: unknown }
 hasProperty(data, 'user', 'profile', 'age');        // false
-hasProperty(data, 'user', 'settings', 'name');      // false
 hasProperty(data, 'user', 'profile', 'tags', 1);    // true
+hasProperty(data, 'user', 'profile', 'tags', 2);    // false
+hasProperty(data, 'user', 'missing', 'name');       // false
 if (hasProperty(data, 'user', 'profile', 'name')) { // true
   data.user.profile.name = 'Jo';                    // narrowed to { user: { profile: { name: unknown } } }
 }
