@@ -42,7 +42,7 @@ const driveHub = {
       state: {},
       config: {
         port: 3000,
-        privateDir: '_ignore/store',
+        privateDir: '_exclude/_ignore/store',
         publicDir: `${distFolder}/${moduleName}/view`,
         servicesDir: `${distFolder}/${moduleName}/drive/services`,
       },
