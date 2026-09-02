@@ -7,23 +7,21 @@
   moduleName: string,
   href: string,
   updated: number,
-}} ViewConfig;
+}} ViewHub;
 */
 
 import {
-  contextHub, log, hydrate, parseQuery, jsonStringify,
+  contextHub, hydrate, parseQuery,
 } from './imported/lib/view/view.js';
-import { coreProps } from './imported/_self/core/index.js';
+import { coreHub } from './imported/_self/core/hub.js';
 
-const params = parseQuery(location.search);
+const viewParams = parseQuery(location.search);
 
-/** @type {PlainObject & ViewConfig} */
-const viewConfig = {
+/** @type {PlainObject & ViewHub} */
+const viewHub = {
   moduleName: 'main',
   href: location.href,
   updated: Date.now(),
 };
 
-hydrate(contextHub, coreProps, viewConfig, params);
-
-log.info(`hub: ${jsonStringify(contextHub, null, 2)}`);
+hydrate(contextHub, coreHub, viewHub, viewParams);

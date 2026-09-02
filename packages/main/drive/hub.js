@@ -8,13 +8,13 @@
   moduleName: string,
   distFolder: string,
   updated: number,
-}} DriveConfig;
+}} DriveHub;
 */
 
 import {
   contextHub, hydrate, jsonParse,
 } from '../../../../jrjs/packages/lib/drive/drive.js';
-import { coreProps } from '../core/index.js';
+import { coreHub } from '../core/hub.js';
 
 export * from '../../../../jrjs/packages/lib/drive/drive.js';
 export { getEnvHubName, setupClusterWorker } from '../../../../jrjs/packages/lib/drive/cluster.js';
@@ -24,10 +24,10 @@ const distFolder = _fileurl.includes('/dist/') ? 'dist' : 'packages';
 const moduleName = _fileurl.split('/').at(-3) ?? 'main';
 
 const _inputarg = process.argv.slice(2).at(-1) || '{}';
-const params = jsonParse(_inputarg) ?? {};
+const driveParams = jsonParse(_inputarg) ?? {};
 
-/** @type {PlainObject & DriveConfig & ClusterConfig} */
-const driveConfig = {
+/** @type {PlainObject & DriveHub & ClusterConfig} */
+const driveHub = {
   moduleName,
   distFolder,
   updated: Date.now(),
@@ -50,4 +50,4 @@ const driveConfig = {
   ],
 };
 
-hydrate(contextHub, coreProps, driveConfig, params);
+hydrate(contextHub, coreHub, driveHub, driveParams);

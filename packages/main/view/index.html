@@ -18,10 +18,11 @@
   </style>
   <script type="module">// _@ts-check 'use strict';
     import {
-      contextHub, when, jsonStringify, getEnvironment,
+      contextHub, log, when, jsonStringify, getEnvironment,
       ge, gt, qs, qa, appendHtml,
     } from './imported/lib/view/view.js';
     import './hub.js';
+    log.info(`hub: ${jsonStringify(contextHub, null, 2)}`);
     when(() => document.body, () => {
       appendHtml(document.body, `<h1>${contextHub.moduleName ?? 'Index'}</h1>`);
       appendHtml(document.body, `<pre>getEnvironment: ${jsonStringify(getEnvironment(), null, 2)}</pre>`);

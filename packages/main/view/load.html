@@ -13,9 +13,11 @@
   <link rel="stylesheet" href="./imported/lib/view/view.css"/>
   <script type="module">// _@ts-check 'use strict';
     import {
-      contextHub, when, ge, gt, qs, qa, loadHtml, insertHtml,
+      contextHub, log, when, jsonStringify,
+      ge, gt, qs, qa, loadHtml, insertHtml,
     } from './imported/lib/view/view.js';
     import './hub.js';
+    log.info(`hub: ${jsonStringify(contextHub, null, 2)}`);
     when(() => document.body, () => {
       contextHub.content
         ? loadHtml(contextHub.content)
