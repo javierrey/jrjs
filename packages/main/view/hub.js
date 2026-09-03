@@ -16,10 +16,11 @@ import {
 import { coreHub } from './imported/_self/core/hub.js';
 
 const viewParams = parseQuery(location.search);
+const moduleName = 'main'; // @define (not in filepath).
 
 /** @type {PlainObject & ViewHub} */
 const viewHub = {
-  moduleName: 'main',
+  moduleName,
   href: location.href,
   updated: Date.now(),
 };

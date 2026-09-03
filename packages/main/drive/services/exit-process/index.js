@@ -19,6 +19,6 @@ export default async (params = {}) => {
     workerId: contextHub.workerId,
     params,
     updated: Date.now(),
-    status: 'worker exit scheduled',
+    status: 'process exit scheduled',
   };
 };

@@ -20,8 +20,8 @@ export * from '../../../../jrjs/packages/lib/drive/drive.js';
 export { getEnvHubName, setupClusterWorker } from '../../../../jrjs/packages/lib/drive/cluster.js';
 
 const _fileurl = import.meta.url;
+const moduleName = _fileurl.split('/').at(-3) ?? '';
 const distFolder = _fileurl.includes('/dist/') ? 'dist' : 'packages';
-const moduleName = _fileurl.split('/').at(-3) ?? 'main';
 
 const _inputarg = process.argv.slice(2).at(-1) || '{}';
 const driveParams = jsonParse(_inputarg) ?? {};

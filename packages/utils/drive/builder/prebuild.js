@@ -2,9 +2,7 @@
 // @ts-check
 
 import {
-  log,
-  getArgumentValue, fileExists,
-  removeDir, copyDir, symlinkDir
+  log, getArgumentValue, fileExists, removeDir, copyDir, symlinkDir,
 } from '../../../lib/drive/drive.js';
 
 const cloneMethod = getArgumentValue('method') === 'copy' ? copyDir : symlinkDir; // symlink, copy
