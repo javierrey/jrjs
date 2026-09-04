@@ -19,11 +19,11 @@
     "stop:main": "echo @todo stop main",
     "start:main": "npm run stop:main && npm run sync-source:main && npm run node:args packages/main/drive/index.js \"{}\"",
     "format:lib": "npx eslint packages/lib",
+    "test:lib": "npm -w packages/lib run test",
     "format:utils": "npx eslint packages/utils",
+    "test:utils": "npm -w packages/utils run test",
     "format": "npm run format:lib && npm run format:utils && npm run format:main",
     "sync-source": "npm run sync-source:main",
-    "test:lib": "npm -w packages/lib run test",
-    "test:utils": "npm -w packages/utils run test",
     "test": "npm run test:lib && npm run test:utils && npm run test:main",
     "stop": "npm run stop:main",
     "start": "npm run start:main"
