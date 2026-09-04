@@ -9,6 +9,7 @@ import { Log, delay } from '../../../../../jrjs/packages/lib/drive/drive.js';
 // import { coreHub } from '../../core/hub.js';
 
 export * from '../../../../../jrjs/packages/lib/drive/drive.js';
+export { stopPrimaryProcess, stopWorkerProcess } from '../../../../../jrjs/packages/lib/drive/cluster.js';
 
 export const log = Log({ name: 'services', level: 3 });
 

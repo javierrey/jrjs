@@ -154,4 +154,15 @@ export const setupClusterWorker = (workerUrl) => cluster.setupPrimary({ exec: fi
 /** Latest contextHub name from moduleName to use as an environment constant. */
 export const getEnvHubName = () => (contextHub.moduleName || '').toUpperCase() + '_LATEST_HUB';
 
+export const stopWorkerProcess = () => {
+  log.warn(`stopWorkerProcess ${process.pid} (worker ${contextHub.workerId})`);
+  process.exit(1);
+};
+
+export const stopPrimaryProcess = () => {
+  const pid = contextHub.workerId ? process.ppid : process.pid;
+  log.warn(`stopPrimaryProcess ${pid} (from worker ${contextHub.workerId}, pid ${process.pid})`);
+  process.kill(pid, 'SIGINT');
+};
+
 /* * */
