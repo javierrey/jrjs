@@ -5,20 +5,23 @@
 @typedef {import('../hub.js').PlainObject} PlainObject;
 */
 
-import { contextHub, log, delay, stopRuntime } from '../hub.js';
+import { contextHub, delay, log } from '../hub.js';
+
+const exitPrimaryProcess = () => {
+  const pid = contextHub.workerId ? process.ppid : process.pid;
+  log.warn(`exitPrimaryProcess ${pid} (from worker ${contextHub.workerId}, pid ${process.pid})`);
+  process.kill(pid, 'SIGINT');
+};
 
 /** @param {PlainObject} [params] @return {Promise<PlainObject>} */
 export default async (params = {}) => {
   params.name ||= 'exitProcess';
-  delay(1, () => {
-    log.warn(`stopping runtime from process ${process.pid} (worker ${contextHub.workerId})`);
-    stopRuntime();
-  });
+  delay(1, exitPrimaryProcess);
   return {
     pid: process.pid,
     workerId: contextHub.workerId,
     params,
     updated: Date.now(),
-    status: 'runtime stop scheduled',
+    status: 'primary process exit scheduled',
   };
 };

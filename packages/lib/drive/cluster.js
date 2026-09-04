@@ -24,8 +24,6 @@ import cluster from 'node:cluster';
 import { fileURLToPath } from 'node:url';
 import { contextHub, jsonStringify, log } from './drive.js';
 
-const runtimeStopMessage = 'jrjs:runtime:stop';
-
 /* Apps functionality: */
 
 const clusterConfig = /** @type {ClusterConfig} */ (contextHub);
@@ -108,33 +106,6 @@ const clusterPrimary = () => {
   updateWorkerId(clusterSize ? 0 : NaN);
   const imports = getAppLoaders(true);
   !clusterSize && imports.push(...getAppLoaders(false));
-  let stopping = false;
-
-  /** @param {NodeJS.Signals} signal */
-  const stopWorkers = (signal) => {
-    if (stopping) { return; }
-    stopping = true;
-    const workers = Object.values(cluster.workers ?? {}).filter(Boolean);
-    let workersLeft = workers.length;
-    const exitCode = signal === 'SIGINT' ? 130 : 143;
-
-    log.warn(`primary ${process.pid} received ${signal}, disconnecting ${workersLeft} workers`);
-    if (!workersLeft) { process.exit(exitCode); }
-
-    const exitWhenStopped = () => {
-      workersLeft--;
-      if (workersLeft < 1) { process.exit(exitCode); }
-    };
-    workers.forEach((worker) => {
-      worker?.once('exit', exitWhenStopped);
-      worker?.disconnect();
-    });
-  };
-
-  if (clusterSize) {
-    process.once('SIGINT', () => stopWorkers('SIGINT'));
-    process.once('SIGTERM', () => stopWorkers('SIGTERM'));
-  }
 
   log.info([
     `Primary id ${contextHub.workerId}`,
@@ -151,17 +122,13 @@ const clusterPrimary = () => {
 
   cluster.on('exit', (worker, code, signal) => {
     log.warn(`worker ${worker.id} (process ${worker.process.pid}, code ${signal ?? code}) ${
-      worker.exitedAfterDisconnect || stopping ? 'disconnected' : 'crashed, restarting...'
+      worker.exitedAfterDisconnect ? 'disconnected' : 'crashed, restarting...'
     }`);
-    !worker.exitedAfterDisconnect && !stopping && fork();
+    !worker.exitedAfterDisconnect && fork();
   });
 
   cluster.on('message', (worker, message, _handle) => {
     log.info(`message ${getWorkerId(process.pid)}, worker ${worker.id} (${worker.process.pid}): ${message}`);
-    if (message?.type === runtimeStopMessage) {
-      stopWorkers(message.signal === 'SIGTERM' ? 'SIGTERM' : 'SIGINT');
-      return;
-    }
   });
 
   importApps(imports);
@@ -186,14 +153,5 @@ export const setupClusterWorker = (workerUrl) => cluster.setupPrimary({ exec: fi
 
 /** Latest contextHub name from moduleName to use as an environment constant. */
 export const getEnvHubName = () => (contextHub.moduleName || '').toUpperCase() + '_LATEST_HUB';
-
-/** Request the runtime primary process to stop. @param {NodeJS.Signals} [signal] */
-export const stopRuntime = (signal = 'SIGINT') => {
-  if (cluster.isWorker && process.send) {
-    process.send({ type: runtimeStopMessage, signal });
-  } else {
-    process.kill(process.pid, signal);
-  }
-};
 
 /* * */
