@@ -16,7 +16,8 @@
     "format:main": "npx eslint packages/main",
     "sync-source:main": "node packages/utils/drive/builder/sync-source.js --method=symlink --orig=packages --dest=packages/main --view-imports=1 --drive-imports=",
     "test:main": "npm -w packages/main run test",
-    "start:main": "npm run sync-source:main && npm run node:args packages/main/drive/index.js \"{}\"",
+    "stop:main": "echo @todo stop main",
+    "start:main": "npm run stop:main && npm run sync-source:main && npm run node:args packages/main/drive/index.js \"{}\"",
     "format:lib": "npx eslint packages/lib",
     "format:utils": "npx eslint packages/utils",
     "format": "npm run format:lib && npm run format:utils && npm run format:main",
@@ -24,6 +25,7 @@
     "test:lib": "npm -w packages/lib run test",
     "test:utils": "npm -w packages/utils run test",
     "test": "npm run test:lib && npm run test:utils && npm run test:main",
+    "stop": "npm run stop:main",
     "start": "npm run start:main"
   },
   "dependencies": {},
