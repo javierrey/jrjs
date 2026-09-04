@@ -9,7 +9,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import {
-  hydrate, log, contextHub, getArgumentValue, jsonStringify,
+  hydrate, log, contextHub, getArgumentValue,
 } from './drive.js';
 import { runCluster } from './cluster.js';
 
@@ -22,17 +22,13 @@ const defaults = {
 
 const isDirect = import.meta.url === pathToFileURL(path.resolve(process.argv[1] ?? '')).href;
 const mode = getArgumentValue('stop') ? 'stop' : 'start';
-const runtimeName = getArgumentValue('runtime') || getArgumentValue('main') || 'main';
-const pidFile = path.resolve(`_exclude/_ignore/store/runtime-${runtimeName}.pid`);
+const packageName = getArgumentValue('package') || 'main';
+const privateFolder = getArgumentValue('private-dir') || '_exclude/_ignore';
+const pidFile = path.resolve(`${privateFolder}/store/temp/run-${packageName}.pid`);
 
-/** @return {{ pid: number, invalid: boolean }} */
+/** @return {number} */
 const readPidFile = () => {
-  try {
-    const pidData = JSON.parse(fs.readFileSync(pidFile, 'utf8'));
-    return { pid: Number(pidData.pid) || 0, invalid: false };
-  } catch (_err) {
-    return { pid: 0, invalid: fs.existsSync(pidFile) };
-  }
+  try { return Number(fs.readFileSync(pidFile, 'utf8').trim()) || NaN; } catch (_) { return NaN; }
 };
 
 /** @param {number} pid @return {boolean} */
@@ -53,32 +49,30 @@ const run = () => {
 };
 
 const stop = () => {
-  const { pid, invalid } = readPidFile();
-  if (!pid) {
-    invalid && removePid();
-    log.info(invalid ? `runtime ${runtimeName} not running (removed invalid pid file)` : `runtime ${runtimeName} not running`);
+  const pid = readPidFile();
+  if (Number.isNaN(pid)) {
+    removePid();
+    log.info(`runtime ${packageName} not running`);
     return;
   }
   if (!isRunning(pid)) {
     removePid();
-    log.info(`runtime ${runtimeName} not running (removed stale pid ${pid})`);
+    log.info(`runtime ${packageName} not running (removed stale pid ${pid})`);
     return;
   }
   process.kill(pid, 'SIGINT');
   removePid();
-  log.info(`sent SIGINT to runtime ${runtimeName} ${pid}`);
+  log.info(`sent SIGINT to runtime ${packageName} ${pid}`);
 };
 
 const start = async () => {
   fs.mkdirSync(path.dirname(pidFile), { recursive: true });
   const pidFileTemp = `${pidFile}.${process.pid}.tmp`;
-  fs.writeFileSync(pidFileTemp, JSON.stringify({ pid: process.pid, runtime: runtimeName, started: Date.now() }, null, 2));
+  fs.writeFileSync(pidFileTemp, String(process.pid));
   fs.renameSync(pidFileTemp, pidFile);
   process.once('exit', removePid);
 
-  const hub = await import(`../../${runtimeName}/drive/hub.js`);
-  log.info(`hub: ${jsonStringify(contextHub, null, 2)}`);
-  contextHub.clusterSize && hub.setupClusterWorker(new URL(`../../${runtimeName}/drive/worker.js`, import.meta.url));
+  await import(pathToFileURL(path.resolve('packages', packageName, 'drive/index.js')).href);
   run();
 };
 
