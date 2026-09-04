@@ -12,7 +12,7 @@
     "node:args": "node --preserve-symlinks --preserve-symlinks-main",
     "status": "echo CLEAN: && git clean -nfdX -e !.* -e !**/_ignore/ -e !**/_ignore/** && echo NEW: && git ls-files -o --exclude-standard",
     "clean": "git clean -fdX -e !.* -e !**/_ignore/ -e !**/_ignore/**",
-    "reinstall": "npm run clean && npm i",
+    "clean:install": "npm run clean && npm i",
     "format:main": "npx eslint packages/main",
     "sync-source:main": "node packages/utils/drive/builder/sync-source.js --method=symlink --orig=packages --dest=packages/main --view-imports=1 --drive-imports=",
     "test:main": "npm -w packages/main run test",
