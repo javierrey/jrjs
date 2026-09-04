@@ -6,8 +6,8 @@ import { configMinify, minifyBuild } from './minify.js';
 
 const buildMethod = getArgumentValue('method') === 'copy' ? copyDir : minifyBuild; // minify, copy
 
-const dirs = getArgumentValue('dirs') || ''; // main/view, main/drive
+const packages = getArgumentValue('packages') || ''; // main, ...
 
 buildMethod === minifyBuild && configMinify(getArgumentValue('config') || '{}');
 
-dirs.split(',').forEach((dir) => buildMethod('./packages/' + dir, './dist/' + dir));
+packages.split(',').forEach((dir) => buildMethod('./packages/' + dir, './dist/' + dir));
