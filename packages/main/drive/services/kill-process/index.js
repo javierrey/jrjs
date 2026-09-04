@@ -1,24 +1,24 @@
-// main/drive/services/exit-process/index.js
+// main/drive/services/kill-process/index.js
 // @ts-check
 
 /**
 @typedef {import('../hub.js').PlainObject} PlainObject;
 */
 
-import { contextHub, log, delay, stopRuntime } from '../hub.js';
+import { contextHub, delay, log } from '../hub.js';
 
 /** @param {PlainObject} [params] @return {Promise<PlainObject>} */
 export default async (params = {}) => {
-  params.name ||= 'exitProcess';
+  params.name ||= 'killProcess';
   delay(1, () => {
-    log.warn(`stopping runtime from process ${process.pid} (worker ${contextHub.workerId})`);
-    stopRuntime();
+    log.warn(`killing process ${process.pid} (worker ${contextHub.workerId})`);
+    process.exit(1);
   });
   return {
     pid: process.pid,
     workerId: contextHub.workerId,
     params,
     updated: Date.now(),
-    status: 'runtime stop scheduled',
+    status: 'kill process scheduled',
   };
 };
