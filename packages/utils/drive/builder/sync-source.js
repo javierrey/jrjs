@@ -1,4 +1,4 @@
-// prebuild.js
+// sync-source.js
 // @ts-check
 
 import {
