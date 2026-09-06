@@ -22,6 +22,7 @@
 */
 
 import cluster from 'node:cluster';
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { contextHub, fs, jsonStringify, log } from './drive.js';
 
@@ -101,13 +102,21 @@ const onMessage = (wrk = process, msg = '') => {
   // }
 };
 
-/** Save the primary process pid into `<privateDir>/store/temp/primary.pid`. @return {void} */
+const getPrimaryPidFile = () => `${clusterConfig.privateDir}/temp/primary.pid`;
+
+/** Save the primary process pid into `<privateDir>/temp/primary.pid`. @return {void} */
 const savePrimaryPid = () => {
+  const primaryPidFile = getPrimaryPidFile();
   try {
-    const folder = `${clusterConfig.privateDir}/store/temp`;
-    fs.mkdirSync(folder, { recursive: true });
-    fs.writeFileSync(folder + '/primary.pid', String(process.pid), 'utf8');
-  } catch {}
+    fs.mkdirSync(path.dirname(primaryPidFile), { recursive: true });
+    fs.writeFileSync(primaryPidFile, String(process.pid), 'utf8');
+  } catch (err) { log.error(`Error in savePrimaryPid ${primaryPidFile}`, err); }
+};
+
+/** Read the primary pid set in savePrimaryPid */
+const readPrimaryPid = () => {
+  try { return Number(fs.readFileSync(getPrimaryPidFile(), 'utf8').trim()); }
+  catch { return NaN; }
 };
 
 /** Primary method to be used in the cluster script for `cluster.isPrimary`. */
@@ -175,6 +184,14 @@ export const stopPrimaryProcess = () => {
   const pid = contextHub.workerId ? process.ppid : process.pid;
   log.warn(`stopPrimaryProcess ${pid} (from worker ${contextHub.workerId}, pid ${process.pid})`);
   process.kill(pid, 'SIGINT');
+};
+
+export const stopPrimaryProceedFromPidFile = () => {
+  const pid = readPrimaryPid();
+  log.warn(`stopPrimaryProceedFromPidFile ${pid} (from pid ${process.pid})`);
+  if (!pid || Number.isNaN(pid)) { return; }
+  try { process.kill(pid, 'SIGINT'); } catch {}
+  try { fs.rmSync(getPrimaryPidFile(), { force: true }); } catch {}
 };
 
 /* * */
