@@ -1,4 +1,4 @@
-// utils/.../core.js
+// utils/core/core.js
 // _@ts-check
 
 /**

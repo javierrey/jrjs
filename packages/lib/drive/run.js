@@ -1,4 +1,4 @@
-// drive/run.js (cluster)
+// lib/drive/run.js (cluster)
 // @ts-check
 
 /**
@@ -12,6 +12,7 @@ import { runCluster } from './cluster.js';
 const defaults = {
   clusterSize: 0,
   base: '',
+  privateDir: '',
   apps: [],
 };
 

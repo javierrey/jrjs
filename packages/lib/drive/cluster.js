@@ -1,4 +1,4 @@
-// drive/cluster.js
+// lib/drive/cluster.js
 // @ts-check
 
 /**
@@ -16,13 +16,14 @@
 @typedef {{
   clusterSize: number;
   base: string;
+  privateDir: string,
   apps: AppLoader[];
 }} ClusterConfig;
 */
 
 import cluster from 'node:cluster';
 import { fileURLToPath } from 'node:url';
-import { contextHub, jsonStringify, log } from './drive.js';
+import { contextHub, fs, jsonStringify, log } from './drive.js';
 
 /* Apps functionality: */
 
@@ -100,6 +101,15 @@ const onMessage = (wrk = process, msg = '') => {
   // }
 };
 
+/** Save the primary process pid into `<privateDir>/store/temp/primary.pid`. @return {void} */
+const savePrimaryPid = () => {
+  try {
+    const folder = `${clusterConfig.privateDir}/store/temp`;
+    fs.mkdirSync(folder, { recursive: true });
+    fs.writeFileSync(folder + '/primary.pid', String(process.pid), 'utf8');
+  } catch {}
+};
+
 /** Primary method to be used in the cluster script for `cluster.isPrimary`. */
 const clusterPrimary = () => {
   const clusterSize = /** @type {number} */ (clusterConfig.clusterSize);
@@ -112,6 +122,8 @@ const clusterPrimary = () => {
     `pid ${process.pid}, clusterSize ${clusterSize}`,
     `[${imports.map(app => app.name)}]`,
   ].join(', '));
+
+  savePrimaryPid();
 
   const fork = () => cluster.fork({ [getEnvHubName()]: jsonStringify(contextHub) });
   for (let i = 0; i < clusterSize; i++) { fork(); }

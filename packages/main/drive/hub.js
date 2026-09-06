@@ -7,6 +7,9 @@
 @typedef {{
   moduleName: string,
   distFolder: string,
+  privateDir: string,
+  publicDir: string,
+  servicesDir: string,
   updated: number,
 }} DriveHub;
 */
@@ -23,6 +26,10 @@ const _fileurl = import.meta.url;
 const moduleName = _fileurl.split('/').at(-3) ?? '';
 const distFolder = _fileurl.includes('/dist/') ? 'dist' : 'packages';
 
+const privateDir = '_exclude/_ignore/store';
+const publicDir = `${distFolder}/${moduleName}/view`;
+const servicesDir = `${distFolder}/${moduleName}/drive/services`;
+
 const _inputarg = process.argv.slice(2).at(-1) || '{}';
 const driveParams = jsonParse(_inputarg) ?? {};
 
@@ -30,6 +37,9 @@ const driveParams = jsonParse(_inputarg) ?? {};
 const driveHub = {
   moduleName,
   distFolder,
+  privateDir,
+  publicDir,
+  servicesDir,
   updated: Date.now(),
   clusterSize: 1, // 0, 1, 2, ... os.cpus().length
   base: '',
@@ -42,9 +52,9 @@ const driveHub = {
       state: {},
       config: {
         port: 3000,
-        privateDir: '_exclude/_ignore/store',
-        publicDir: `${distFolder}/${moduleName}/view`,
-        servicesDir: `${distFolder}/${moduleName}/drive/services`,
+        privateDir,
+        publicDir,
+        servicesDir,
       },
     },
   ],

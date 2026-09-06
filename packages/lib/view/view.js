@@ -1,4 +1,4 @@
-// lib/.../view.js, DOM
+// lib/view/view.js, DOM
 // _@ts-check
 
 /**

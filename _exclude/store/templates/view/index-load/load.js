@@ -1,4 +1,4 @@
-// index-load/load.js
+// main/view/.../load.js
 // _@ts-check
 
 const log = console.log; // eslint-disable-line

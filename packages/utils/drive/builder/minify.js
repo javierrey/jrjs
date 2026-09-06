@@ -1,4 +1,4 @@
-// minify.js, javier.rey.eu@gmail.com, 2022
+// utils/drive/builder/minify.js, javier.rey.eu@gmail.com, 2022
 // dependencies: 'imports/drive/dev_modules/min_modules/*', 'lib/drive/drive.js'
 // _@ts-check
 
@@ -29,7 +29,7 @@ const minify_json = (data, options) => {
   try { // JSON RegExp: Complex values inducing false positives will use core's parse.
     const isJson5 = !options?.skipJson5 && /[^"\s]\s*:/g.test(data);
     data = JSON.stringify(isJson5 ? parse(data) : JSON.parse(data)) ?? data;
-  } catch (_) {}
+  } catch {}
   return data;
 };
 
@@ -134,7 +134,7 @@ const minifyFile = (file, orig, dest, options) => {
 
 const minifyHTML = async (file, target, options) => {
   let data = await fsP.readFile(file, encoding);
-  try { data = await minify_html(data, options); } catch (_) {}
+  try { data = await minify_html(data, options); } catch {}
   fsP.writeFile(target, data, encoding);
 };
 
@@ -143,7 +143,7 @@ const minifyCSS = async (file, target, options) => {
   try {
     const { css } = await minify_css(data, options);
     data = css;
-  } catch (_) {}
+  } catch {}
   fsP.writeFile(target, data, encoding);
 };
 
@@ -152,13 +152,13 @@ const minifyJS = async (file, target, options) => {
   try {
     const { code } = await minify_js(data, options);
     data = code;
-  } catch (_) {}
+  } catch {}
   fsP.writeFile(target, data, encoding);
 };
 
 const minifyXML = async (file, target, options) => {
   let data = await fsP.readFile(file, encoding);
-  try { data = minify_xml(data, options); } catch (_) {}
+  try { data = minify_xml(data, options); } catch {}
   fsP.writeFile(target, data, encoding);
 };
 

@@ -1,4 +1,4 @@
-// utils/.../view.js, DOM
+// utils/view/view.js, DOM
 // _@ts-check
 
 /**

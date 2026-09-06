@@ -1,4 +1,4 @@
-// server/run.js
+// lib/drive/server/run.js
 // @ts-check
 
 /**
@@ -15,14 +15,14 @@ import { runServer } from './server.js';
 /** @type {ServerConfig} */
 const defaults = {
   baseDir: '',
-  privateDir: '../../_exclude/_ignore/store',
-  publicDir: '../view',
-  servicesDir: '../drive/services',
+  privateDir: '_exclude/_ignore/store', // (from root)
+  publicDir: '../view', // (from main/drive)
+  servicesDir: './services', // (from main/drive)
   protocol: 'http',
   host: '0.0.0.0', // '0.0.0.0', '127.0.0.1', 'localhost',
   port: 3000,
-  sslCert: '/data/secret/cert.pem',
-  sslKey: '/data/secret/key.pem',
+  sslCert: '/data/secret/cert.pem', // after privateDir
+  sslKey: '/data/secret/key.pem', // after privateDir
   timeout: 50e3,
   clientsSize: 1e3,
   clientPortsSize: 16,

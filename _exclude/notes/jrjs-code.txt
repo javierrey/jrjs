@@ -425,8 +425,7 @@ export const log = Object.assign(
     const mi = args.findIndex((a) => a?.constructor === String), msg = mi > -1 ? args.splice(mi, 1)[0] : '';
     const logArg = (a) => {
       if (log.indent > -1 && [a, ...(a?.some ? a : [])].some((v) => v?.constructor === Object)) {
-        try { a = JSON.stringify(a, null, log.indent).replace(/(\\\\|\\[ntfv])+/g, ' '); }
-        catch (_) {}
+        try { a = JSON.stringify(a, null, log.indent).replace(/(\\\\|\\[ntfv])+/g, ' '); } catch {}
       }
       main(a);
     };
