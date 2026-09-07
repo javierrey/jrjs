@@ -44,7 +44,7 @@ export const hasProperty =
 
 /**
 @template {PropertyKey[]} PKA;
-@typedef {PKA extends [infer First extends PropertyKey, ...infer Rest extends PropertyKey[]]
+@typedef {PKA extends [infer First extends PropertyKey, ...infer Rest extends PropertyKey[]];
   ? { [Key in First]: Rest extends [] ? unknown : NestedObject<Rest> }
   : unknown} NestedObject;
 */
@@ -56,7 +56,7 @@ export const hasProperty =
   PKA extends [infer First extends PropertyKey, ...infer Rest extends PropertyKey[]]
     ? { [Key in First]: Rest extends [] ? unknown : NestedObject<Rest> }
       & Record<PropertyKey, unknown>
-    : Record<PropertyKey, unknown>
+    : Record<PropertyKey, unknown>;
 } NestedObject;
 */
 

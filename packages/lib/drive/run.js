@@ -10,9 +10,9 @@ import { runCluster } from './cluster.js';
 
 /** @type {ClusterConfig} */
 const defaults = {
+  privateDir: '',
   clusterSize: 0,
   savePid: false,
-  privateDir: '',
   apps: [],
 };
 

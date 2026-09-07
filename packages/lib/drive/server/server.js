@@ -2,7 +2,7 @@
 // _@ts-check
 
 /**
-@typedef {import('node:http').Server} Server
+@typedef {import('node:http').Server} Server;
 @typedef {
   (req: import('node:http').IncomingMessage, res: import('node:http').ServerResponse) => Promise<void>
 } RequestListener;

@@ -4,9 +4,9 @@
 /**
 @typedef {import('./imported/lib/view/view.js').PlainObject} PlainObject;
 @typedef {{
-  moduleName: string,
-  href: string,
-  updated: number,
+  moduleName: string;
+  href: string;
+  updated: number;
 }} ViewHub;
 */
 

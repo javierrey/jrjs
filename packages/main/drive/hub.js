@@ -5,12 +5,12 @@
 @typedef {import('../../../../jrjs/packages/lib/drive/drive.js').PlainObject} PlainObject;
 @typedef {import('../../../../jrjs/packages/lib/drive/cluster.js').ClusterConfig} ClusterConfig;
 @typedef {{
-  moduleName: string,
-  distFolder: string,
-  privateDir: string,
-  publicDir: string,
-  servicesDir: string,
-  updated: number,
+  moduleName: string;
+  distFolder: string;
+  privateDir: string;
+  publicDir: string;
+  servicesDir: string;
+  updated: number;
 }} DriveHub;
 */
 

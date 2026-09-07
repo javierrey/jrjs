@@ -14,9 +14,9 @@
   config: PlainObject;
 }} AppLoader;
 @typedef {{
+  privateDir: string;
   clusterSize: number;
   savePid: boolean;
-  privateDir: string,
   apps: AppLoader[];
 }} ClusterConfig;
 */
@@ -102,11 +102,11 @@ const onMessage = (wrk = process, msg = '') => {
   // }
 };
 
-const getPrimaryPidFile = () => `${clusterConfig.privateDir}/temp/primary.pid`;
+const getPrimaryPidPath = () => `${clusterConfig.privateDir}/temp/primary.pid`;
 
 /** Save the primary process pid into `<privateDir>/temp/primary.pid`. @return {boolean} */
 const savePrimaryPid = () => {
-  const primaryPidFile = getPrimaryPidFile();
+  const primaryPidFile = getPrimaryPidPath();
   try {
     fs.mkdirSync(path.dirname(primaryPidFile), { recursive: true });
     fs.writeFileSync(primaryPidFile, String(process.pid), 'utf8');
@@ -116,7 +116,7 @@ const savePrimaryPid = () => {
 
 /** Read the primary pid set in savePrimaryPid. @return {number} */
 const readPrimaryPid = () => {
-  try { return Number(fs.readFileSync(getPrimaryPidFile(), 'utf8').trim()); } catch { return NaN; }
+  try { return Number(fs.readFileSync(getPrimaryPidPath(), 'utf8').trim()); } catch { return NaN; }
 };
 
 /** Primary method to be used in the cluster script for `cluster.isPrimary`. */
@@ -190,7 +190,7 @@ export const stopSavedPrimaryProcess = () => {
   log.warn(`stopSavedPrimaryProcess pid ${pid} (from command)`);
   if (!pid || Number.isNaN(pid)) { return; }
   try { process.kill(pid, 'SIGINT'); } catch {}
-  try { fs.rmSync(getPrimaryPidFile(), { force: true }); } catch {}
+  try { fs.rmSync(getPrimaryPidPath(), { force: true }); } catch {}
 };
 
 /* * */
