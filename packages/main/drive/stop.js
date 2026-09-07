@@ -2,6 +2,6 @@
 /* Runtime stop script. */
 // @ts-check
 
-import { stopPrimaryProceedFromPidFile } from './hub.js';
+import { contextHub, stopSavedPrimaryProcess } from './hub.js';
 
-stopPrimaryProceedFromPidFile();
+contextHub.savePid && stopSavedPrimaryProcess();

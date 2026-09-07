@@ -16,6 +16,7 @@
 @typedef {{
   clusterSize: number;
   base: string;
+  savePid: boolean;
   privateDir: string,
   apps: AppLoader[];
 }} ClusterConfig;
@@ -104,35 +105,34 @@ const onMessage = (wrk = process, msg = '') => {
 
 const getPrimaryPidFile = () => `${clusterConfig.privateDir}/temp/primary.pid`;
 
-/** Save the primary process pid into `<privateDir>/temp/primary.pid`. @return {void} */
+/** Save the primary process pid into `<privateDir>/temp/primary.pid`. @return {boolean} */
 const savePrimaryPid = () => {
   const primaryPidFile = getPrimaryPidFile();
   try {
     fs.mkdirSync(path.dirname(primaryPidFile), { recursive: true });
     fs.writeFileSync(primaryPidFile, String(process.pid), 'utf8');
-  } catch (err) { log.error(`Error in savePrimaryPid ${primaryPidFile}`, err); }
+    return true;
+  } catch { return false; }
 };
 
-/** Read the primary pid set in savePrimaryPid */
+/** Read the primary pid set in savePrimaryPid. @return {number} */
 const readPrimaryPid = () => {
-  try { return Number(fs.readFileSync(getPrimaryPidFile(), 'utf8').trim()); }
-  catch { return NaN; }
+  try { return Number(fs.readFileSync(getPrimaryPidFile(), 'utf8').trim()); } catch { return NaN; }
 };
 
 /** Primary method to be used in the cluster script for `cluster.isPrimary`. */
 const clusterPrimary = () => {
-  const clusterSize = /** @type {number} */ (clusterConfig.clusterSize);
+  const saved = clusterConfig.savePid && savePrimaryPid();
+  const clusterSize = clusterConfig.clusterSize;
   updateWorkerId(clusterSize ? 0 : NaN);
   const imports = getAppLoaders(true);
   !clusterSize && imports.push(...getAppLoaders(false));
 
   log.info([
     `Primary id ${contextHub.workerId}`,
-    `pid ${process.pid}, clusterSize ${clusterSize}`,
+    `pid ${process.pid}, clusterSize ${clusterSize}, saved ${saved}`,
     `[${imports.map(app => app.name)}]`,
   ].join(', '));
-
-  savePrimaryPid();
 
   const fork = () => cluster.fork({ [getEnvHubName()]: jsonStringify(contextHub) });
   for (let i = 0; i < clusterSize; i++) { fork(); }
@@ -186,9 +186,9 @@ export const stopPrimaryProcess = () => {
   process.kill(pid, 'SIGINT');
 };
 
-export const stopPrimaryProceedFromPidFile = () => {
+export const stopSavedPrimaryProcess = () => {
   const pid = readPrimaryPid();
-  log.warn(`stopPrimaryProceedFromPidFile ${pid} (from pid ${process.pid})`);
+  log.warn(`stopSavedPrimaryProcess ${pid} (from pid ${process.pid})`);
   if (!pid || Number.isNaN(pid)) { return; }
   try { process.kill(pid, 'SIGINT'); } catch {}
   try { fs.rmSync(getPrimaryPidFile(), { force: true }); } catch {}

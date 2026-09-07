@@ -21,7 +21,7 @@ import { coreHub } from '../core/hub.js';
 
 export * from '../../../../jrjs/packages/lib/drive/drive.js';
 export {
-  getEnvHubName, setupClusterWorker, stopPrimaryProceedFromPidFile,
+  getEnvHubName, setupClusterWorker, stopSavedPrimaryProcess as stopSavedPrimaryProcess,
 } from '../../../../jrjs/packages/lib/drive/cluster.js';
 
 const _fileurl = import.meta.url;
@@ -45,6 +45,7 @@ const driveHub = {
   updated: Date.now(),
   clusterSize: 1, // 0, 1, 2, ... os.cpus().length
   base: '',
+  savePid: true,
   apps: [
     {
       name: 'server',
