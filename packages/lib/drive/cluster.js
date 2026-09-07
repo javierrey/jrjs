@@ -172,19 +172,22 @@ export const runCluster = () => cluster.isPrimary ? clusterPrimary() : clusterWo
 export const setupClusterWorker = (workerUrl) => cluster.setupPrimary({ exec: fileURLToPath(workerUrl) });
 
 /** Latest contextHub name from moduleName to use as an environment constant. */
-export const getEnvHubName = () => (contextHub.moduleName || '').toUpperCase() + '_LATEST_HUB';
+export const getEnvHubName = () => (contextHub.moduleName || '').toUpperCase() + '_CONTEXT_HUB';
 
+/** Stop the worker process as a crash, so cluster will resume it in a new worker. */
 export const stopWorkerProcess = () => {
   log.warn(`stopWorkerProcess pid ${process.pid}, worker ${contextHub.workerId}`);
   process.exit(1);
 };
 
+/** Stop the primary process runtime, from itself or a worker. */
 export const stopPrimaryProcess = () => {
   const pid = contextHub.workerId ? process.ppid : process.pid;
   log.warn(`stopPrimaryProcess pid ${pid} (from worker ${contextHub.workerId}, pid ${process.pid})`);
   process.kill(pid, 'SIGINT');
 };
 
+/** Stop the saved primary process runtime, typically from a command. */
 export const stopSavedPrimaryProcess = () => {
   const pid = readPrimaryPid();
   log.warn(`stopSavedPrimaryProcess pid ${pid} (from command)`);
