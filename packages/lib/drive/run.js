@@ -11,7 +11,6 @@ import { runCluster } from './cluster.js';
 /** @type {ClusterConfig} */
 const defaults = {
   clusterSize: 0,
-  base: '',
   savePid: false,
   privateDir: '',
   apps: [],

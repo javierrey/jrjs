@@ -9,7 +9,6 @@
 @typedef {import('../../core/core.js').PlainObject} PlainObject;
 @typedef {import('../../core/core.js').FunctionObject} FunctionObject;
 @typedef {{
-  baseDir: string;
   privateDir: string;
   publicDir: string;
   servicesDir: string;
@@ -166,15 +165,28 @@ const resolveUpstream = (request, params) => {
 
 const resolveDownstream = (request, file) => {
   if (!request.headers.range) { return null; }
-  const boundaries = request.headers.range.replace(/bytes=/, '').split('-');
-  const start = Number(boundaries[0]) || 0, end = Number(boundaries[1]) || file.size - 1, size = end - start + 1;
-  const range = { start, end, size }, status = size > 0 ? 206 : 200, headers = { 'content-type': file.type };
-  if (size) { // headers.range = range;
-    headers['accept-ranges'] = 'bytes';
-    headers['content-range'] = `bytes ${range.start}-${range.end}/${size}`;
-    headers['content-length'] = size;
+  const match = /^bytes=(\d*)-(\d*)$/i.exec(request.headers.range);
+  const headers = { 'accept-ranges': 'bytes' };
+  if (!match || (!match[1] && !match[2]) || !Buffer.isBuffer(file.content)) {
+    return { status: 416, headers: { ...headers, 'content-range': `bytes */${file.size}` } };
   }
-  return { status, headers, body: file.content };
+  const suffixSize = Number(match[2]);
+  const end = match[1] ? Math.min(suffixSize || file.size - 1, file.size - 1) : file.size - 1;
+  const start = match[1] ? Number(match[1]) : Math.max(file.size - suffixSize, 0);
+  if (start > end || start >= file.size) {
+    return { status: 416, headers: { ...headers, 'content-range': `bytes */${file.size}` } };
+  }
+  const size = end - start + 1;
+  return {
+    status: 206,
+    headers: {
+      ...headers,
+      'content-type': file.type,
+      'content-range': `bytes ${start}-${end}/${file.size}`,
+      'content-length': size,
+    },
+    body: file.content.subarray(start, end + 1),
+  };
 };
 
 /** @param {string} urlPath @param {string} viewDir */
@@ -281,9 +293,9 @@ const resolver = async (request, response) => {
   }
   const resource = await resolveResource(request);
   await resolveUpstream(request, resource.params);
-  // const stream = resolveDownstream(request, file);
-  // if (stream) { return responder(response, stream.status, stream.headers, stream.body); }
   const file = await resolveFile(resource);
+  const stream = resolveDownstream(request, file);
+  if (stream) { return responder(response, stream.status, stream.headers, stream.body); }
   const error = file.error ?? (isNul(file.content) ? { message: 'no content' } : null);
   const missing = !Number.isFinite(resource.filesize) || resource.filesize < 0 || error?.code === 'ENOENT';
   const status = !error ? 200 : missing ? 404 : 500; // @ts-expect-error:
@@ -296,8 +308,7 @@ const resolver = async (request, response) => {
 /** @param {ServerConfig} config @return {ServerConfig & ResolvedServerConfig} */
 const resolveConfig = (config) => {
   const env = getEnvironment();
-  const cwd = process.cwd().replace(/\\/g, '/');
-  const baseFolder = getDistPath(resolvePath(cwd, config.baseDir || '') || (env.root + env.path));
+  const baseFolder = getDistPath(process.cwd().replace(/\\/g, '/') || (env.root + env.path));
   const privateFolder = getDistPath(resolvePath(baseFolder, config.privateDir));
   const publicFolder = getDistPath(resolvePath(baseFolder, config.publicDir));
   const servicesFolder = config.servicesDir ? getDistPath(resolvePath(baseFolder, config.servicesDir)) : '';

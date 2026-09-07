@@ -14,7 +14,6 @@ import { runServer } from './server.js';
 
 /** @type {ServerConfig} */
 const defaults = {
-  baseDir: '',
   privateDir: '_exclude/_ignore/store', // (from root)
   publicDir: '../view', // (from main/drive)
   servicesDir: './services', // (from main/drive)

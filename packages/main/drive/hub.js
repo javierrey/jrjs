@@ -44,7 +44,6 @@ const driveHub = {
   servicesDir,
   updated: Date.now(),
   clusterSize: 1, // 0, 1, 2, ... os.cpus().length
-  base: '',
   savePid: true,
   apps: [
     {

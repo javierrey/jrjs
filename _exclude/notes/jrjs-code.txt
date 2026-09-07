@@ -115,7 +115,7 @@ export const rebaseLinks = (html, base = null) => html
 ----------------------------------------------------------
 // drive/server.js resolveConfig
 
-log.info(`resolveConfig "${import.meta.url}" "${cwd}" "${publicFolder}" "${config.baseDir}" "${config.publicDir}"`);
+log.info(`resolveConfig "${import.meta.url}" "${cwd}" "${publicFolder}" "${config.publicDir}"`);
 
 ----------------------------------------------------------
 

@@ -15,7 +15,6 @@
 }} AppLoader;
 @typedef {{
   clusterSize: number;
-  base: string;
   savePid: boolean;
   privateDir: string,
   apps: AppLoader[];
@@ -43,7 +42,7 @@ const getAppLoaders = (primary = false) =>
 const importApps = async (imports) => {
   try {
     for (const app of imports) {
-      if (app.path) { await import(clusterConfig.base + app.path); }
+      if (app.path) { await import(app.path); }
     }
   } catch (err) { log.error(`Error in importApps`, err); }
 };
@@ -176,19 +175,19 @@ export const setupClusterWorker = (workerUrl) => cluster.setupPrimary({ exec: fi
 export const getEnvHubName = () => (contextHub.moduleName || '').toUpperCase() + '_LATEST_HUB';
 
 export const stopWorkerProcess = () => {
-  log.warn(`stopWorkerProcess ${process.pid} (worker ${contextHub.workerId})`);
+  log.warn(`stopWorkerProcess pid ${process.pid}, worker ${contextHub.workerId}`);
   process.exit(1);
 };
 
 export const stopPrimaryProcess = () => {
   const pid = contextHub.workerId ? process.ppid : process.pid;
-  log.warn(`stopPrimaryProcess ${pid} (from worker ${contextHub.workerId}, pid ${process.pid})`);
+  log.warn(`stopPrimaryProcess pid ${pid} (from worker ${contextHub.workerId}, pid ${process.pid})`);
   process.kill(pid, 'SIGINT');
 };
 
 export const stopSavedPrimaryProcess = () => {
   const pid = readPrimaryPid();
-  log.warn(`stopSavedPrimaryProcess ${pid} (from pid ${process.pid})`);
+  log.warn(`stopSavedPrimaryProcess pid ${pid} (from command)`);
   if (!pid || Number.isNaN(pid)) { return; }
   try { process.kill(pid, 'SIGINT'); } catch {}
   try { fs.rmSync(getPrimaryPidFile(), { force: true }); } catch {}
