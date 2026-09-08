@@ -2,7 +2,6 @@
 // @ts-check
 
 /**
-@typedef {import('../../../../jrjs/packages/lib/drive/drive.js').PlainObject} PlainObject;
 @typedef {import('../../../../jrjs/packages/lib/drive/cluster.js').ClusterConfig} ClusterConfig;
 @typedef {{
   moduleName: string;
@@ -11,7 +10,7 @@
   publicDir: string;
   servicesDir: string;
   updated: number;
-}} DriveHub;
+}} DriveConfig;
 */
 
 import {
@@ -35,7 +34,7 @@ const servicesDir = `${distFolder}/${moduleName}/drive/services`;
 const _inputarg = process.argv.slice(2).at(-1) || '{}';
 const driveParams = jsonParse(_inputarg) ?? {};
 
-/** @type {PlainObject & DriveHub & ClusterConfig} */
+/** @type {DriveConfig & ClusterConfig} */
 const driveHub = {
   moduleName,
   distFolder,
@@ -57,6 +56,7 @@ const driveHub = {
         privateDir,
         publicDir,
         servicesDir,
+        verbose: false,
       },
     },
   ],

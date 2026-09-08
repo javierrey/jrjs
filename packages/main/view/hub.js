@@ -2,12 +2,11 @@
 // @ts-check
 
 /**
-@typedef {import('./imported/lib/view/view.js').PlainObject} PlainObject;
 @typedef {{
   moduleName: string;
   href: string;
   updated: number;
-}} ViewHub;
+}} ViewConfig;
 */
 
 import {
@@ -18,7 +17,7 @@ import { coreHub } from './imported/_self/core/hub.js';
 const viewParams = parseQuery(location.search);
 const moduleName = 'main'; // @define (not in filepath).
 
-/** @type {PlainObject & ViewHub} */
+/** @type {ViewConfig} */
 const viewHub = {
   moduleName,
   href: location.href,

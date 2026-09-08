@@ -18,6 +18,7 @@
   sslCert: string;
   sslKey: string;
   timeout: number;
+  verbose: boolean;
   clientsSize: number;
   clientPortsSize: number;
   largeThreshold: number;
@@ -32,6 +33,15 @@
   cert: string | null;
   key: string | null;
 }} ResolvedServerConfig;
+@typedef {{
+  remoteAddress: string;
+  remotePort: number;
+  requestUrl: string;
+  ports: number[];
+  remarks: PlainObject;
+  updated: number;
+  created: number;
+}} Client;
 */
 
 import http from 'node:http';
@@ -41,7 +51,7 @@ import fs from 'node:fs';
 import pathmod from 'node:path';
 import { pathToFileURL } from 'node:url';
 import {
-  Log, toStr, isNul, isJso, isBin, toSam,
+  Log, toStr, isNul, isJso, isBin, isTra,
   urlComponents, parseQuery, resolvePath, getEnvironment,
   fileSize, readFile, readStream, getDistPath,
 } from '../drive.js';
@@ -52,13 +62,15 @@ const fsP = fs.promises;
 
 const log = Log({ name: 'server', level: 4 });
 
-const serverConfig = /** @type {PlainObject & ServerConfig & ResolvedServerConfig} */ ({});
-const clients = [];
+const serverConfig = /** @type {ServerConfig & ResolvedServerConfig} */ ({});
+const clients = /** @type {Client[]} */ ([]);
 
 const getFileExtension = (filename) => filename.slice(filename.lastIndexOf('.') + 1 || filename.length);
 
 const getContentType = (content, defType = 'text/html') =>
-  isBin(content) ? 'application/octet-stream' : isJso(toSam(content)) ? 'application/json' : defType;
+  isBin(content) ? 'application/octet-stream'
+  : isTra(content) || isJso(content) ? 'application/json'
+  : defType;
 
 const getFileContentType = (filename, content) => {
   const ext = getFileExtension(filename ?? ''), type = getContentType(content ?? '');
@@ -99,7 +111,7 @@ const getSample = (content, info, size = 300) => {
   content = toStr(content);
   const length = content.byteLength ?? content.length ?? 0, range = ~~(size / 3);
   const r2 = range * 2, l_2 = ~~(length / 2), r_2 = ~~(range / 2);
-  info = info ? `[${content?.constructor?.name} ${length}${isBin(content) ? 'B' : 'C'}] ` : '';
+  info = info ? `[${content?.constructor?.name} ${length} ${isBin(content) ? 'B' : 'C'}] ` : '';
   return info + (
     (length > r2 ? content.slice(0, range) : content)
     + (length > size ? ' ... ' + content.slice(l_2 - r_2, l_2 + r_2) : '')
@@ -107,21 +119,43 @@ const getSample = (content, info, size = 300) => {
   ).replace(/\s+/g, ' ');
 };
 
+const headerValue = (value) => Array.isArray(value) ? value.join(',') : String(value ?? '');
+
+const isMainRequest = (request, resource, headers) => {
+  if (request.headers.range) { return false; }
+  const fetchDest = headerValue(request.headers['sec-fetch-dest']).toLowerCase();
+  if (fetchDest) { return /^(document|frame|iframe|nested-document)$/.test(fetchDest); }
+  const accept = headerValue(request.headers.accept).toLowerCase();
+  const contentType = headerValue(headers?.['content-type']).toLowerCase();
+  const extension = getFileExtension(resource.slug === '/' ? '' : resource.slug);
+  return !extension && (accept.includes('text/html') || contentType.includes('text/html'));
+};
+
 const logConnection = ({ request, resource, error, status, headers, body }) => {
-  if (!log.level || (log.level < 3 && !error)) { return; } // @todo || status === 206:
-  const bodySample = getSample(body, true), payloadSample = getSample(resource.params.payload, true);
+  if (!log.config.level || (log.config.level < 3 && !error)) { return; } // @todo || status === 206:
+  const isMain = isMainRequest(request, resource, headers); if (!serverConfig.verbose && !isMain) { return; }
+  const logArgs = [], errorMsg = error?.message ?? error ?? '', result = errorMsg ? 'KO' : 'OK';
   const client = resource.client, remarksLength = Object.keys(client.remarks).length;
-  const logArgs = [
-    `CLIENT ${client.remoteAddress} (${client.remotePort}/${client.ports.length})`,
-    `clients ${clients.length}, remarks ${remarksLength}`,
-    `REQUEST ${request.method} "${request.url}"`,
-    `headers {${Object.keys(request.headers)}}`,
-    `params ${toStr({ ...resource.params, payload: payloadSample })}`,
-    `RESPONSE ${status}, ${headers['content-type']}, ${error?.message ?? error ?? 'OK'}`,
-    `headers {${Object.keys(headers)}}`,
-    `body ${bodySample}`,
-  ];
-  error ? log.error(...logArgs, `error ${error.message}`) : log.info(...logArgs);
+  if (serverConfig.verbose) {
+    const bodySample = getSample(body, true), payloadSample = getSample(resource.params.payload, true);
+    logArgs.push(
+      `CLIENT ${client.remoteAddress} (${client.remotePort}/${client.ports.length})`,
+      `clients ${clients.length}, remarks ${remarksLength}`,
+      `REQUEST (${isMain ? 'MAIN' : 'SUB'}) ${request.method} "${request.url}"`,
+      `headers {${Object.keys(request.headers)}}`,
+      `params ${toStr({ ...resource.params, payload: payloadSample })}`,
+      `RESPONSE ${result}, ${status}, type "${headers['content-type']}"`,
+      `headers {${Object.keys(headers)}}`,
+      `body ${bodySample}`,
+    );
+  } else {
+    logArgs.push(
+      `CLIENT ${client.remoteAddress} clients ${clients.length}, remarks ${remarksLength}`,
+      `REQUEST ${request.method} "${request.url}" (${Object.keys(resource.params ?? {}).length} params)`,
+      `RESPONSE ${result}, ${status}, type "${headers['content-type']}" (body ${body?.length ?? 0} B)`,
+    );
+  }
+  error ? log.error(...logArgs, `Error: ${errorMsg}`) : log.info(...logArgs);
 };
 
 const setClientRemarks = (resource) => {
@@ -132,13 +166,15 @@ const setClientRemarks = (resource) => {
 
 const resolveClient = (request) => {
   const index = clients.findIndex((client) => client.remoteAddress === request.client.remoteAddress);
-  const client = {
+  const now = Date.now();
+  /** @type {Client} */ const client = {
     remoteAddress: request.client.remoteAddress,
     remotePort: request.client.remotePort,
     requestUrl: request.url,
     ports: clients[index]?.ports ?? [],
     remarks: clients[index]?.remarks ?? {},
-    updated: Date.now(),
+    updated: now,
+    created: now,
   };
   const portIndex = client.ports.findIndex((port) => port === client.remotePort);
   portIndex < 0 && client.ports.push(client.remotePort);
