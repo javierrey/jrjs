@@ -3,14 +3,14 @@
 
 /**
 @typedef {import('node:http').Server} Server;
+@typedef {import('../../core/core.js').PlainObject} PlainObject;
+@typedef {import('../../core/core.js').FunctionObject} FunctionObject;
 @typedef {
   (
     req: import('node:http').IncomingMessage & { info?: PlainObject },
     res: import('node:http').ServerResponse & { info?: PlainObject },
   ) => Promise<void>
 } RequestListener;
-@typedef {import('../../core/core.js').PlainObject} PlainObject;
-@typedef {import('../../core/core.js').FunctionObject} FunctionObject;
 @typedef {{
   privateDir: string;
   publicDir: string;
@@ -208,7 +208,7 @@ const resolveDownstream = (request, file) => {
   if (!request.headers.range) { return null; }
   const match = /^bytes=(\d*)-(\d*)$/i.exec(request.headers.range);
   const headers = { 'accept-ranges': 'bytes' };
-  if (!match || (!match[1] && !match[2]) || !Buffer.isBuffer(file.content)) {
+  if (!match || (!match[1] && !match[2]) || (!Buffer.isBuffer(file.content) && !file.stream)) {
     return { status: 416, headers: { ...headers, 'content-range': `bytes */${file.size}` } };
   }
   const suffixSize = Number(match[2]);
@@ -226,7 +226,9 @@ const resolveDownstream = (request, file) => {
       'content-range': `bytes ${start}-${end}/${file.size}`,
       'content-length': size,
     },
-    body: file.content.subarray(start, end + 1),
+    body: Buffer.isBuffer(file.content)
+      ? file.content.subarray(start, end + 1)
+      : file.stream({ start, end }),
   };
 };
 
@@ -298,7 +300,7 @@ otherwise, a file object with null content and a `not a content file` error is r
 */
 const resolveFile = async (resource) => {
   /** @type {{ [key: string]: unknown }} */ const file = {
-    url: resource.filepath, type: '', size: resource.filesize, content: null, error: null
+    url: resource.filepath, type: '', size: resource.filesize, content: null, stream: null, error: null,
   };
   if (resource.isService) {
     try {
@@ -309,9 +311,15 @@ const resolveFile = async (resource) => {
       if (file.size > serverConfig.largeThreshold) { throw new Error(`service result too large: ${file.size}B`); }
     } catch (error) { file.error = error; }
   } else if (resource.filesize > 0) {
-    const reader = resource.filesize > serverConfig.largeThreshold ? readStream : readFile;
-    Object.assign(file, await reader(resource.filepath));
-    file.type = getFileContentType(resource.filepath, file.content);
+    file.type = getFileContentType(resource.filepath, '');
+    if (resource.filesize > serverConfig.largeThreshold) {
+      const streamed = await readStream(resource.filepath);
+      file.error = streamed.error;
+      file.stream = (options) => options ? fs.createReadStream(resource.filepath, options) : streamed.stream;
+    } else {
+      Object.assign(file, await readFile(resource.filepath));
+      file.type = getFileContentType(resource.filepath, file.content);
+    }
   } else if (Object.is(resource.filesize, 0)) { file.content = Buffer.alloc(0);
   } else { file.error = { message: `not a content file "${resource.filepath}"` }; }
   return file;
@@ -319,7 +327,15 @@ const resolveFile = async (resource) => {
 
 const responder = async (response, status, headers, body) => { // @todo status === 206:
   Object.entries(headers ?? {}).forEach(([k, v]) => response.setHeader(k, v));
-  response.writeHead(status ?? 0); response.end(body ?? '');
+  response.writeHead(status ?? 0);
+  if (body?.pipe) {
+    return new Promise((resolve) => {
+      body.once('error', (error) => response.destroy(error));
+      response.once('close', resolve);
+      body.pipe(response);
+    });
+  }
+  response.end(body ?? '');
 };
 
 /** @type {RequestListener} */
@@ -337,10 +353,10 @@ const resolver = async (request, response) => {
   const file = await resolveFile(resource);
   const stream = resolveDownstream(request, file);
   if (stream) { return responder(response, stream.status, stream.headers, stream.body); }
-  const error = file.error ?? (isNul(file.content) ? { message: 'no content' } : null);
+  const error = file.error ?? (isNul(file.content) && !file.stream ? { message: 'no content' } : null);
   const missing = !Number.isFinite(resource.filesize) || resource.filesize < 0 || error?.code === 'ENOENT';
   const status = !error ? 200 : missing ? 404 : 500; // @ts-expect-error:
-  const body = error?.message ?? (file.content?.slice ? file.content : toStr(file.content));
+  const body = error?.message ?? file.stream?.() ?? (file.content?.slice ? file.content : toStr(file.content));
   const headers = { 'content-type': file.type };
   request.info = { main: isMainRequest(request, resource, headers) };
   responder(response, status, headers, body);

@@ -4,6 +4,13 @@
 /**
 @typedef {import('../core/core.js').PlainObject} PlainObject;
 @typedef {typeof globalThis} DriveContext;
+@typedef {{
+  url: string;
+  content: unknown;
+  size: number;
+  stream: import('node:fs').ReadStream | null;
+  error: Error | null;
+}} FileObject;
 */
 
 import fs from 'node:fs';
@@ -131,16 +138,11 @@ export const readFile = async (url, encoding = null) => {
 
 /** Creates a file object with a readable stream. */
 export const readStream = async (url, encoding) => {
-  /** @type {Record<string, unknown>} */ const file = {
-    url, type: '', size: fileSize(url), content: null, error: null,
+  /** @type {FileObject} */ const file = {
+    url, type: '', size: fileSize(url), content: null, stream: null, error: null,
   };
   if (file.size > 0) {
-    const readable = fs.createReadStream(url, { encoding }), chunks = [];
-    await new Promise((resolve) => {
-      readable.on('error', (error) => { file.error = error; resolve(file); });
-      readable.on('data', (chunk) => { chunks.push(chunk); });
-      readable.on('end', () => { file.content = Buffer.concat(chunks); resolve(file); }); // @hide for streaming
-    });
+    file.stream = fs.createReadStream(url, { encoding });
   } else if (Object.is(file.size, 0)) { file.content = Buffer.alloc(0);
   } else { file.error = { message: `not a content file "${url}"` }; }
   return file;
