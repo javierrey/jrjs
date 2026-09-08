@@ -56,7 +56,7 @@ const driveHub = {
         privateDir,
         publicDir,
         servicesDir,
-        verbose: false,
+        logConfig: { level: 3 },
       },
     },
   ],

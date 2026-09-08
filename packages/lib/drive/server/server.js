@@ -4,7 +4,10 @@
 /**
 @typedef {import('node:http').Server} Server;
 @typedef {
-  (req: import('node:http').IncomingMessage, res: import('node:http').ServerResponse) => Promise<void>
+  (
+    req: import('node:http').IncomingMessage & { info?: PlainObject },
+    res: import('node:http').ServerResponse & { info?: PlainObject },
+  ) => Promise<void>
 } RequestListener;
 @typedef {import('../../core/core.js').PlainObject} PlainObject;
 @typedef {import('../../core/core.js').FunctionObject} FunctionObject;
@@ -18,7 +21,7 @@
   sslCert: string;
   sslKey: string;
   timeout: number;
-  verbose: boolean;
+  logConfig: PlainObject;
   clientsSize: number;
   clientPortsSize: number;
   largeThreshold: number;
@@ -60,7 +63,7 @@ const fsP = fs.promises;
 
 /* server core: */
 
-const log = Log({ name: 'server', level: 4 });
+const log = Log({ name: 'server', level: 3 });
 
 const serverConfig = /** @type {ServerConfig & ResolvedServerConfig} */ ({});
 const clients = /** @type {Client[]} */ ([]);
@@ -133,15 +136,15 @@ const isMainRequest = (request, resource, headers) => {
 
 const logConnection = ({ request, resource, error, status, headers, body }) => {
   if (!log.config.level || (log.config.level < 3 && !error)) { return; } // @todo || status === 206:
-  const isMain = isMainRequest(request, resource, headers); if (!serverConfig.verbose && !isMain) { return; }
   const logArgs = [], errorMsg = error?.message ?? error ?? '', result = errorMsg ? 'KO' : 'OK';
-  const client = resource.client, remarksLength = Object.keys(client.remarks).length;
-  if (serverConfig.verbose) {
+  const client = resource.client, remarksKeys = Object.keys(client.remarks);
+  const info = request.info ?? {}, hasMain = 'main' in info, isMain = !!info.main;
+  if (log.config.level > 3) {
     const bodySample = getSample(body, true), payloadSample = getSample(resource.params.payload, true);
     logArgs.push(
       `CLIENT ${client.remoteAddress} (${client.remotePort}/${client.ports.length})`,
-      `clients ${clients.length}, remarks ${remarksLength}`,
-      `REQUEST (${isMain ? 'MAIN' : 'SUB'}) ${request.method} "${request.url}"`,
+      `remarks "${remarksKeys}" (${clients.length} clients)`,
+      `REQUEST ${hasMain ? `(${isMain ? 'MAIN' : 'SUB'}) ` : ''}${request.method} "${request.url}"`,
       `headers {${Object.keys(request.headers)}}`,
       `params ${toStr({ ...resource.params, payload: payloadSample })}`,
       `RESPONSE ${result}, ${status}, type "${headers['content-type']}"`,
@@ -149,13 +152,15 @@ const logConnection = ({ request, resource, error, status, headers, body }) => {
       `body ${bodySample}`,
     );
   } else {
+    if (hasMain && !isMain) { return; }
+    const paramsKeys = Object.keys(resource.params ?? {});
     logArgs.push(
-      `CLIENT ${client.remoteAddress} clients ${clients.length}, remarks ${remarksLength}`,
-      `REQUEST ${request.method} "${request.url}" (${Object.keys(resource.params ?? {}).length} params)`,
-      `RESPONSE ${result}, ${status}, type "${headers['content-type']}" (body ${body?.length ?? 0} B)`,
+      `CLIENT ${client.remoteAddress}, remarks ${remarksKeys.length} (${clients.length} clients)`,
+      `REQUEST ${request.method} "${request.url}" (${paramsKeys.length} params)`,
+      `RESPONSE ${result}, ${status}, type "${headers['content-type']}" (body ${body?.length ?? 0} C)`,
     );
   }
-  error ? log.error(...logArgs, `Error: ${errorMsg}`) : log.info(...logArgs);
+  error ? log.error(...logArgs, `ERROR ${errorMsg}`) : log.info(...logArgs);
 };
 
 const setClientRemarks = (resource) => {
@@ -337,6 +342,7 @@ const resolver = async (request, response) => {
   const status = !error ? 200 : missing ? 404 : 500; // @ts-expect-error:
   const body = error?.message ?? (file.content?.slice ? file.content : toStr(file.content));
   const headers = { 'content-type': file.type };
+  request.info = { main: isMainRequest(request, resource, headers) };
   responder(response, status, headers, body);
   logConnection({ request, resource, error, status, headers, body });
 };

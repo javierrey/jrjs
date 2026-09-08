@@ -38,6 +38,8 @@ ehthumbs.db
 !/packages/imports/**
 /packages/imports/drive/dev_modules/electron_modules/**
 
+!_exclude/code/**
+
 # !_exclude
 # local_modules/
 # !_local_modules/**/*
