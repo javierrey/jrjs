@@ -12,8 +12,8 @@ export { stopPrimaryProcess, stopWorkerProcess } from '../../../../../jrjs/packa
 
 export const log = Log({ name: 'services', level: 3 });
 
-const _fileurl = import.meta.url;
-const moduleName = _fileurl.split('/').at(-4) ?? '';
+const fileFolders = import.meta.url.split('/'), modulePos = -4;
+const moduleName = fileFolders.at(modulePos) ?? '';
 
 /** @param {PlainObject} [params] @return {Promise<PlainObject>} */
 export const serviceBase = async (params = {}) => {

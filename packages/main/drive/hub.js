@@ -23,9 +23,9 @@ export {
   getEnvHubName, setupClusterWorker, stopSavedPrimaryProcess,
 } from '../../../../jrjs/packages/lib/drive/cluster.js';
 
-const _fileurl = import.meta.url;
-const moduleName = _fileurl.split('/').at(-3) ?? '';
-const distFolder = _fileurl.includes('/dist/') ? 'dist' : 'packages';
+const fileFolders = import.meta.url.split('/'), modulePos = -3, distPos = modulePos - 1;
+const moduleName = fileFolders.at(modulePos) ?? '';
+const distFolder = fileFolders.at(distPos) ?? '';
 
 const privateDir = '_exclude/_ignore/store';
 const publicDir = `${distFolder}/${moduleName}/view`;
