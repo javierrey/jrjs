@@ -27,7 +27,7 @@ const minify_css = CleanCSS.process;
 
 const minify_json = (data, options) => {
   try { // JSON RegExp: Complex values inducing false positives will use core's parse.
-    const isJson5 = !options?.skipJson5 && /[^"\s]\s*:/g.test(data);
+    const isJson5 = !options.skipJson5 && /[^"\s]\s*:/g.test(data);
     data = JSON.stringify(isJson5 ? parse(data) : JSON.parse(data)) ?? data;
   } catch {}
   return data;
@@ -71,7 +71,7 @@ const defaultConfig = {
     keep_fnames: false,
     keep_classnames: false,
   },
-  css: null && { // clean-css // disabled, lacks @scope support
+  css: { // clean-css // disabled, lacks @scope support
     level: 1,
     returnPromise: true,
     rebaseTo: undefined, // undefined to preserve URLs
@@ -124,11 +124,11 @@ const minifyFile = (file, orig, dest, options) => {
   fs.mkdirSync(target.slice(0, target.lastIndexOf('/') + 1), { recursive: true });
   const skipMinify = getSkipMinify(file, options.minifyScope);
   if (skipMinify || rawRE.test(file)) { fsP.copyFile(file, target);
-  } else if (htmlRE.test(file) && options.html) { minifyHTML(file, target, options.html);
-  } else if (jsRE.test(file) && options.js) { minifyJS(file, target, options.js);
-  } else if (cssRE.test(file) && options.css) { minifyCSS(file, target, options.css);
-  } else if (xmlRE.test(file) && options.xml) { minifyXML(file, target, options.xml);
-  } else if (jsonRE.test(file) && options.json) { minifyJSON(file, target, options.json);
+  } else if (options.html && htmlRE.test(file)) { minifyHTML(file, target, options.html);
+  } else if (options.js && jsRE.test(file)) { minifyJS(file, target, options.js);
+  } else if (options.css && cssRE.test(file)) { minifyCSS(file, target, options.css);
+  } else if (options.xml && xmlRE.test(file)) { minifyXML(file, target, options.xml);
+  } else if (options.json && jsonRE.test(file)) { minifyJSON(file, target, options.json);
   } else { fsP.copyFile(file, target); }
 };
 

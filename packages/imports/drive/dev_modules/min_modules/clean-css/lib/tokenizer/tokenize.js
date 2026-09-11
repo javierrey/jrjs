@@ -27,7 +27,8 @@ var BLOCK_RULES = [
   '@media',
   '@supports',
   '@container',
-  '@layer'
+  '@layer',
+  '@scope'
 ];
 
 var IGNORE_END_COMMENT_PATTERN = /\/\* clean-css ignore:end \*\/$/;

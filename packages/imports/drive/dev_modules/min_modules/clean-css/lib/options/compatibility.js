@@ -50,6 +50,7 @@ var DEFAULTS = {
         ':only-child',
         ':only-of-type',
         ':root',
+        ':scope',
         ':target',
         ':visited'
       ], // selectors with these pseudo-classes can be merged as these are universally supported
