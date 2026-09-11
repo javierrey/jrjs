@@ -1,35 +1,11 @@
 <style>
-/*
-h1, h2, h3, h4, h5, h6 { color: #0050a0; }
-a { color: #0044ff; text-decoration: underline; }
-pre, code { background-color: #555555; color: #ffffff; }
-code { padding-inline: 0.3rem; }
-pre > code { background-color: rgba(128, 128, 128, 0); padding-inline: 0; }
-.no-display { display: none; }
-.main-doc { background-color: #aaaaaa; color: #003355; padding: 2rem; }
-.fit-content > * { width: inherit; height: inherit; object-fit: scale-down; }
-
-table, th, td { border: 1px solid #777777; border-collapse: collapse; }
-th, td { padding: 0.5rem; text-align: left; }
-th { background-color: rgba(128, 128, 128, 0.5); }
-
-input[type="checkbox"] {
-  appearance: none; position: relative; width: 1rem; height: 1rem; vertical-align: middle;
-  background-color: #999999; border: 1px solid #777777; border-radius: 0.125rem;
-}
-input[type="checkbox"]:checked::after {
-  content: ''; position: absolute; width: 0.25rem; height: 0.5rem; left: 0.2rem; top: 0;
-  border: 0.2rem solid #ffffff; border-top: none; border-left: none; transform: rotate(45deg);
-}
-
-.hi { color: #000088; }
-.bye { color: #880000; }
-*/
+.hi { color: #0077ff; }
+.bye { color: #cc4400; }
 </style>
-<link rel="stylesheet" href="./content.css"/>
+<link rel="stylesheet" href="../imported/lib/view/md.css"/>
 <script src="./content.js"></script>
 <script>console.log(`inline js!`); document.querySelector('.notes').append(`\ninline js!`);</script>
-<div class="main-doc">
+<div class="md-main">
 
 # Neural Network Insights
 
@@ -77,10 +53,10 @@ The sum is processed by an `activation` function, which transforms any given val
     1. Item B 1
     1. Item B 2
         - Item B 2 A
-        - Item B 2 B `some code` <span class="fit-content" style="height: 1.2rem; vertical-align: sub;">![Alt](./assets/img-land.jpg "Title")</span> more text
+        - Item B 2 B `some code` text <span class="fit-content" style="height: 1.2rem; vertical-align: sub;">![Alt](./assets/img-land.jpg "Title")</span> more text
         - Item B 2 C
     1. Item B 3
-- Item C
+- Item C x<sub>2</sub><sup>2</sup>
 
 | Syntax `header` | Description `header` |
 | ---             | -----------          |
@@ -100,10 +76,10 @@ The most universal activation function for neural networks is called the `sigmoi
     1. Item B 1
     1. Item B 2
         - Item B 2 A
-        - Item B 2 B `some code` <span class="fit-content" style="height: 1.2rem; vertical-align: sub;">![Alt](./assets/img-land.jpg "Title")</span> more text
+        - Item B 2 B `some code` text <span class="fit-content" style="height: 1.2rem; vertical-align: sub;">![Alt](./assets/img-land.jpg "Title")</span> more text
         - Item B 2 C
     1. Item B 3
-- Item C
+- Item C x<sub>2</sub><sup>2</sup>
 
 | Syntax `header` | Description `header` |
 | --- | ----------- |
@@ -134,7 +110,7 @@ Here is an interactive playground to design a neural network and train it: <a hr
 </a>
 <video src="./assets/vid-small.mp4" controls _autoplay loop alt="Content video" style="width: 866px;"></video>
 
-<div class="no-display">
+<div class="display-none">
   <a href="./info.md">&lt; Prev</a> &nbsp; <a href="./info.md">Next &gt;</a>
 </div>
 

@@ -1,0 +1,63 @@
+/* lib/view/md.css */
+
+:root {
+  /* Colors: */
+  --md-col-trans: rgba(128, 128, 128, 0);
+  --md-col-light: #ffffff;
+  --md-col-dark: #222222;
+  --md-col-blue-1: #0050a0;
+  --md-col-blue-1-1: #00ccff;
+  --md-col-grey-1: #555555;
+  --md-col-grey-2: #777777;
+  --md-col-grey-3: #bbbbbb;
+  /* Light: */
+  --md-coll-back: var(--md-col-light);
+  --md-coll-fore: var(--md-col-dark);
+  --md-coll-border: var(--md-col-grey-2);
+  --md-coll-hi-back: var(--md-col-grey-3);
+  --md-coll-hi-fore: var(--md-col-blue-1);
+  --md-coll-neg-back: var(--md-col-grey-1);
+  --md-coll-neg-fore: var(--md-col-light);
+  /* Dark: */
+  --md-cold-back: var(--md-col-dark);
+  --md-cold-fore: var(--md-col-light);
+  --md-cold-border: var(--md-col-grey-2);
+  --md-cold-hi-back: var(--md-col-grey-1);
+  --md-cold-hi-fore: var(--md-col-blue-1-1);
+  --md-cold-neg-back: var(--md-col-grey-1);
+  --md-cold-neg-fore: var(--md-col-light);
+  /* Themed: */
+  --md-colt-back: var(--md-coll-back);
+  --md-colt-fore: var(--md-coll-fore);
+  --md-colt-border: var(--md-coll-border);
+  --md-colt-hi-back: var(--md-coll-hi-back);
+  --md-colt-hi-fore: var(--md-coll-hi-fore);
+  --md-colt-neg-back: var(--md-coll-neg-back);
+  --md-colt-neg-fore: var(--md-coll-neg-fore);
+}
+
+@scope (.md-main) {
+  :scope { background-color: var(--md-colt-back); color: var(--md-colt-fore); padding: 16px; }
+
+  h1, h2, h3, h4, h5, h6 { color: var(--md-colt-hi-fore); }
+  a { color: var(--md-colt-hi-fore); text-decoration: underline; }
+  pre, code { background-color: var(--md-colt-neg-back); color: var(--md-colt-neg-fore); }
+  code { padding-inline: 0.3rem; }
+  pre > code { background-color: var(--md-col-trans); padding-inline: 0; }
+
+  .display-none { display: none; }
+  .fit-content > * { width: inherit; height: inherit; object-fit: scale-down; }
+
+  table, th, td { border: 1px solid var(--md-colt-border); border-collapse: collapse; }
+  th, td { padding: 0.5rem; text-align: left; background-color: var(--md-colt-back); }
+  th { background-color: var(--md-colt-hi-back); }
+
+  input[type="checkbox"] {
+    appearance: none; position: relative; width: 1rem; height: 1rem; vertical-align: middle;
+    background-color: var(--md-colt-hi-back); border: 1px solid var(--md-colt-border); border-radius: 0.125rem;
+  }
+  input[type="checkbox"]:checked::after {
+    content: ''; position: absolute; width: 0.25rem; height: 0.5rem; left: 0.2rem; top: 0;
+    border: 0.2rem solid var(--md-col-light); border-top: none; border-left: none; transform: rotate(45deg);
+  }
+}
