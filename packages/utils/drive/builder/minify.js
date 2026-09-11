@@ -44,8 +44,8 @@ const srcRE = /\.(?:src|test|spec|assert)\./i;
 const rawRE = /\.(?:raw|min|bin)\./i;
 
 const htmlRE = /\.html?$/i;
-const cssRE = /\.css$/i;
 const jsRE = /\.[mc]?js$/i;
+const cssRE = /\.css$/i;
 const xmlRE = /\.(?:xml|xhtml|svg|dae)$/i;
 const jsonRE = /\.json5?$/i;
 
@@ -59,14 +59,6 @@ const defaultConfig = {
     removeComments: true,
     keepClosingSlash: false,
   },
-  css: { // clean-css
-    level: 1,
-    returnPromise: true,
-    rebaseTo: undefined, // undefined to preserve URLs
-    inlineTimeout: 5000,
-    compatibility: {},
-    format: {},
-  },
   js: { // terser
     ecma: 2024, // `_` prefix name to ignore
     parse: {},
@@ -78,6 +70,14 @@ const defaultConfig = {
     module: true,
     keep_fnames: false,
     keep_classnames: false,
+  },
+  css: null && { // clean-css // disabled, lacks @scope support
+    level: 1,
+    returnPromise: true,
+    rebaseTo: undefined, // undefined to preserve URLs
+    inlineTimeout: 5000,
+    compatibility: {},
+    format: {},
   },
   xml: { // minify-xml
     collapseEmptyElements: false,
@@ -124,11 +124,11 @@ const minifyFile = (file, orig, dest, options) => {
   fs.mkdirSync(target.slice(0, target.lastIndexOf('/') + 1), { recursive: true });
   const skipMinify = getSkipMinify(file, options.minifyScope);
   if (skipMinify || rawRE.test(file)) { fsP.copyFile(file, target);
-  } else if (htmlRE.test(file)) { minifyHTML(file, target, options.html);
-  } else if (cssRE.test(file)) { minifyCSS(file, target, options.css);
-  } else if (jsRE.test(file)) { minifyJS(file, target, options.js);
-  } else if (xmlRE.test(file)) { minifyXML(file, target, options.xml);
-  } else if (jsonRE.test(file)) { minifyJSON(file, target, options.json);
+  } else if (htmlRE.test(file) && options.html) { minifyHTML(file, target, options.html);
+  } else if (jsRE.test(file) && options.js) { minifyJS(file, target, options.js);
+  } else if (cssRE.test(file) && options.css) { minifyCSS(file, target, options.css);
+  } else if (xmlRE.test(file) && options.xml) { minifyXML(file, target, options.xml);
+  } else if (jsonRE.test(file) && options.json) { minifyJSON(file, target, options.json);
   } else { fsP.copyFile(file, target); }
 };
 
@@ -138,20 +138,20 @@ const minifyHTML = async (file, target, options) => {
   fsP.writeFile(target, data, encoding);
 };
 
-const minifyCSS = async (file, target, options) => {
-  let data = await fsP.readFile(file, encoding);
-  try {
-    const { css } = await minify_css(data, options);
-    data = css;
-  } catch {}
-  fsP.writeFile(target, data, encoding);
-};
-
 const minifyJS = async (file, target, options) => {
   let data = await fsP.readFile(file, encoding);
   try {
     const { code } = await minify_js(data, options);
     data = code;
+  } catch {}
+  fsP.writeFile(target, data, encoding);
+};
+
+const minifyCSS = async (file, target, options) => {
+  let data = await fsP.readFile(file, encoding);
+  try {
+    const { css } = await minify_css(data, options);
+    data = css;
   } catch {}
   fsP.writeFile(target, data, encoding);
 };
