@@ -11,50 +11,50 @@
   --md-col-grey-2: #777777;
   --md-col-grey-3: #bbbbbb;
   /* Light: */
-  --md-coll-back: var(--md-col-light);
-  --md-coll-fore: var(--md-col-dark);
-  --md-coll-border: var(--md-col-grey-2);
-  --md-coll-hi-back: var(--md-col-grey-3);
-  --md-coll-hi-fore: var(--md-col-blue-1);
-  --md-coll-neg-back: var(--md-col-grey-1);
-  --md-coll-neg-fore: var(--md-col-light);
+  --md-light-back: var(--md-col-light);
+  --md-light-fore: var(--md-col-dark);
+  --md-light-border: var(--md-col-grey-2);
+  --md-light-hi-back: var(--md-col-grey-3);
+  --md-light-hi-fore: var(--md-col-blue-1);
+  --md-light-neg-back: var(--md-col-grey-1);
+  --md-light-neg-fore: var(--md-col-light);
   /* Dark: */
-  --md-cold-back: var(--md-col-dark);
-  --md-cold-fore: var(--md-col-light);
-  --md-cold-border: var(--md-col-grey-2);
-  --md-cold-hi-back: var(--md-col-grey-1);
-  --md-cold-hi-fore: var(--md-col-blue-1-1);
-  --md-cold-neg-back: var(--md-col-grey-1);
-  --md-cold-neg-fore: var(--md-col-light);
-  /* Themed: */
-  --md-colt-back: var(--md-coll-back);
-  --md-colt-fore: var(--md-coll-fore);
-  --md-colt-border: var(--md-coll-border);
-  --md-colt-hi-back: var(--md-coll-hi-back);
-  --md-colt-hi-fore: var(--md-coll-hi-fore);
-  --md-colt-neg-back: var(--md-coll-neg-back);
-  --md-colt-neg-fore: var(--md-coll-neg-fore);
+  --md-dark-back: var(--md-col-dark);
+  --md-dark-fore: var(--md-col-light);
+  --md-dark-border: var(--md-col-grey-2);
+  --md-dark-hi-back: var(--md-col-grey-1);
+  --md-dark-hi-fore: var(--md-col-blue-1-1);
+  --md-dark-neg-back: var(--md-col-grey-1);
+  --md-dark-neg-fore: var(--md-col-light);
+  /* Theme: */
+  --md-theme-back: var(--md-light-back);
+  --md-theme-fore: var(--md-light-fore);
+  --md-theme-border: var(--md-light-border);
+  --md-theme-hi-back: var(--md-light-hi-back);
+  --md-theme-hi-fore: var(--md-light-hi-fore);
+  --md-theme-neg-back: var(--md-light-neg-back);
+  --md-theme-neg-fore: var(--md-light-neg-fore);
 }
 
 @scope (.md-main) {
-  :scope { background-color: var(--md-colt-back); color: var(--md-colt-fore); padding: 16px; }
+  :scope { background-color: var(--md-theme-back); color: var(--md-theme-fore); padding: 16px; }
 
-  h1, h2, h3, h4, h5, h6 { color: var(--md-colt-hi-fore); }
-  a { color: var(--md-colt-hi-fore); text-decoration: underline; }
-  pre, code { background-color: var(--md-colt-neg-back); color: var(--md-colt-neg-fore); }
+  h1, h2, h3, h4, h5, h6 { color: var(--md-theme-hi-fore); }
+  a { color: var(--md-theme-hi-fore); text-decoration: underline; }
+  pre, code { background-color: var(--md-theme-neg-back); color: var(--md-theme-neg-fore); }
   code { padding-inline: 0.3rem; }
   pre > code { background-color: var(--md-col-trans); padding-inline: 0; }
 
   .display-none { display: none; }
   .fit-content > * { width: inherit; height: inherit; object-fit: scale-down; }
 
-  table, th, td { border: 1px solid var(--md-colt-border); border-collapse: collapse; }
-  th, td { padding: 0.5rem; text-align: left; background-color: var(--md-colt-back); }
-  th { background-color: var(--md-colt-hi-back); }
+  table, th, td { border: 1px solid var(--md-theme-border); border-collapse: collapse; }
+  th, td { padding: 0.5rem; text-align: left; background-color: var(--md-theme-back); }
+  th { background-color: var(--md-theme-hi-back); }
 
   input[type="checkbox"] {
     appearance: none; position: relative; width: 1rem; height: 1rem; vertical-align: middle;
-    background-color: var(--md-colt-hi-back); border: 1px solid var(--md-colt-border); border-radius: 0.125rem;
+    background-color: var(--md-theme-hi-back); border: 1px solid var(--md-theme-border); border-radius: 0.125rem;
   }
   input[type="checkbox"]:checked::after {
     content: ''; position: absolute; width: 0.25rem; height: 0.5rem; left: 0.2rem; top: 0;

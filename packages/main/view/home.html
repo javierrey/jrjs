@@ -24,7 +24,7 @@
     when(() => document.body, () => {
       appendHtml(document.body, `<h1>${contextHub.moduleName ?? 'Home'}</h1>`);
       appendHtml(document.body, `<pre>getEnvironment: ${jsonStringify(getEnvironment(), null, 2)}</pre>`);
-      appendHtml(document.body, `<pre>hub: ${jsonStringify(contextHub, null, 2)}</pre>`);
+      appendHtml(document.body, `<pre>contextHub: ${jsonStringify(contextHub, null, 2)}</pre>`);
     });
   </script>
 </head><body bgcolor="#808080">

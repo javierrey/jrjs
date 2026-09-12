@@ -14,7 +14,7 @@
 */
 
 import {
-  contextHub, merge, jsonParse,
+  contextHub, merge, hydrate, jsonParse,
 } from '../../../../jrjs/packages/lib/drive/drive.js';
 import { coreHub } from '../core/hub.js';
 
@@ -62,4 +62,5 @@ const driveHub = {
   ],
 };
 
-merge(contextHub, coreHub, driveHub, driveParams);
+merge(contextHub, coreHub, driveHub);
+hydrate(contextHub, driveParams);

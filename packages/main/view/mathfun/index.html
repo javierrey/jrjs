@@ -19,25 +19,25 @@
     --htm-col-grey-50: rgba(128, 128, 128, 0.5);
     --htm-col-grey-25: rgba(128, 128, 128, 0.25);
     /* Light: */
-    --svg-coll-stroke-hi: #222222;
-    --svg-coll-stroke-me: #aaaaaa;
-    --svg-coll-stroke-lo: #cccccc;
-    --svg-coll-stroke-1: #004488;
-    --svg-coll-stroke-2: #882200;
+    --svg-light-stroke-hi: #222222;
+    --svg-light-stroke-me: #aaaaaa;
+    --svg-light-stroke-lo: #cccccc;
+    --svg-light-stroke-1: #004488;
+    --svg-light-stroke-2: #882200;
     /* Dark: */
-    --svg-cold-stroke-hi: #dddddd;
-    --svg-cold-stroke-me: #555555;
-    --svg-cold-stroke-lo: #333333;
-    --svg-cold-stroke-1: #22ddff;
-    --svg-cold-stroke-2: #ff4422;
-    /* Themed: */
-    --svg-colt-back: var(--htm-coll-back);
-    --svg-colt-fore: var(--htm-coll-fore);
-    --svg-colt-stroke-hi: var(--svg-coll-stroke-hi);
-    --svg-colt-stroke-me: var(--svg-coll-stroke-me);
-    --svg-colt-stroke-lo: var(--svg-coll-stroke-lo);
-    --svg-colt-stroke-1: var(--svg-coll-stroke-1);
-    --svg-colt-stroke-2: var(--svg-coll-stroke-2);
+    --svg-dark-stroke-hi: #dddddd;
+    --svg-dark-stroke-me: #555555;
+    --svg-dark-stroke-lo: #333333;
+    --svg-dark-stroke-1: #22ddff;
+    --svg-dark-stroke-2: #ff4422;
+    /* Theme: */
+    --svg-theme-back: var(--htm-light-back);
+    --svg-theme-fore: var(--htm-light-fore);
+    --svg-theme-stroke-hi: var(--svg-light-stroke-hi);
+    --svg-theme-stroke-me: var(--svg-light-stroke-me);
+    --svg-theme-stroke-lo: var(--svg-light-stroke-lo);
+    --svg-theme-stroke-1: var(--svg-light-stroke-1);
+    --svg-theme-stroke-2: var(--svg-light-stroke-2);
     /**/
   }
   #panelSvg {
@@ -107,7 +107,7 @@
   </style>
   <script type="module">// _@ts-check 'use strict';
   import {
-    delay, when, debounce, parse,
+    delay, when, debounce, parse, expose,
     ge, qs, qa, CSSUtil,
   } from '../imported/lib/view/view.js';
   import { MathFun } from '../imported/_self/core/mathfun.js';
@@ -230,7 +230,7 @@
     const name = 'svg-pointer-cross', cross = qa(`[name="${name}"]`, svgProps.svg); cross.forEach((el) => el.remove());
     const span = 2 * Math.max(svgProps.box[2], svgProps.box[3]) * Math.max(Math.abs(svgProps.scaleX), Math.abs(svgProps.scaleY));
     svgProps.pointer && addCross(
-      svgProps.svg, svgProps.pointer[0], svgProps.pointer[1] * svgProps.scaleY, span, 'var(--svg-colt-stroke-hi)', '2,2', 1, name
+      svgProps.svg, svgProps.pointer[0], svgProps.pointer[1] * svgProps.scaleY, span, 'var(--svg-theme-stroke-hi)', '2,2', 1, name
     );
   };
 
@@ -243,7 +243,7 @@
         D:[${roundText(domain)}], P:(${roundText(pointer)}),
       `.replace(/\s+/g, ' ').trim().replace(/,$/, '');
     }
-    const size = 1 / 120; addSvgText(svg, message, size, domain[0], domain[1], 'var(--svg-colt-fore)');
+    const size = 1 / 120; addSvgText(svg, message, size, domain[0], domain[1], 'var(--svg-theme-fore)');
     cap.insertAdjacentHTML('beforeend', `<div>${message}</div>\n`);
   };
 
@@ -253,9 +253,9 @@
     const { domain, box, scaleX, scaleY } = setSvgView(svgProps);
     const gridArgs = Object.values({
       svg, box, scaleX, scaleY,
-      stroke: svgProps.stroke || 'var(--svg-colt-stroke-me)',
-      lowStroke: svgProps.lowStroke || 'var(--svg-colt-stroke-lo)',
-      highStroke: svgProps.highStroke || 'var(--svg-colt-stroke-hi)',
+      stroke: svgProps.stroke || 'var(--svg-theme-stroke-me)',
+      lowStroke: svgProps.lowStroke || 'var(--svg-theme-stroke-lo)',
+      highStroke: svgProps.highStroke || 'var(--svg-theme-stroke-hi)',
     });
     const { gridUnit } = addSvgGrid(...gridArgs);
     updateSvgProps({ domain, box, scaleX, scaleY, gridUnit, zoom: 0 });
@@ -374,16 +374,12 @@
   };
   //<!/script>
   //<!script type="module">// @ts-check 'use strict';
-  // @ts-expect-error
-  window.MathFun = MathFun; // @ts-expect-error
-  window.addField = addField; // @ts-expect-error
-  window.domainClick = domainClick; // @ts-expect-error
-  window.scaleYClick = scaleYClick; // @ts-expect-error
-  window.scheduleRenderSvg = scheduleRenderSvg; // @ts-expect-error
-  window.svgClick = svgClick; // @ts-expect-error
-  window.svgDebounced = svgDebounced; // @ts-expect-error
-  window.refreshPaths = refreshPaths; // @ts-expect-error
-  window.svgProps = svgProps; // @hide/show
+
+  expose({
+    MathFun, addField, domainClick, scaleYClick, scheduleRenderSvg,
+    svgClick, svgDebounced, refreshPaths,
+    CSSUtil, svgProps, // @hide/show
+  });
 
   const pwave = (x, p, r, ox = 0, oy = 0) => {
     x = (x - ox) % p + (x < ox ? p : 0); r = x < p / 2 ? -r : r; x *= 4 / p; x = r < 0 ? x - 1 : 3 - x;
@@ -417,7 +413,7 @@
 
     // addPath(addField({
     //   expression: 'x ^ 2 - 1',
-    //   attr: { stroke: 'var(--svg-colt-stroke-1)' },
+    //   attr: { stroke: 'var(--svg-theme-stroke-1)' },
     // }));
 
     addPath(addField({
@@ -430,7 +426,7 @@
 
     // addPath(addField({
     //   expression: '(x - 1) ^ 2 - .5',
-    //   attr: { stroke: 'var(--svg-colt-stroke-1)' },
+    //   attr: { stroke: 'var(--svg-theme-stroke-1)' },
     // }));
 
     // addPath(addField({
@@ -443,7 +439,7 @@
 
     // addPath(addField({
     //   expression: 'sin(x + PI / 4) + .25',
-    //   attr: { stroke: 'var(--svg-colt-stroke-2)' },
+    //   attr: { stroke: 'var(--svg-theme-stroke-2)' },
     // }));
 
     // addPath(addField({
@@ -456,9 +452,7 @@
     //   attr: { stroke: '#22cc44' },
     // }));
 
-    CSSUtil({ themed: 'colt', themes: ['coll', 'cold'] });
-    CSSUtil.toggleCssTheme(); // @ts-expect-error // @show/hide
-    window.CSSUtil = CSSUtil; // @hide/show
+    CSSUtil.toggleCssTheme();
     // scheduleRenderSvg();
   });
   </script>

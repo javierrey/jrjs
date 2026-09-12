@@ -12,6 +12,6 @@ import('../../../../jrjs/packages/lib/drive/run.js');
 
 // @remove, test examples:
 // http://localhost:3000?load=&p1=v%201&p2=v%202
-// http://localhost:3000/hub.html?load=./content/document.md&expose=CSSUtil,merge&p1=v%201&p2=v%202
+// http://localhost:3000/hub.html?load=./test/document.md&expose=qs,qa,CSSUtil,merge&p1=v%201&p2=v%202
 // http://localhost:3000/service-one?p1=v%201&p2=v%202
-// http://localhost:3000/exit-process?p1=v%201&p2=v%202
+// http://localhost:3000/stop-worker?p1=v%201&p2=v%202

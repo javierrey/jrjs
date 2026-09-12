@@ -1,4 +1,4 @@
-// lib/.../core-x.js
+// lib/core/core-x.js
 // _@ts-check
 
 /**

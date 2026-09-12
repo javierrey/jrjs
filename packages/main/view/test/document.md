@@ -9,7 +9,7 @@
 
 # Neural Network Insights
 
-A quick overview of how a neural network works. [A link](../hub.html?load=&expose=CSSUtil). [A title anchor](#training-the-neural-network). [A hash anchor](/hub.html?load=./content/document.md&expose=CSSUtil,merge&p1=v%201&p2=v%202#hash-anchor).
+A quick overview of how a neural network works. [A link](../hub.html?load=./test/document.md&expose=). [A title anchor](#training-the-neural-network). [A hash anchor](/hub.html?load=./test/document.md&expose=qs,qa,CSSUtil,merge&p1=v%201&p2=v%202#hash-anchor).
 
 A neural network is an input-output system that attempts to predict unknown results based on the pattern of known samples.
 

@@ -1,4 +1,4 @@
-// lib/.../drive-x.js
+// lib/drive/drive-x.js
 // _@ts-check
 
 /**

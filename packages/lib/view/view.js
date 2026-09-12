@@ -99,7 +99,7 @@ export const loadHtml = (url, elem, position, norun) => {
 /**
 CSS functionality.
 Usage:
-`CSSUtil({ themed: 'colt', themes: ['coll', 'cold'] }); CSSUtil.toggleCssTheme();`
+`CSSUtil.toggleCssTheme();`
 `const dbS = CSSUtil.getElementStyle(document.body); dbS.set('opacity', '0'); dbS.add('fade-in');`
 ```
 const varValue = CSSUtil.getCssVariable('var-name');
@@ -110,9 +110,9 @@ export const CSSUtil = (() => {
   const typename = 'CSSUtil';
   const registry = {};
 
-  const buildRegistry = (themed, themes) => {
-    /** @type {{ rules: object[], variables: object, themes: string[], themed: string }} */
-    const reg = { rules: [], variables: {}, themes: [], themed };
+  const buildRegistry = (theme, themes) => {
+    /** @type {{ rules: object[], variables: object, themes: string[], theme: string }} */
+    const reg = { rules: [], variables: {}, themes: [], theme };
     const sheets = [...document.styleSheets];
     sheets.forEach((sheet) => {
       reg.rules.push(...[...sheet.cssRules]);
@@ -132,9 +132,10 @@ export const CSSUtil = (() => {
 
   const emptyObject = (obj) => Object.keys(obj).forEach((k) => delete obj[k]);
 
-  const updateRegistry = (themed = registry.themed ?? '', themes = registry.themes ?? []) => {
-    emptyObject(registry); Object.assign(registry, buildRegistry(themed, themes));
-  };
+  const updateRegistry = (
+    theme = registry.theme || 'theme',
+    themes = registry.themes?.length ? registry.themes : ['light', 'dark'],
+  ) => { emptyObject(registry); Object.assign(registry, buildRegistry(theme, themes)); };
 
   /** @param {string} name, @param {HTMLElement | CSSStyleDeclaration} style */
   const getCssVariable = (name, style, pseudo = '') => {
@@ -166,12 +167,13 @@ export const CSSUtil = (() => {
   };
 
   const toggleCssTheme = (themeIndex = -1) => {
-    if (!registry?.themes?.length || !registry.themed) { return; }
-    const themed = `-${registry.themed}-`;
+    if (!registry?.themes?.length || !registry.theme) { updateRegistry(); }
+    if (!registry?.themes?.length || !registry.theme) { return; }
+    const theme = `-${registry.theme}-`;
     const variables = Object.entries(registry.variables);
-    const themedVariable = variables.find(([k, v]) => k.includes(themed)) ?? [];
-    const themedValue = getCssVariable(themedVariable[0], themedVariable[1]);
-    let currentIndex = registry.themes.findIndex((theme) => themedValue.includes(`-${theme}-`));
+    const themeVariable = variables.find(([k, v]) => k.includes(theme)) ?? [];
+    const themeValue = getCssVariable(themeVariable[0], themeVariable[1]);
+    let currentIndex = registry.themes.findIndex((theme) => themeValue.includes(`-${theme}-`));
     if (currentIndex < 0) { currentIndex = 0; }
     const valueSearch = `-${registry.themes[currentIndex]}-`;
     if (themeIndex < 0) { themeIndex = Math.max(currentIndex - themeIndex, 0); }
@@ -185,19 +187,13 @@ export const CSSUtil = (() => {
     });
   };
 
-  /** constructor method
-  Updates the static CSS registry for themed variable replacements.
-  @param {{ themed: string; themes: string[]; }} _0, @return {void}
-  */
-  const main = ({ themed, themes }) => updateRegistry(themed, themes);
-
   /** public static members */
   const members = {
     typename, registry, updateRegistry, toggleCssTheme,
     getCssVariable, setCssVariable, getElementStyle,
   };
 
-  return Object.freeze(Object.assign(main, members));
+  return Object.freeze(members);
 })();
 
 /* * */

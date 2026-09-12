@@ -15,44 +15,44 @@
     /* * */
     :root {
       /* Predefined: */
-      --con-base: 16;
+      --pre-base: 16;
       /* Define: */
       --htm-base: 14;
       --htm-font: sans-serif;
       --htm-line: 1.5;
       --htm-overflow: hidden auto;
       /* Calculate: */
-      --htm-factor: calc(var(--htm-base) / var(--con-base));
+      --htm-factor: calc(var(--htm-base) / var(--pre-base));
       --htm-size: calc(var(--htm-base) * 1px);
-      --htm-stroke: calc(1 / var(--con-base) * 1rem);
+      --htm-stroke: calc(1 / var(--pre-base) * 1rem);
       /* Colors: */
       --htm-col-trans: rgba(128, 128, 128, 0);
       --htm-col-light: #dddddd;
       --htm-col-dark: #222222;
       /* Light: */
-      --htm-coll-back: var(--htm-col-light);
-      --htm-coll-fore: var(--htm-col-dark);
+      --htm-light-back: var(--htm-col-light);
+      --htm-light-fore: var(--htm-col-dark);
       /* Dark: */
-      --htm-cold-back: var(--htm-col-dark);
-      --htm-cold-fore: var(--htm-col-light);
-      /* Themed: */
-      --htm-colt-back: var(--htm-coll-back);
-      --htm-colt-fore: var(--htm-coll-fore);
+      --htm-dark-back: var(--htm-col-dark);
+      --htm-dark-fore: var(--htm-col-light);
+      /* Theme: */
+      --htm-theme-back: var(--htm-light-back);
+      --htm-theme-fore: var(--htm-light-fore);
       /* * */
     }
     /* * */
     html { font-family: var(--htm-font); font-size: var(--htm-size); line-height: var(--htm-line); }
     body { margin: 0; overflow: var(--htm-overflow); }
     body, input, select, button, textarea {
-      background-color: var(--htm-colt-back); color: var(--htm-colt-fore); font-family: var(--htm-font); font-size: 1rem;
+      background-color: var(--htm-theme-back); color: var(--htm-theme-fore); font-family: var(--htm-font); font-size: 1rem;
     }
-    a { color: var(--htm-colt-fore); text-decoration: none; }
+    a { color: var(--htm-theme-fore); text-decoration: none; }
     * { box-sizing: border-box; -webkit-tap-highlight-color: var(--htm-col-trans); }
     *:focus { outline: 0; }
     table { border: none; border-collapse: collapse; }
     td { padding: 0; vertical-align: top; }
     fieldset { border: none; margin: 0; padding: 0; }
-    hr { background-color: var(--htm-colt-fore); color: var(--htm-colt-fore); height: var(--htm-stroke); border: none; }
+    hr { background-color: var(--htm-theme-fore); color: var(--htm-theme-fore); height: var(--htm-stroke); border: none; }
     /* * */
     select, button, input, textarea { border-width: 1px; }
     a, select, button, input { cursor: pointer; }

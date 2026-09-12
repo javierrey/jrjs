@@ -3,7 +3,12 @@
 /* @import "./view.css"; /* hide, use <link> */
 
 /* * */
-
-
-
+:root {
+  /* Define: */
+  --htm-font-sans: sans-serif;
+  --htm-font-serif: serif;
+  --htm-font-mono: monospace;
+  --htm-overflow-ver: hidden auto;
+  --htm-overflow-hor: auto hidden;
+}
 /* * */

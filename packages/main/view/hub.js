@@ -10,7 +10,7 @@
 */
 
 import {
-  contextHub, merge, parseQuery,
+  contextHub, merge, hydrate, parseQuery,
 } from './imported/lib/view/view.js';
 import { coreHub } from './imported/_self/core/hub.js';
 
@@ -26,4 +26,5 @@ const viewHub = {
   updated: Date.now(),
 };
 
-merge(contextHub, coreHub, viewHub, viewParams);
+merge(contextHub, coreHub, viewHub);
+hydrate(contextHub, viewParams);
