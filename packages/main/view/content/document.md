@@ -9,7 +9,7 @@
 
 # Neural Network Insights
 
-A quick overview of how a neural network works.
+A quick overview of how a neural network works. [A link](../hub.html?load=&expose=CSSUtil). [A title anchor](#training-the-neural-network). [A hash anchor](/hub.html?load=./content/document.md&expose=CSSUtil,merge&p1=v%201&p2=v%202#hash-anchor).
 
 A neural network is an input-output system that attempts to predict unknown results based on the pattern of known samples.
 
@@ -91,7 +91,8 @@ The most universal activation function for neural networks is called the `sigmoi
 - [ ] (third checkbox)
 - [x] (fourth checkbox)
 
-## Training the neural network
+
+## <a name="hash-anchor"></a>Training the neural network
 
 <span class="fit-content" style="width: 320px;">![Alt](./assets/img-land.jpg "Title")</span>
 
@@ -101,7 +102,7 @@ In most cases, even simple ones, the neural network will need intermediate layer
 
 If the network is not well designed for the purpose of the use case, it may never converge into a consistent result, or it may even diverge.
 
-Here is an interactive playground to design a neural network and train it: <a href="../../" target="_blank">Neural Network Designer</a>
+Here is an interactive playground to design a neural network and train it: <a href="../?load=./mathfun" target="_blank">Neural Network Designer</a>
 
 <div class="notes hi"></div>
 

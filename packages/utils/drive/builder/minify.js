@@ -50,7 +50,7 @@ const xmlRE = /\.(?:xml|xhtml|svg|dae)$/i;
 const jsonRE = /\.json5?$/i;
 
 const defaultConfig = {
-  minifyScope: 1, // 0: none, 1: view (default), 2: skip imports, 3: all
+  minifyScope: 1, // 0: none, 1: only view (default), 2: skip imports, 3: all
   html: { // html-minifier-terser
     minifyCSS: true,
     minifyJS: true,
@@ -71,7 +71,7 @@ const defaultConfig = {
     keep_fnames: false,
     keep_classnames: false,
   },
-  css: { // clean-css // disabled, lacks @scope support
+  css: { // clean-css // added @scope support
     level: 1,
     returnPromise: true,
     rebaseTo: undefined, // undefined to preserve URLs

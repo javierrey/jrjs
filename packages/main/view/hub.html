@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en"><head>
-  <title>Load</title>
+  <title>Hub</title>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=1"/>
   <meta name="mobile-web-app-capable" content="yes"/><meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -13,15 +13,15 @@
   <link rel="stylesheet" href="./imported/lib/view/view.css"/>
   <script type="module">// _@ts-check 'use strict';
     import {
-      contextHub, log, when, jsonStringify,
+      contextHub, log, when, jsonStringify, expose,
       ge, gt, qs, qa, loadHtml, insertHtml,
-    } from './imported/lib/view/view.js';
-    import './hub.js';
-    log.info(`hub: ${jsonStringify(contextHub, null, 2)}`);
+    } from './hub.js';
+    import * as hub from './hub.js';
+    log.info(`contextHub: ${jsonStringify(contextHub, null, 2)}`);
+    contextHub.expose && expose(Object.fromEntries(contextHub.expose.split(',').map((k) => [k, hub[k]])));
+    contextHub.load ||= './home.html';
     when(() => document.body, () => {
-      contextHub.content
-        ? loadHtml(contextHub.content)
-        : insertHtml(`<style>body { margin: 16px; }</style><p>Use: "${location.pathname}?content=..." in URL</p>`);
+      loadHtml(contextHub.load);
     });
   </script>
 </head><body bgcolor="#808080">

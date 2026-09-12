@@ -14,6 +14,8 @@ import {
 } from './imported/lib/view/view.js';
 import { coreHub } from './imported/_self/core/hub.js';
 
+export * from './imported/lib/view/view.js';
+
 const viewParams = parseQuery(location.search);
 const moduleName = 'main'; // @define (not in filepath).
 
