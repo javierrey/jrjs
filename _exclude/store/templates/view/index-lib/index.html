@@ -21,7 +21,7 @@
       ge, gt, qs, qa,
       appendHtml, prependHtml, replaceHtml, insertHtmlBefore, insertHtmlAfter,
     } from './imported/lib/view/view.js';
-    when(() => document.body, () => { // log('ready!');
+    when(() => document.body).then(() => { // log('ready!');
     });
   </script>
 </head><body bgcolor="#808080">

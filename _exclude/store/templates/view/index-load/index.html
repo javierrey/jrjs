@@ -81,7 +81,7 @@
   </style>
   <script type="module" src="./load.js"></script>
   <script type="module">// _@ts-check 'use strict'; 
-    when(() => document.body, () => {
+    when(() => document.body).then(() => {
       contextHub.content
         ? loadHtml(contextHub.content)
         : insertHtml(`<style>body { margin: 16px; }</style><p>Use: "${location.pathname}?content=..." in URL</p>`);

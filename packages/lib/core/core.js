@@ -787,13 +787,16 @@ export const getEnvironment = () => {
 export const importModule = async (url, type) =>
   (await (type ? import(url, { with: { type } }) : import(url))).default;
 
-/** Delays a function call. `delay(2e3, () => log('run'));` */
-export const delay = (ms = 0, run = () => {}) => new Promise((s) => setTimeout(() => s(run()), ms));
+/** Delays a function call. `delay(2e3).then(() => log('delayed'))` */
+export const delay = (ms = 0) => new Promise((s) => setTimeout(s, ms));
 
-/** Calls a function when a condition is met. `when(() => globalThis.document?.body, () => log('run'));` */
-export const when = (ready = () => true, run = () => {}) => new Promise((s, e) => {
-  let l = 50; const m = l * 100, t = Date.now() + m * 2.10, d = () => (l = Math.min(l * 1.2, m));
-  (function f() { ready() ? s(run()) : Date.now() > t ? e() : setTimeout(f, d()); })();
+/**
+Calls a function when a condition is met.
+`when(() => globalThis.document?.body).then(() => log('ready')).catch(() => log('timeout'))`
+*/
+export const when = (ready = () => true) => new Promise((s, e) => {
+  let g = 50; const l = g * 100, o = Date.now() + l * 10, d = () => (g = Math.min(g * 1.2, l));
+  (function f() { ready() ? s() : Date.now() > o ? e() : setTimeout(f, d()); })();
 });
 
 /**

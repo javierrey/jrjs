@@ -385,7 +385,7 @@
     return r * x * x - r + oy;
   };
 
-  when(() => document.body, () => {
+  when(() => document.body).then(() => {
     log.info('mathfun ready');
     const dbS = CSSUtil.getElementStyle(document.body);
     dbS.set('opacity', '0');
@@ -408,7 +408,7 @@
       return when(() => dbS.get('opacity') === '1');
     }).then(() => {
       dbS.update('opacity');
-    });
+    }).catch(() => log('timeout'));
 
     // addPath(addField({
     //   expression: 'x ^ 2 - 1',
@@ -453,7 +453,7 @@
 
     CSSUtil.toggleCssTheme();
     // scheduleRenderSvg();
-  });
+  }).catch(() => {});
   </script>
 </head><body>
   <div id="panelDiv">

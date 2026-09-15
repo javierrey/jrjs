@@ -9,7 +9,7 @@ import './hub.js';
 
 /* * */
 
-when(() => document.body, () => { // log('ready!');
+when(() => document.body).then(() => { // log('ready!');
 });
 
 /* * */

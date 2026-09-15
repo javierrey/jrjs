@@ -319,6 +319,7 @@ export const waitFor = (state, args) => new Promise((resolve, reject) => {
 });
 
 -------------------------------
+// old:
 
 /**
 Delays a function call. @param {number} ms @param {Function} run

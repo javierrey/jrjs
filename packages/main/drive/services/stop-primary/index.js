@@ -10,7 +10,7 @@ import { contextHub, delay, stopPrimaryProcess } from '../hub.js';
 /** @param {PlainObject} [params] @return {Promise<PlainObject>} */
 export default async (params = {}) => {
   params.name ||= 'stopPrimary';
-  delay(1, stopPrimaryProcess);
+  delay(1).then(stopPrimaryProcess);
   return {
     pid: process.pid,
     workerId: contextHub.workerId,
