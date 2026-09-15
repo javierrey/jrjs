@@ -124,13 +124,18 @@ export const Log = (config = {}) => {
     const stack = (new Error().stack ?? '').trim().split('\n'); stack[0].startsWith('Error') && stack.shift();
     return stack.slice(level ? 3 : 2);
   };
+  const getAt = (line) => {
+    line = (line ?? '').trim().replace(/^at\s+/, ''); line = /\(([^()]*)\)\s*$/.exec(line)?.[1] ?? line;
+    const m = /^(.*?)((?::\d+){1,2})$/.exec(line), p = (m ? m[1] : line).replace(/^[a-z][\w+.-]*:\/\//i, '')
+      .replace(/^[^/]+/, '').split(/[?#]/)[0].replace(/.*\/(?=[^/]+\/[^/]+$)/, '').replace(/^\//, '');
+    return p + (m ? m[2] : '');
+  };
   const renderUTC = (d = new Date()) => d.toISOString().replace('T', ` ${DAYS[d.getUTCDay()]} `).slice(0, -1);
   const method = (level) => (...args) => { config.level >= level && log(METHODS[level], ...args); };
   const log = (...args) => { // main method
-    const method = METHODS.includes(args[0]) ? args.shift() : METHODS[0], level = METHODS.indexOf(method);
-    if (!config.level && level) return;
-    const tron = config.trace && (config.trace >= level || level > 3);
-    const stack = trace(level), at = (stack[0] ?? '').trim().replace(/\(|.*\/(?=\S+\/\S)|\)/g, '');
+    const explicit = METHODS.includes(args[0]); if (!explicit) return args.forEach(print);
+    const method = args.shift(), level = METHODS.indexOf(method); if (!config.level && level) return;
+    const tron = config.trace && (config.trace >= level || level > 3), stack = trace(level), at = getAt(stack[0]);
     const wid = contextHub.workerId, worker = isNaN(wid) ? '' : !wid ? ' P0' : ` W${wid}`;
     const name = config.name ? ` "${config.name}"` : '';
     CONSOLE[method](`\n[${method.toUpperCase()} ${renderUTC()}]${worker}${name} @${at}`); args.forEach(print);
@@ -405,8 +410,8 @@ export const merge = (tgt, ...srcs) => {
 };
 
 /**
-Populates an object with default values from other objects recursively,
-as long as they are absent or less curated than the source defaults:
+Populates a target object with default values from other sources recursively,
+as long as they are absent or less curated in the target than in the source:
 undefined, null, NaN, '', [] and {}.
 */
 export const hydrate = (tgt, ...srcs) => {
@@ -782,9 +787,9 @@ export const importModule = async (url, type) =>
 export const delay = (ms = 0, run = () => {}) => new Promise((s) => setTimeout(() => s(run()), ms));
 
 /** Calls a function when a condition is met. `when(() => globalThis.document?.body, () => log('run'));` */
-export const when = (ready = () => true, run = () => {}) => new Promise((s) => {
-  let l = 50; const m = l * 100, t = Date.now() + m * 10, d = () => (l = Math.min(l * 1.2, m));
-  (function f() { ready() ? s(run()) : Date.now() > t ? s() : setTimeout(f, d()); })();
+export const when = (ready = () => true, run = () => {}) => new Promise((s, e) => {
+  let l = 50; const m = l * 100, t = Date.now() + m * 2.10, d = () => (l = Math.min(l * 1.2, m));
+  (function f() { ready() ? s(run()) : Date.now() > t ? e() : setTimeout(f, d()); })();
 });
 
 /**

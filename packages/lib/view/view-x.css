@@ -5,10 +5,15 @@
 /* * */
 :root {
   /* Define: */
-  --htm-font-sans: sans-serif;
-  --htm-font-serif: serif;
-  --htm-font-mono: monospace;
-  --htm-overflow-ver: hidden auto;
-  --htm-overflow-hor: auto hidden;
+  --lib-view-view-x-css: 1;
+  --view-font-sans: sans-serif;
+  --view-font-serif: serif;
+  --view-font-mono: monospace;
+  --view-overflow-ver: hidden auto;
+  --view-overflow-hor: auto hidden;
+  /* Colors: */
+  --view-grey-075: rgba(128, 128, 128, 0.75);
+  --view-grey-050: rgba(128, 128, 128, 0.5);
+  --view-grey-025: rgba(128, 128, 128, 0.25);
 }
 /* * */

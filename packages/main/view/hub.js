@@ -5,7 +5,8 @@
 @typedef {{
   moduleName: string;
   href: string;
-  updated: number;
+  load: string;
+  theme: string;
 }} ViewConfig;
 */
 
@@ -23,8 +24,15 @@ const moduleName = 'main'; // @define (not in filepath).
 const viewHub = {
   moduleName,
   href: location.href,
-  updated: Date.now(),
+  load: '',
+  theme: '',
+};
+
+/** @type {Partial<ViewConfig>} */
+const defaults = {
+  load: './home.html',
+  theme: 'light',
 };
 
 merge(contextHub, coreHub, viewHub);
-hydrate(contextHub, viewParams);
+hydrate(contextHub, viewParams, defaults);

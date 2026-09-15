@@ -23,12 +23,12 @@ import { minify as minify_xml } from '../../../imports/drive/dev_modules/min_mod
 
 import { clone, merge, parse, fs, fsP, log, getPathCore, getAllFiles, removeDir } from '../../../lib/drive/drive.js';
 
-const minify_css = CleanCSS.process;
+const minify_css = CleanCSS.process; // Module modified to support @scope.
 
 const minify_json = (data, options) => {
-  try { // JSON RegExp: Complex values inducing false positives will use core's parse.
-    const isJson5 = !options.skipJson5 && /[^"\s]\s*:/g.test(data);
-    data = JSON.stringify(isJson5 ? parse(data) : JSON.parse(data)) ?? data;
+  try { // Heuristic JSON RegExp: complex values inducing false positives will simply use core's parse.
+    const isJsonExt = !options.skipJsonExt && (/[^"\s]\s*:/.test(data) || /(?:^|[^:])\/[/*]/.test(data));
+    data = JSON.stringify(isJsonExt ? parse(data) : JSON.parse(data)) ?? data;
   } catch {}
   return data;
 };
@@ -47,7 +47,7 @@ const htmlRE = /\.html?$/i;
 const jsRE = /\.[mc]?js$/i;
 const cssRE = /\.css$/i;
 const xmlRE = /\.(?:xml|xhtml|svg|dae)$/i;
-const jsonRE = /\.json5?$/i;
+const jsonRE = /\.json[5c]?$/i;
 
 const defaultConfig = {
   minifyScope: 1, // 0: none, 1: only view (default), 2: skip imports, 3: all
@@ -71,7 +71,7 @@ const defaultConfig = {
     keep_fnames: false,
     keep_classnames: false,
   },
-  css: { // clean-css // added @scope support
+  css: { // clean-css
     level: 1,
     returnPromise: true,
     rebaseTo: undefined, // undefined to preserve URLs
@@ -84,7 +84,7 @@ const defaultConfig = {
     ignoreCData: true,
   },
   json: { // internal (using jrjs/core)
-    skipJson5: false,
+    skipJsonExt: false,
   },
 };
 

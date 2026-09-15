@@ -27,7 +27,7 @@
   largeThreshold: number;
   uploadLimit: number;
 }} ServerConfig;
-@typedef {{
+@typedef {ServerConfig & {
   baseFolder: string;
   privateFolder: string;
   publicFolder: string;
@@ -81,7 +81,7 @@ const getFileContentType = (filename, content) => {
     : /^html?$/i.test(ext) ? 'text/html'
     : /^[mc]?js$/i.test(ext) ? 'application/javascript'
     : /^css$/i.test(ext) ? 'text/css'
-    : /^json5?$/i.test(ext) ? 'application/json'
+    : /^json[5c]?$/i.test(ext) ? 'application/json'
     : /^md$/i.test(ext) ? 'text/markdown'
     : /^x(ht)?ml$/i.test(ext) ? 'application/xml'
     : /^svg$/i.test(ext) ? 'image/svg+xml'
@@ -363,17 +363,17 @@ const resolver = async (request, response) => {
   logConnection({ request, resource, error, status, headers, body });
 };
 
-/** @param {ServerConfig} config @return {ServerConfig & ResolvedServerConfig} */
+/** @param {ServerConfig} config @return {ResolvedServerConfig} */
 const resolveConfig = (config) => {
   const env = getEnvironment();
   const baseFolder = getDistPath(process.cwd().replace(/\\/g, '/') || (env.root + env.path));
   const privateFolder = getDistPath(resolvePath(baseFolder, config.privateDir));
   const publicFolder = getDistPath(resolvePath(baseFolder, config.publicDir));
   const servicesFolder = config.servicesDir ? getDistPath(resolvePath(baseFolder, config.servicesDir)) : '';
-  const isSSL = config.protocol === 'https';
+  const isSSL = ['https', 'wss', 'ftps'].includes(config.protocol);
 
-  /** @type {ResolvedServerConfig} */
-  const resolvedConfig = {
+  return {
+    ...config,
     baseFolder,
     privateFolder,
     publicFolder,
@@ -382,8 +382,6 @@ const resolveConfig = (config) => {
     cert: isSSL ? fs.readFileSync(privateFolder + config.sslCert, 'utf-8') : null,
     key: isSSL ? fs.readFileSync(privateFolder + config.sslKey, 'utf-8') : null,
   };
-
-  return { ...config, ...resolvedConfig };
 };
 
 /**
@@ -391,22 +389,22 @@ Creates and runs an `http` or `https` nodejs server.
 Accepts a server listener and a server config object.
 The listener can also be an express-like server application.
 Both arguments are optional: `runServer(config)` and `runServer()` are also valid.
-@param {(RequestListener & FunctionObject) | (ServerConfig & PlainObject) | undefined} listener
-@param {(ServerConfig & PlainObject) | undefined} [config]
+@param {(RequestListener & FunctionObject) | ServerConfig | undefined} listener
+@param {ServerConfig | undefined} [config]
 @return {Server}
 */
 export const runServer = (listener, config) => {
-  config ??= /** @type {ServerConfig & PlainObject} */ ({});
+  config ??= /** @type {ServerConfig} */ ({});
   if (!(listener instanceof Function)) { Object.assign(config, listener); listener = resolver; }
   else { Object.assign(config, listener.config); }
-  config = resolveConfig(config);
-  Object.entries(config.logConfig ?? {}).forEach(([k, v]) => log.config[k] = v);
-  config.isSSL ??= Boolean(config.cert && config.key);
-  config.protocol ??= config.isSSL ? 'https' : 'http';
-  config.host ??= '0.0.0.0'; config.port ??= 3000;
-  config.timeout ??= 50e3; config.clientsSize ??= 1e3; config.clientPortsSize ??= 16;
-  config.largeThreshold ??= 2e6; config.uploadLimit ??= 8e6;
-  Object.assign(serverConfig, config);
+  const rsConfig = resolveConfig(config);
+  Object.entries(rsConfig.logConfig ?? {}).forEach(([k, v]) => log.config[k] = v);
+  rsConfig.isSSL ??= Boolean(rsConfig.cert && rsConfig.key);
+  rsConfig.protocol ??= rsConfig.isSSL ? 'https' : 'http';
+  rsConfig.host ??= '0.0.0.0'; rsConfig.port ??= 3000;
+  rsConfig.timeout ??= 50e3; rsConfig.clientsSize ??= 1e3; rsConfig.clientPortsSize ??= 16;
+  rsConfig.largeThreshold ??= 2e6; rsConfig.uploadLimit ??= 8e6;
+  Object.assign(serverConfig, rsConfig);
   const httpModule = serverConfig.isSSL ? https : http; // @ts-expect-error:
   const server = /** @type {Server} */ (httpModule.createServer(serverConfig, listener));
   server.timeout = serverConfig.timeout;

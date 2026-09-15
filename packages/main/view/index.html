@@ -13,14 +13,13 @@
   <link rel="stylesheet" href="./imported/lib/view/view.css"/>
   <script type="module">// _@ts-check 'use strict';
     import {
-      contextHub, log, when, jsonStringify,
+      contextHub, log, when, jsonStringify, CSSUtil,
       ge, gt, qs, qa, loadHtml, insertHtml,
     } from './hub.js';
     log.info(`contextHub: ${jsonStringify(contextHub, null, 2)}`);
-    contextHub.load ||= './home.html';
-    when(() => document.body, () => {
-      loadHtml(contextHub.load);
-    });
+    when(() => document.body)
+    .then(() => loadHtml(contextHub.load))
+    .catch(() => {});
   </script>
 </head><body bgcolor="#808080">
 </body></html>

@@ -86,7 +86,7 @@ New scripts in the content are also loaded and run, unless `norun` is true.
 export const loadHtml = (url, elem, position, norun) => {
   const cb = (uri, cont, err) => {
     uri = UrlFun.closeDirUrl(uri);
-    cont ??= '', cont = `\n<!--loadHtml "${uri}" "${cont.length}B" "${err ?? ''}"-->\n`
+    cont ??= '', cont = `\n<!--loadHtml "${uri}" "${cont.length} C" "${err ?? ''}"-->\n`
       + UrlFun.rebaseHtml(/[^?#]+\.md([?#]|$)/i.test(uri) ? mdToHtml(cont) : cont, uri)
       + `\n<!--/loadHtml-->\n`;
     insertHtml(cont, elem, position, norun);
@@ -99,7 +99,7 @@ export const loadHtml = (url, elem, position, norun) => {
 /**
 CSS functionality.
 Usage:
-`CSSUtil.toggleCssTheme();`
+`CSSUtil.setCssTheme('dark')`, `CSSUtil.toggleCssTheme()`,
 `const dbS = CSSUtil.getElementStyle(document.body); dbS.set('opacity', '0'); dbS.add('fade-in');`
 ```
 const varValue = CSSUtil.getCssVariable('var-name');
@@ -137,6 +137,8 @@ export const CSSUtil = (() => {
     themes = registry.themes?.length ? registry.themes : ['light', 'dark'],
   ) => { emptyObject(registry); Object.assign(registry, buildRegistry(theme, themes)); };
 
+  const initRegistry = () => (!registry.themes?.length || !registry.theme) && updateRegistry();
+
   /** @param {string} name, @param {HTMLElement | CSSStyleDeclaration} style */
   const getCssVariable = (name, style, pseudo = '') => {
     style ??= document.documentElement;
@@ -167,11 +169,10 @@ export const CSSUtil = (() => {
   };
 
   const toggleCssTheme = (themeIndex = -1) => {
-    if (!registry?.themes?.length || !registry.theme) { updateRegistry(); }
-    if (!registry?.themes?.length || !registry.theme) { return; }
-    const theme = `-${registry.theme}-`;
+    initRegistry();
+    const regTheme = `-${registry.theme}-`;
     const variables = Object.entries(registry.variables);
-    const themeVariable = variables.find(([k, v]) => k.includes(theme)) ?? [];
+    const themeVariable = variables.find(([k, v]) => k.includes(regTheme)) ?? [];
     const themeValue = getCssVariable(themeVariable[0], themeVariable[1]);
     let currentIndex = registry.themes.findIndex((theme) => themeValue.includes(`-${theme}-`));
     if (currentIndex < 0) { currentIndex = 0; }
@@ -187,9 +188,22 @@ export const CSSUtil = (() => {
     });
   };
 
+  const setCssTheme = (theme = '') => {
+    initRegistry();
+    const themeIndex = registry.themes?.indexOf(theme);
+    themeIndex > -1 && toggleCssTheme(themeIndex);
+  };
+
+  const getCssTheme = () => {
+    initRegistry();
+    const themeVariable = Object.entries(registry.variables ?? {}).find(([k, v]) => k.includes(`-${registry.theme}-`)) ?? [];
+    const themeValue = getCssVariable(themeVariable[0], themeVariable[1]);
+    return registry.themes?.find((theme) => themeValue?.includes(`-${theme}-`)) ?? '';
+  };
+
   /** public static members */
   const members = {
-    typename, registry, updateRegistry, toggleCssTheme,
+    typename, registry, updateRegistry, toggleCssTheme, setCssTheme, getCssTheme,
     getCssVariable, setCssVariable, getElementStyle,
   };
 

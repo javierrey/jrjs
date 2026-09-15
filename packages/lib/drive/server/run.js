@@ -12,7 +12,7 @@ import { runServer } from './server.js';
 
 // const fsP = fs.promises;
 
-/** @type {ServerConfig} */
+/** @type {Partial<ServerConfig>} */
 const defaults = {
   privateDir: '_exclude/_ignore/store', // (from root)
   publicDir: '../view', // (from main/drive)
@@ -27,6 +27,7 @@ const defaults = {
   clientPortsSize: 16,
   largeThreshold: 2e6,
   uploadLimit: 8e6,
+  logConfig: { level: 3 },
 };
 
 const appName = 'server';

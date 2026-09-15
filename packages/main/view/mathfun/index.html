@@ -16,8 +16,8 @@
   /* * */
   :root {
     /* Colors: */
-    --htm-col-grey-50: rgba(128, 128, 128, 0.5);
-    --htm-col-grey-25: rgba(128, 128, 128, 0.25);
+    --view-grey-050: rgba(128, 128, 128, 0.5);
+    --view-grey-025: rgba(128, 128, 128, 0.25);
     /* Light: */
     --svg-light-stroke-hi: #222222;
     --svg-light-stroke-me: #aaaaaa;
@@ -31,8 +31,8 @@
     --svg-dark-stroke-1: #22ddff;
     --svg-dark-stroke-2: #ff4422;
     /* Theme: */
-    --svg-theme-back: var(--htm-light-back);
-    --svg-theme-fore: var(--htm-light-fore);
+    --svg-theme-back: var(--view-light-back);
+    --svg-theme-fore: var(--view-light-fore);
     --svg-theme-stroke-hi: var(--svg-light-stroke-hi);
     --svg-theme-stroke-me: var(--svg-light-stroke-me);
     --svg-theme-stroke-lo: var(--svg-light-stroke-lo);
@@ -55,7 +55,7 @@
     overflow: hidden;
     padding-block-start: 2px;
     padding-inline: 0.5rem;
-    background-color: var(--htm-col-grey-50);
+    background-color: var(--view-grey-050);
     font-family: monospace;
   }
   #aspect-input {
@@ -101,13 +101,13 @@
     overflow: hidden;
     font-family: sans-serif;
   }
-  .selected-back { background-color: var(--htm-col-grey-50); }
-  .half-selected-back { background-color: var(--htm-col-grey-25); }
+  .selected-back { background-color: var(--view-grey-050); }
+  .half-selected-back { background-color: var(--view-grey-025); }
   .margin-block-start { margin-block-start: 8px; }
   </style>
   <script type="module">// _@ts-check 'use strict';
   import {
-    delay, when, debounce, parse, expose,
+    log, delay, when, debounce, parse, expose,
     ge, qs, qa, CSSUtil,
   } from '../imported/lib/view/view.js';
   import { MathFun } from '../imported/_self/core/mathfun.js';
@@ -116,7 +116,6 @@
     roundText, rectCenter, rangeRect, rangeDomain, scaleRect, setViewField,
   } from './mathfun-svg.js';
   const lo = {}, go = globalThis; // typeof global === 'undefined' ? self : global
-  const log = console.log; // eslint-disable-line
   // log('local', lo);
 
   // core/client:
@@ -387,10 +386,10 @@
   };
 
   when(() => document.body, () => {
-    // log('ready', arguments);
+    log.info('mathfun ready');
     const dbS = CSSUtil.getElementStyle(document.body);
     dbS.set('opacity', '0');
-    when().then(() => {
+    when(() => true).then(() => {
     //   return delay(2e3);
     // }).then(() => {
       dbS.add('fade-in');

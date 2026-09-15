@@ -1,31 +1,33 @@
 /* lib/view/md.css */
 
 :root {
+  /* Define: */
+  --lib-view-md-css: 1;
   /* Colors: */
-  --md-col-trans: rgba(128, 128, 128, 0);
-  --md-col-light: #ffffff;
-  --md-col-dark: #222222;
-  --md-col-blue-1: #0050a0;
-  --md-col-blue-1-1: #66ddff;
-  --md-col-grey-1: #555555;
-  --md-col-grey-2: #777777;
-  --md-col-grey-3: #bbbbbb;
+  --md-trans-000: rgba(128, 128, 128, 0);
+  --md-white-1: #ffffff;
+  --md-black-1: #222222;
+  --md-blue-1: #3355bb;
+  --md-blue-2: #66bbff;
+  --md-grey-1: #555555;
+  --md-grey-2: #777777;
+  --md-grey-3: #bbbbbb;
   /* Light: */
-  --md-light-back: var(--md-col-light);
-  --md-light-fore: var(--md-col-dark);
-  --md-light-border: var(--md-col-grey-2);
-  --md-light-hi-back: var(--md-col-grey-3);
-  --md-light-hi-fore: var(--md-col-blue-1);
-  --md-light-neg-back: var(--md-col-grey-1);
-  --md-light-neg-fore: var(--md-col-light);
+  --md-light-back: var(--md-white-1);
+  --md-light-fore: var(--md-black-1);
+  --md-light-border: var(--md-grey-2);
+  --md-light-hi-back: var(--md-grey-3);
+  --md-light-hi-fore: var(--md-blue-1);
+  --md-light-neg-back: var(--md-grey-1);
+  --md-light-neg-fore: var(--md-white-1);
   /* Dark: */
-  --md-dark-back: var(--md-col-dark);
-  --md-dark-fore: var(--md-col-light);
-  --md-dark-border: var(--md-col-grey-2);
-  --md-dark-hi-back: var(--md-col-grey-1);
-  --md-dark-hi-fore: var(--md-col-blue-1-1);
-  --md-dark-neg-back: var(--md-col-grey-1);
-  --md-dark-neg-fore: var(--md-col-light);
+  --md-dark-back: var(--md-black-1);
+  --md-dark-fore: var(--md-white-1);
+  --md-dark-border: var(--md-grey-2);
+  --md-dark-hi-back: var(--md-grey-1);
+  --md-dark-hi-fore: var(--md-blue-2);
+  --md-dark-neg-back: var(--md-grey-1);
+  --md-dark-neg-fore: var(--md-white-1);
   /* Theme: */
   --md-theme-back: var(--md-light-back);
   --md-theme-fore: var(--md-light-fore);
@@ -43,7 +45,7 @@
   a { color: var(--md-theme-hi-fore); text-decoration: underline; }
   pre, code { background-color: var(--md-theme-neg-back); color: var(--md-theme-neg-fore); }
   code { padding-inline: 0.3rem; }
-  pre > code { background-color: var(--md-col-trans); padding-inline: 0; }
+  pre > code { background-color: var(--md-trans-000); padding-inline: 0; }
 
   .display-none { display: none; }
   .fit-content > * { width: inherit; height: inherit; object-fit: scale-down; }
@@ -58,6 +60,6 @@
   }
   input[type="checkbox"]:checked::after {
     content: ''; position: absolute; width: 0.25rem; height: 0.5rem; left: 0.2rem; top: 0;
-    border: 0.2rem solid var(--md-col-light); border-top: none; border-left: none; transform: rotate(45deg);
+    border: 0.2rem solid var(--md-white-1); border-top: none; border-left: none; transform: rotate(45deg);
   }
 }

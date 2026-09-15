@@ -3,13 +3,13 @@
 .bye { color: #cc4400; }
 </style>
 <link rel="stylesheet" href="../imported/lib/view/md.css"/>
-<script src="./content.js"></script>
+<script src="./content.js" type="module"></script>
 <script>console.log(`inline js!`); document.querySelector('.notes').append(`\ninline js!`);</script>
 <div class="md-main">
 
 # Neural Network Insights
 
-A quick overview of how a neural network works. [A link](../hub.html?load=./test/document.md&expose=). [A title anchor](#training-the-neural-network). [A hash anchor](/hub.html?load=./test/document.md&expose=qs,qa,CSSUtil,merge&p1=v%201&p2=v%202#hash-anchor).
+A quick overview of how a neural network works. [A link](../hub.html?load=./test/document.md&expose=). [A title anchor](#training-the-neural-network). [A hash anchor](/hub.html?load=./test/document.md&theme=dark&expose=qs,qa,CSSUtil,merge#hash-anchor).
 
 A neural network is an input-output system that attempts to predict unknown results based on the pattern of known samples.
 
