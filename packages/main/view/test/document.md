@@ -3,6 +3,7 @@
 .bye { color: #cc4400; }
 </style>
 <link rel="stylesheet" href="../imported/lib/view/md.css"/>
+<link rel="stylesheet" href="./content.css"/>
 <script src="./content.js" type="module"></script>
 <script>console.log(`inline js!`); document.querySelector('.notes').append(`\ninline js!`);</script>
 <div class="md-main">
@@ -17,13 +18,13 @@ A neural network is an input-output system that attempts to predict unknown resu
 
 We have a number of **_boxes_** of __*different*__ sizes and we want to know if they fit in a given container.
 
-We'll simplify the problem to a plane, so figures only have width and height.
-
-Boxes can be as small as 10cm or as big as 100cm side.
-
-The container is 80cm x 40cm, but this is unknown, we'll just check if the boxes we have fit inside the container or not, in one position or another.
-
-Some boxes will be classified as valid (value 1) and others as invalid (value 0).
+> We'll simplify the problem to a plane, so figures only have width and height.
+>
+> Boxes can be as small as 10cm or as big as 100cm side.
+>
+>> The container is 80cm x 40cm, but this is unknown, we'll just check if the boxes we have fit inside the container or not, in one position or another.
+>>
+>> Some boxes will be classified as valid (value 1) and others as invalid (value 0).
 
 We can write a table with the measures of the boxes we have and their fitting result.
 

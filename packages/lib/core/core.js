@@ -679,7 +679,7 @@ export const mdToHtml = (() => {
   SE ='script|style|pre|code', SE0 = new RegExp(`<(${SE})[ >]`, 'i'), SE1 = new RegExp(`<\\/(${SE})>`, 'i'),
   RE1 = /^\s{0,3}(\#{1,6})\s+(.*?)\s*#*\s*$/, RE2 = /^\s*<[^>]+(?:>\s*<)?[^>]+>\s*$/,
   RE3 = /^(\s*)(?:[-*]|(\d+[.)])) (.+)$/, RE4 = /^\s{0,3}([-])(\s*\1){2,}\s*$/,
-  RE5 = /^\s*\|?(?:\s*:?-{3,}:?\s*\|)+\s*:?-{3,}:?\s*\|?\s*$/,
+  RE5 = /^\s*\|?(?:\s*:?-{3,}:?\s*\|)+\s*:?-{3,}:?\s*\|?\s*$/, RE6 = /^\s{0,3}>/,
   start = (t) => t.replace(/\\([-(){}[\]#*+.!_\\])/g,
     (_a, b, _c, d) => String.fromCharCode(1, CH.indexOf(b) + d)
   ).replace(/(\*\*|__|~~)(\S(?:[\s\S]*?\S)?)\1/g,
@@ -722,7 +722,11 @@ export const mdToHtml = (() => {
     for (let f, h = start(a).split('\n'), i = 0; i < h.length; i++) {
       const k = h[i], u = RE2.test(k), p = u || inCode || (s0 && s1) ? '' : 'p'; let m = RE1.exec(k);
       if (!m) {
-        if (/\|/.test(k) && RE5.test(h[i + 1] ?? '')) {
+        if (RE6.test(k)) {
+          const q = 'blockquote', j = i; while (RE6.test(h[i + 1] ?? '')) i++;
+          g.push([`<${q}>` + main(h.slice(j, i + 1).map((line) => line.replace(/^\s{0,3}>[ \t]?/, '')).join('\n'))
+            + `</${q}>`, '']);
+        } else if (/\|/.test(k) && RE5.test(h[i + 1] ?? '')) {
           const j = [k, h[++i]];
           while (/\|/.test(h[i + 1] ?? '')) j.push(h[++i]);
           g.push(f = [table(j), '', '']);

@@ -43,6 +43,11 @@
 
   h1, h2, h3, h4, h5, h6 { color: var(--md-theme-hi-fore); }
   a { color: var(--md-theme-hi-fore); text-decoration: underline; }
+  blockquote {
+    margin-block: 1rem; margin-inline: 0; padding-inline-start: 1rem;
+    background-color: var(--md-theme-back); color: var(--md-theme-fore);
+    border-inline-start: 0.25rem solid var(--md-theme-border);
+  }
   pre, code { background-color: var(--md-theme-neg-back); color: var(--md-theme-neg-fore); }
   code { padding-inline: 0.3rem; }
   pre > code { background-color: var(--md-trans-000); padding-inline: 0; }
