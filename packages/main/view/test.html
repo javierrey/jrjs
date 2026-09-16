@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en"><head>
-  <title>Hub</title>
+  <title>Test</title>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=1"/>
   <meta name="mobile-web-app-capable" content="yes"/><meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -16,9 +16,8 @@
       contextHub, log, when, delay, jsonStringify, expose,
       ge, gt, qs, qa, loadHtml, insertHtml, CSSUtil,
     } from './hub.js';
-    import * as hub from './hub.js';
     log.info(`contextHub: ${jsonStringify(contextHub, null, 2)}`);
-    contextHub.expose && expose(Object.fromEntries(contextHub.expose.split(',').map((k) => [k, hub[k]])));
+    contextHub.expose && expose(await import('./hub.js'));
     when(() => document.body)
     .then(() => loadHtml(contextHub.load))
     .catch(() => {});
