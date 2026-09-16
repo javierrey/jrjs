@@ -267,6 +267,7 @@ const resolveRoute = (request, urlParts, props) => {
 };
 
 ----------------------------------------------------------
+// old:
 
 /**
 Holds a promise resolution until a stateful condition is ready.
@@ -319,23 +320,48 @@ export const waitFor = (state, args) => new Promise((resolve, reject) => {
 });
 
 -------------------------------
-// old:
+
+/** Delays a function call. `delay(2e3, () => log('run'));` */
+export const delay = (ms = 0, run = () => {}) => new Promise((s) => setTimeout(() => s(run()), ms));
+
+/** Calls a function when a condition is met. `when(() => globalThis.document?.body, () => log('run'));` */
+export const when = (ready = () => true, run = () => {}) => new Promise((s, e) => {
+  let g = 50; const l = g * 100, o = Date.now() + l * 10, d = () => (g = Math.min(g * 1.2, l));
+  const f = () => { ready() ? s(run()) : Date.now() > o ? e() : setTimeout(f, d()); }; setTimeout(f);
+});
+
+-----------------
 
 /**
-Delays a function call. @param {number} ms @param {Function} run
-`delay(2e3, () => 'run').then((a) => console.log(a));`
-`(async () => console.log(await delay(2e3, () => 'run')))();`
+Calls a function when a condition is met.
+`when(() => globalThis.document?.body).then(() => log('ready')).catch(() => log('timeout'))`
 */
-export const delay = (ms, run) => new Promise((s) => setTimeout(() => s(run()), ms));
+export const when = (ready = () => true) => new Promise((s, e) => {
+  let g = 50; const l = g * 100, o = Date.now() + l * 10, d = () => (g = Math.min(g * 1.2, l));
+  (function f() { ready() ? s() : Date.now() > o ? e() : setTimeout(f, d()); })();
+});
+
+-----------------
 
 /**
-Calls a function when a condition is met. @param {Function} ready @param {Function} run
-`when(() => globalThis.done, () => 'run').then((a) => console.log(a));`
-`(async () => console.log(await when(() => globalThis.done, () => 'run')))();`
+Calls a function when a condition is met.
+`when(() => globalThis.document?.body).then(() => log('ready')).catch(() => log('failed'))`
 */
-export const when = (ready, run) => new Promise((s) => {
-  let l = 50; const t = Date.now() + l * 1e3;
-  (function f() { if (ready()) s(run()); else if (Date.now() > t) s(); else setTimeout(f, l *= 1.2); })();
+export const when = (ready = () => true) => new Promise((s, e) => {
+  let g = 50; const l = g * 100, o = Date.now() + l * 10, d = () => (g = Math.min(g * 1.2, l));
+  const f = () => { ready() ? s() : Date.now() > o ? e() : setTimeout(f, d()); }; setTimeout(f);
+});
+
+-----------------
+
+/**
+Calls a function when a condition is met.
+`when(() => globalThis.document?.body).then(() => log('ready')).catch(() => log('failed'))`
+*/
+export const when = (ready = () => true) => new Promise((s, e) => {
+  let g = 50; const l = g * 100, o = Date.now() + l * 10, d = () => (g = Math.min(g * 1.2, l));
+  const f = () => { try { ready() ? s() : Date.now() > o ? e() : setTimeout(f, d()); } catch { e(); } };
+  setTimeout(f);
 });
 
 -------------------------------

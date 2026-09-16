@@ -791,12 +791,12 @@ export const importModule = async (url, type) =>
 export const delay = (ms = 0) => new Promise((s) => setTimeout(s, ms));
 
 /**
-Calls a function when a condition is met.
-`when(() => globalThis.document?.body).then(() => log('ready')).catch(() => log('timeout'))`
+Calls a function when a condition is met. Optional method `run` called immediately after a positive `ready`.
+`when(() => globalThis.document?.body).then(() => log('ready')).catch(() => log('failed'))`
 */
-export const when = (ready = () => true) => new Promise((s, e) => {
+export const when = (ready = () => true, run = () => {}) => new Promise((s, e) => {
   let g = 50; const l = g * 100, o = Date.now() + l * 10, d = () => (g = Math.min(g * 1.2, l));
-  (function f() { ready() ? s() : Date.now() > o ? e() : setTimeout(f, d()); })();
+  const f = () => { ready() ? s(run()) : Date.now() > o ? e() : setTimeout(f, d()); }; setTimeout(f);
 });
 
 /**
