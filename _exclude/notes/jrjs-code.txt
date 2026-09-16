@@ -243,7 +243,7 @@ export const isNulOrEmp = (v) => {
 };
 
 ----------------------------------------------------------
-server.js
+// server.js
 
 const log = Log({ name: 'server', level: 4 });
 
@@ -267,7 +267,83 @@ const resolveRoute = (request, urlParts, props) => {
 };
 
 ----------------------------------------------------------
-// old:
+// when:
+-------------------------------
+
+/** Delays a resolver call. `delay(2e3).then(() => log('delayed'))` */
+export const delay = (ms = 0) => new Promise((s) => setTimeout(s, ms));
+
+/**
+Schedules a resolver call when a `ready` condition is met.
+`when(() => globalThis.document?.body).then(() => log('ready')).catch(() => log('failed'))`
+*/
+export const when = (ready = () => true) => new Promise((s, e) => {
+  let g = 50; const l = g * 100, o = Date.now() + l * 10, d = () => (g = Math.min(g * 1.2, l));
+  const f = () => { ready() ? s() : Date.now() > o ? e() : setTimeout(f, d()); }; setTimeout(f);
+});
+
+-----------------
+// Obsolete. No need for a second synchronous method, use ready itself.
+
+/**
+Schedules a resolver call when a `ready` condition is met.
+Optionally, a second method can be defined to be called immediately after a positive `ready`.
+`when(() => globalThis.document?.body).then(() => log('ready')).catch(() => log('failed'))`
+*/
+export const when = (ready = () => true, r = () => {}) => new Promise((s, e) => {
+  let g = 50; const l = g * 100, o = Date.now() + l * 10, d = () => (g = Math.min(g * 1.2, l));
+  const f = () => { ready() ? s(r()) : Date.now() > o ? e() : setTimeout(f, d()); }; setTimeout(f);
+});
+
+-----------------
+
+/**
+Calls a function when a condition is met.
+`when(() => globalThis.document?.body).then(() => log('ready')).catch(() => log('timeout'))`
+*/
+export const when = (ready = () => true) => new Promise((s, e) => {
+  let g = 50; const l = g * 100, o = Date.now() + l * 10, d = () => (g = Math.min(g * 1.2, l));
+  (function f() { ready() ? s() : Date.now() > o ? e() : setTimeout(f, d()); })();
+});
+
+-----------------
+
+/**
+Calls a function when a condition is met.
+`when(() => globalThis.document?.body).then(() => log('ready')).catch(() => log('failed'))`
+*/
+export const when = (ready = () => true) => new Promise((s, e) => {
+  let g = 50; const l = g * 100, o = Date.now() + l * 10, d = () => (g = Math.min(g * 1.2, l));
+  const f = () => { ready() ? s() : Date.now() > o ? e() : setTimeout(f, d()); }; setTimeout(f);
+});
+
+-----------------
+
+/**
+Calls a function when a condition is met.
+`when(() => globalThis.document?.body).then(() => log('ready')).catch(() => log('failed'))`
+*/
+export const when = (ready = () => true) => new Promise((s, e) => {
+  let g = 50; const l = g * 100, o = Date.now() + l * 10, d = () => (g = Math.min(g * 1.2, l));
+  const f = () => { try { ready() ? s() : Date.now() > o ? e() : setTimeout(f, d()); } catch { e(); } };
+  setTimeout(f);
+});
+
+-------------------------------
+
+/**
+Call function `run` when document body is present.
+Equivalent to self-invoking ready function here:
+```
+(function ready(...args) {
+  if (!document.body) return setTimeout(ready, 50, ...args); // ready:
+})();
+```
+*/
+export const documentReady = (run) => when(() => document.body, run);
+
+-------------------------------
+// core.js, old:
 
 /**
 Holds a promise resolution until a stateful condition is ready.
@@ -318,64 +394,6 @@ export const waitFor = (state, args) => new Promise((resolve, reject) => {
   };
   return timer();
 });
-
--------------------------------
-
-/** Delays a function call. `delay(2e3, () => log('run'));` */
-export const delay = (ms = 0, run = () => {}) => new Promise((s) => setTimeout(() => s(run()), ms));
-
-/** Calls a function when a condition is met. `when(() => globalThis.document?.body, () => log('run'));` */
-export const when = (ready = () => true, run = () => {}) => new Promise((s, e) => {
-  let g = 50; const l = g * 100, o = Date.now() + l * 10, d = () => (g = Math.min(g * 1.2, l));
-  const f = () => { ready() ? s(run()) : Date.now() > o ? e() : setTimeout(f, d()); }; setTimeout(f);
-});
-
------------------
-
-/**
-Calls a function when a condition is met.
-`when(() => globalThis.document?.body).then(() => log('ready')).catch(() => log('timeout'))`
-*/
-export const when = (ready = () => true) => new Promise((s, e) => {
-  let g = 50; const l = g * 100, o = Date.now() + l * 10, d = () => (g = Math.min(g * 1.2, l));
-  (function f() { ready() ? s() : Date.now() > o ? e() : setTimeout(f, d()); })();
-});
-
------------------
-
-/**
-Calls a function when a condition is met.
-`when(() => globalThis.document?.body).then(() => log('ready')).catch(() => log('failed'))`
-*/
-export const when = (ready = () => true) => new Promise((s, e) => {
-  let g = 50; const l = g * 100, o = Date.now() + l * 10, d = () => (g = Math.min(g * 1.2, l));
-  const f = () => { ready() ? s() : Date.now() > o ? e() : setTimeout(f, d()); }; setTimeout(f);
-});
-
------------------
-
-/**
-Calls a function when a condition is met.
-`when(() => globalThis.document?.body).then(() => log('ready')).catch(() => log('failed'))`
-*/
-export const when = (ready = () => true) => new Promise((s, e) => {
-  let g = 50; const l = g * 100, o = Date.now() + l * 10, d = () => (g = Math.min(g * 1.2, l));
-  const f = () => { try { ready() ? s() : Date.now() > o ? e() : setTimeout(f, d()); } catch { e(); } };
-  setTimeout(f);
-});
-
--------------------------------
-
-/**
-Call function `run` when document body is present.
-Equivalent to self-invoking ready function here:
-```
-(function ready(...args) {
-  if (!document.body) return setTimeout(ready, 50, ...args); // ready:
-})();
-```
-*/
-export const documentReady = (run) => when(() => document.body, run);
 
 ----------------------------------------------------------
 // drive/run.js

@@ -787,16 +787,16 @@ export const getEnvironment = () => {
 export const importModule = async (url, type) =>
   (await (type ? import(url, { with: { type } }) : import(url))).default;
 
-/** Delays a function call. `delay(2e3).then(() => log('delayed'))` */
+/** Delays a resolver call. `delay(2e3).then(() => log('delayed'))` */
 export const delay = (ms = 0) => new Promise((s) => setTimeout(s, ms));
 
 /**
-Calls a function when a condition is met. Optional method `run` called immediately after a positive `ready`.
+Schedules a resolver call when a `ready` condition is met.
 `when(() => globalThis.document?.body).then(() => log('ready')).catch(() => log('failed'))`
 */
-export const when = (ready = () => true, run = () => {}) => new Promise((s, e) => {
+export const when = (ready = () => true) => new Promise((s, e) => {
   let g = 50; const l = g * 100, o = Date.now() + l * 10, d = () => (g = Math.min(g * 1.2, l));
-  const f = () => { ready() ? s(run()) : Date.now() > o ? e() : setTimeout(f, d()); }; setTimeout(f);
+  const f = () => { ready() ? s() : Date.now() > o ? e() : setTimeout(f, d()); }; setTimeout(f);
 });
 
 /**
