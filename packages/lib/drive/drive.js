@@ -4,11 +4,12 @@
 /**
 @typedef {import('../core/core.js').PlainObject} PlainObject;
 @typedef {typeof globalThis} DriveContext;
+@typedef {string | import('node:buffer').Buffer | import('node:fs').ReadStream} FileStream;
 @typedef {{
   url: string;
-  content: unknown;
+  type: string;
   size: number;
-  stream: import('node:fs').ReadStream | null;
+  content: FileStream | null;
   error: Error | null;
 }} FileObject;
 */
@@ -127,7 +128,7 @@ Reads a file content asynchronously.
 Returns a file object with `url`, `content` and `error` properties.
 */
 export const readFile = async (url, encoding = null) => {
-  /** @type {Record<string, unknown>} */ const file = { url, content: null, error: null };
+  /** @type {Partial<FileObject>} */ const file = { url, content: null, error: null };
   if (fileExists(url) === 1) {
     await fsP.readFile(url, { encoding })
       .then((content) => { file.content = content; })
@@ -137,14 +138,11 @@ export const readFile = async (url, encoding = null) => {
 };
 
 /** Creates a file object with a readable stream. */
-export const readStream = async (url, encoding) => {
-  /** @type {FileObject} */ const file = {
-    url, type: '', size: fileSize(url), content: null, stream: null, error: null,
-  };
-  if (file.size > 0) {
-    file.stream = fs.createReadStream(url, { encoding });
-  } else if (Object.is(file.size, 0)) { file.content = Buffer.alloc(0);
-  } else { file.error = { message: `not a content file "${url}"` }; }
+export const readFileStream = async (url, encoding) => {
+  /** @type {FileObject} */ const file = { url, type: '', size: fileSize(url), content: null, error: null };
+  if (file.size > 0) file.content = fs.createReadStream(url, { encoding });
+  else if (Object.is(file.size, 0)) file.content = Buffer.alloc(0);
+  else file.error = { message: `not a content file "${url}"` };
   return file;
 };
 

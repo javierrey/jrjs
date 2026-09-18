@@ -3,6 +3,14 @@
 
 /**
 @typedef {import('./core.js').PlainObject} PlainObject;
+@typedef {string | Uint8Array | ReadableStream<Uint8Array>} ContentStream;
+@typedef {{
+  url: string;
+  type: string;
+  size: number;
+  content: ContentStream | null;
+  error: Error | null;
+}} ContentObject;
 */
 
 import {
@@ -12,14 +20,6 @@ import {
 export * from './core.js';
 
 /* Types functionality: */
-
-/** Converts a Node's buffer to an ArrayBuffer. @param {number[]} buffer, @return {ArrayBuffer} */
-export const bufferToArrayBuffer = (buffer) => {
-  const arrayBuffer = new ArrayBuffer(buffer.length);
-  const view = new Uint8Array(arrayBuffer);
-  for (let i = 0; i < buffer.length; i++) { view[i] = buffer[i]; }
-  return arrayBuffer;
-};
 
 /* String and RegExp transformations: */
 
@@ -250,13 +250,10 @@ export const appendHTMLContent = (parent, content, tag) => {
 /* Flow and event functionality: */
 
 /** Clear timeouts and/or intervals. */
-export const clearTimeouts = (timeouts = true, intervals = true, ...except) => {
+export const clearTimeouts = (...skip) => {
   let tid = 1 + (+setTimeout(() => {}));
-  while (tid--) {
-    const include = !except.includes(tid);
-    timeouts && include && clearTimeout(tid);
-    intervals && include && clearInterval(tid);
-  }
+  const timeout = !skip.includes('timeout'), interval = !skip.includes('interval');
+  while (tid--) if (!skip.includes(tid)) { timeout && clearTimeout(tid); interval && clearInterval(tid); }
 };
 
 /**
@@ -330,6 +327,20 @@ export const fetchRequest = (url, options = {}) => {
     .then((result) => (request.result = result))
     .catch((error) => (request.error = error))
     .finally(processor);
+};
+
+/** Fetches a URL resource and returns a file object with a readable Web stream. */
+export const readStream = async (url, options = {}) => {
+  /** @type {ContentObject} */ const file = { url, type: '', size: NaN, content: null, error: null };
+  try {
+    const response = await fetch(url, options);
+    if (!response.ok) { throw new Error(`${response.status} ${response.statusText}`); }
+    file.type = response.headers.get('content-type') ?? '';
+    const size = response.headers.get('content-length');
+    file.size = size === null ? NaN : Number(size);
+    file.content = response.body;
+  } catch (error) { file.error = error; }
+  return file;
 };
 
 /* * */

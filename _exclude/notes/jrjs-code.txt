@@ -5,13 +5,53 @@ jrjs-code.txt
 ----------------------------------------------------------
 ----------------------------------------------------------
 ----------------------------------------------------------
+// From core.js:
+
+var isNul = (v) => [undefined, null, NaN].includes(v);
+var isEmp = (v) => { if (v) for (const p in v) return false; return true; };
+var isObj = (v) => !!v && [Object, undefined].includes(v.constructor);
+var isArr = (v) => !!v?.[Symbol.iterator] && v.constructor !== String;
+var isSca = (v) => !v || [Boolean, Number, String, BigInt].includes(v.constructor);
+var isPri = (v) => !v || !(v instanceof Object || !v.constructor);
+
+var isFun = (v) => typeof v === 'function';
+var isNum = (v) => parseFloat(v) === Number(v);
+var isInt = (v) => Math.floor(parseFloat(v)) === Number(v);
+var isStr = (v) => v?.constructor === String;
+
+var isXml = (v) => /^\s*</.test(v) && />\s*$/.test(v);
+var isJso = (v) => /^\s*\[?\s*\{/.test(v) && /\}\s*\]?\s*$/.test(v);
+var isBuf = (v) => v instanceof ArrayBuffer || ArrayBuffer.isView(v);
+var isKey = (v) =>
+  Number.isInteger(v) && v > -1 || typeof v === 'string' && v.length > 0 && v.length < 1025 && !/\s/.test(v);
+
+var toNum = (v) =>
+  [Number, Boolean, Date].includes(v?.constructor) ? +v : parseFloat(v) === (v = Number(v)) ? v : NaN;
+var toSam = (v) => {
+  if (!v?.slice) { v = String(v ?? ''); }
+  const R = 512, c = ~~((v.byteLength ?? v.length ?? 0) / 2), b = Math.max(0, c - R), s = v.slice(b, b + 2 * R);
+  return isBuf(s) ? new TextDecoder().decode(s) : s;
+};
+
+var isTra = (v) => isObj(v) || !!(v?.every?.(isObj) && v.length); // isObj(v?.[0]) && isObj(v.at(-1))
+var isBin = (v) => isBuf(v) || toSam(v).includes('\x00');
+
+var toSca = (v) => {
+  if (isObj(v) || Array.isArray(v)) try { return JSON.stringify(v); } catch {}
+  return !v ? v : [Boolean, Number, Date, String].includes(v.constructor) ? v.valueOf()
+    : isBuf(v) ? new TextDecoder().decode(v) : v[Symbol.iterator] ? `[${v}]` : String(v);
+};
+var toStr = (v) => isStr(v = toSca(v)) ? v : String(v ?? '');
+var toEmp = (v) => isArr(v) ? [] : {};
+
+----------------------------------------------------------
 TS, getProperty, hasProperty
 --------------------------------
 --------------------------------
 
 /**
 Gets a property value in an unknown type object if present, or undefined otherwise.
-Accepts a list of nested keys: `getProperty(object, 'items', 0, 'title', 'en-US')`
+Accepts a list of nested keys: `getProperty(obj, 'items', 0, 'title', 'en-US')`
 */
 export const getProperty = (object: unknown, ...keys: PropertyKey[]) => {
   for (const key of keys) {
@@ -28,7 +68,7 @@ type NestedObject<PKA extends PropertyKey[]> =
 
 /**
 Asserts an unknown type object has a nested property key. Accepts a list of nested keys:
-`if (hasProperty(object, 'data', 'count')) { object.data.count = 1; }`
+`hasProperty(obj, 'data', 'count') && typeof obj.data.count === 'number' && obj.data.count++`
 */
 export const hasProperty =
   <PKA extends PropertyKey[]>(object: unknown, ...keys: PKA): object is NestedObject<PKA> => {

@@ -8,6 +8,7 @@ author: javier.rey.eu@gmail.com
 // _@ts-check // @ts-ignore TS7006, TS2339
 
 /**
+@typedef {boolean | number | string | BigInt | null | undefined} Scalar;
 @typedef {Record<string, any>} PlainObject;
 @typedef {Record<number | string, any>} ArrayObject;
 @typedef {{ (...args: any[]): any, [key: string]: any }} FunctionObject;
@@ -18,7 +19,7 @@ author: javier.rey.eu@gmail.com
 /** Core persistence container available in all contexts. @type {PlainObject} */
 export const contextHub = {};
 
-/** AsyncFunction constructor (no globalThis.AsyncFunction defined). */
+/** AsyncFunction constructor (globalThis.AsyncFunction does not exist). */
 export const AsyncFunction = (async () => {}).constructor;
 
 /**
@@ -75,6 +76,16 @@ export const stringToBuffer = (string) => new TextEncoder().encode(string).buffe
 
 /** Creates a string from a buffer. Optional param `enc` defaults to 'utf-8' and `bom` to false. */
 export const bufferToString = (buffer, enc, bom) => new TextDecoder(enc, { ignoreBOM: !!bom }).decode(buffer);
+
+/** Converts a byte buffer to an ArrayBuffer. @param {Uint8Array} bytes @return {ArrayBuffer} */
+export const bytesToBuffer = (bytes) => {
+  const arrayBuffer = new ArrayBuffer(bytes.byteLength);
+  new Uint8Array(arrayBuffer).set(bytes);
+  return arrayBuffer;
+};
+
+/** Converts an ArrayBuffer to a byte buffer. @param {ArrayBuffer} buffer @return {Uint8Array} */
+export const bufferToBytes = (buffer) => new Uint8Array(buffer);
 
 /* Log functionality: */
 
