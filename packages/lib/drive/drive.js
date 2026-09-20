@@ -2,6 +2,7 @@
 // _@ts-check
 
 /**
+@typedef {import('../core/core.js').Scalar} Scalar;
 @typedef {import('../core/core.js').PlainObject} PlainObject;
 @typedef {typeof globalThis} DriveContext;
 @typedef {string | import('node:buffer').Buffer | import('node:fs').ReadStream} FileStream;
@@ -12,6 +13,14 @@
   content: FileStream | null;
   error: Error | null;
 }} FileObject;
+@typedef {{
+  moduleName: string;
+  distFolder: string;
+  privateDir: string;
+  publicDir: string;
+  servicesDir: string;
+  expose?: boolean;
+}} DriveConfig;
 */
 
 import fs from 'node:fs';

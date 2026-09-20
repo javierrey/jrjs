@@ -1,5 +1,5 @@
 /* lib/view/view.css */
-/* use view.js: `CSSUtil.setCssTheme('dark')` or `CSSUtil.toggleCssTheme()` */
+/* use view.js: `CSSUtils.setCssTheme('dark')` or `CSSUtils.toggleCssTheme()` */
 /* * */
 :root {
   /* Predefined: */

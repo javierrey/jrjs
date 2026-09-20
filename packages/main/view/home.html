@@ -18,12 +18,12 @@
   </style>
   <script type="module">// _@ts-check 'use strict';
     import {
-      contextHub, log, when, jsonStringify, CSSUtil, getEnvironment,
+      contextHub, log, when, jsonStringify, CSSUtils, getEnvironment,
       ge, gt, qs, qa, appendHtml,
     } from './hub.js';
-    when(() => document.body && CSSUtil.getCssVariable('--lib-view-view-css'))
+    when(() => document.body && CSSUtils.getCssVariable('--lib-view-view-css'))
     .then(() => {
-      CSSUtil.setCssTheme(contextHub.theme);
+      CSSUtils.setCssTheme(contextHub.theme);
       appendHtml(document.body, `<h1>${contextHub.moduleName ?? 'Home'}</h1>`);
       appendHtml(document.body, `<pre>getEnvironment: ${jsonStringify(getEnvironment(), null, 2)}</pre>`);
       appendHtml(document.body, `<pre>contextHub: ${jsonStringify(contextHub, null, 2)}</pre>`);

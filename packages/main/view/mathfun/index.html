@@ -108,7 +108,7 @@
   <script type="module">// _@ts-check 'use strict';
   import {
     log, delay, when, debounce, parse, expose,
-    ge, qs, qa, CSSUtil,
+    ge, qs, qa, CSSUtils,
   } from '../imported/lib/view/view.js';
   import { MathFun } from '../imported/_self/core/mathfun.js';
   import {
@@ -377,7 +377,7 @@
   expose({
     MathFun, addField, domainClick, scaleYClick, scheduleRenderSvg,
     svgClick, svgDebounced, refreshPaths,
-    CSSUtil, svgProps, // @hide/show
+    CSSUtils, svgProps, // @hide/show
   });
 
   const pwave = (x, p, r, ox = 0, oy = 0) => {
@@ -387,7 +387,7 @@
 
   when(() => document.body).then(() => {
     log.info('mathfun ready');
-    const dbS = CSSUtil.getElementStyle(document.body);
+    const dbS = CSSUtils.getElementStyle(document.body);
     dbS.set('opacity', '0');
     when(() => true).then(() => {
     //   return delay(2e3);
@@ -451,7 +451,7 @@
     //   attr: { stroke: '#22cc44' },
     // }));
 
-    CSSUtil.toggleCssTheme();
+    CSSUtils.toggleCssTheme();
     // scheduleRenderSvg();
   }).catch(() => {});
   </script>
@@ -472,7 +472,7 @@
       <input type="text" id="aspect-input" class="text-input"
         value="1" onchange="scheduleRenderSvg()"/>
       <button id="add-field-button" class="char-button" onclick="addField()">+</button>
-      <button id="toggle-theme-button" class="char-button" onclick="CSSUtil.toggleCssTheme()">Ø</button>
+      <button id="toggle-theme-button" class="char-button" onclick="CSSUtils.toggleCssTheme()">Ø</button>
       <button id="refresh-paths-button" class="char-button" onclick="refreshPaths()">*</button>
     </div>
   </div>

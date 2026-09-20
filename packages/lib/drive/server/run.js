@@ -12,7 +12,7 @@ import { runServer } from './server.js';
 
 // const fsP = fs.promises;
 
-/** @type {Partial<ServerConfig>} */
+/** @type {ServerConfig} */
 const defaults = {
   privateDir: '_exclude/_ignore/store', // (from root)
   publicDir: '../view', // (from main/drive)

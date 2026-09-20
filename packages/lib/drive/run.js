@@ -8,7 +8,7 @@
 import { hydrate, log, contextHub } from './drive.js';
 import { runCluster } from './cluster.js';
 
-/** @type {Partial<ClusterConfig>} */
+/** @type {ClusterConfig} */
 const defaults = {
   privateDir: '',
   clusterSize: 0,

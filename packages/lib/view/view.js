@@ -2,8 +2,17 @@
 // _@ts-check
 
 /**
+@typedef {import('../core/core.js').Scalar} Scalar;
 @typedef {import('../core/core.js').PlainObject} PlainObject;
 @typedef {typeof globalThis & Window & WorkerGlobalScope} ViewContext;
+@typedef {{
+  moduleName: string;
+  href: string;
+  load: string;
+  locale: string;
+  theme: string;
+  expose?: boolean;
+}} ViewConfig;
 */
 
 import {
@@ -99,15 +108,15 @@ export const loadHtml = (url, elem, position, norun) => {
 /**
 CSS functionality.
 Usage:
-`CSSUtil.setCssTheme('dark')`, `CSSUtil.toggleCssTheme()`,
-`const dbS = CSSUtil.getElementStyle(document.body); dbS.set('opacity', '0'); dbS.add('fade-in');`
+`CSSUtils.setCssTheme('dark')`, `CSSUtils.toggleCssTheme()`,
+`const dbS = CSSUtils.getElementStyle(document.body); dbS.set('opacity', '0'); dbS.add('fade-in');`
 ```
-const varValue = CSSUtil.getCssVariable('var-name');
-CSSUtil.setCssVariable('var-name', varValue.replace('-light-', '-dark-'));
+const varValue = CSSUtils.getCssVariable('var-name');
+CSSUtils.setCssVariable('var-name', varValue.replace('-light-', '-dark-'));
 ```
 */
-export const CSSUtil = (() => {
-  const typename = 'CSSUtil';
+export const CSSUtils = (() => {
+  const typename = 'CSSUtils';
   const registry = {};
 
   const buildRegistry = (theme, themes) => {
@@ -209,5 +218,13 @@ export const CSSUtil = (() => {
 
   return Object.freeze(members);
 })();
+
+/** Download content as a local document. Browser-specific behaviour. */
+export const saveContent = (content = '', filename = 'content.txt', type = 'text/plain;charset=utf-8;') => {
+  content = new Blob([content], { type });
+  const link = document.createElement('a'), url = URL.createObjectURL(content);
+  link.setAttribute('href', url); link.setAttribute('download', filename); link.style.visibility = 'hidden';
+  document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
+};
 
 /* * */

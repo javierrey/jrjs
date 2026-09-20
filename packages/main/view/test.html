@@ -14,7 +14,7 @@
   <script type="module">// _@ts-check 'use strict';
     import {
       contextHub, log, when, delay, jsonStringify, expose,
-      ge, gt, qs, qa, loadHtml, insertHtml, CSSUtil,
+      ge, gt, qs, qa, loadHtml, insertHtml, CSSUtils,
     } from './hub.js';
     log.info(`contextHub: ${jsonStringify(contextHub, null, 2)}`);
     contextHub.expose && expose(await import('./hub.js'));

@@ -2,12 +2,11 @@
 // @ts-check
 
 /**
-@typedef {{
-  moduleName: string;
-  href: string;
-  load: string;
-  theme: string;
-}} ViewConfig;
+@typedef {import('./imported/lib/view/view.js').Scalar} Scalar;
+@typedef {import('./imported/lib/view/view.js').PlainObject} PlainObject;
+@typedef {import('./imported/lib/view/view.js').ArrayObject} ArrayObject;
+@typedef {import('./imported/lib/view/view.js').FunctionObject} FunctionObject;
+@typedef {import('./imported/lib/view/view.js').ViewConfig} ViewConfig;
 */
 
 import {
@@ -17,22 +16,20 @@ import { coreHub } from './imported/_self/core/hub.js';
 
 export * from './imported/lib/view/view.js';
 
-const viewParams = parseQuery(location.search);
-const moduleName = 'main'; // @define (not in filepath).
-
-/** @type {ViewConfig} */
+/** @type {Partial<ViewConfig> & PlainObject} */
 const viewHub = {
-  moduleName,
+  moduleName: 'main',// @define (not in filepath).
   href: location.href,
-  load: '',
-  theme: '',
 };
 
-/** @type {Partial<ViewConfig>} */
-const defaults = {
+const viewParams = /** @type {typeof viewHub} */ (parseQuery(location.search) ?? {});
+
+/** @type {typeof viewHub} */
+const viewDefaults = {
   load: './home.html',
+  locale: 'en-US',
   theme: 'light',
 };
 
 merge(contextHub, coreHub, viewHub);
-hydrate(contextHub, viewParams, defaults);
+hydrate(contextHub, viewParams, viewDefaults);
