@@ -9,6 +9,7 @@
 @typedef {import('../../../../jrjs/packages/lib/drive/drive.js').DriveConfig} DriveConfig;
 @typedef {import('../../../../jrjs/packages/lib/drive/cluster.js').ClusterConfig} ClusterConfig;
 @typedef {import('../../../../jrjs/packages/lib/drive/server/server.js').ServerConfig} ServerConfig;
+@typedef {DriveConfig & ClusterConfig} DriveHub;
 */
 
 import {
@@ -30,7 +31,7 @@ const publicDir = `${distFolder}/${moduleName}/view`;
 const servicesDir = `${distFolder}/${moduleName}/drive/services`;
 const inputArgs = process.argv.slice(2).at(-1) || '{}';
 
-/** @type {DriveConfig & ClusterConfig} */
+/** @type {DriveHub} */
 const driveHub = {
   moduleName,
   distFolder,
@@ -55,7 +56,7 @@ const driveHub = {
   ],
 };
 
-const driveParams = /** @type {Partial<typeof driveHub>} */ (jsonParse(inputArgs) ?? {});
+const driveParams = /** @type {Partial<DriveHub>} */ (jsonParse(inputArgs) ?? {});
 
 merge(contextHub, coreHub, driveHub);
 hydrate(contextHub, driveParams);
