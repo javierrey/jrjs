@@ -11,8 +11,8 @@
   "scripts": {
     "node:args": "node --preserve-symlinks --preserve-symlinks-main",
     "git:clean": "git -c core.longPaths=true clean",
-    "status": "echo CLEAN: && pnpm run git:clean -- -nfdX -e !.* -e !**/_ignore/ -e !**/_ignore/** && echo NEW: && git ls-files -o --exclude-standard",
-    "clean": "pnpm run git:clean -- -fdX -e !.* -e !**/_ignore/ -e !**/_ignore/**",
+    "status": "echo CLEAN: && pnpm run git:clean -nfdX -e !.* -e !**/_ignore/ -e !**/_ignore/** && echo NEW: && git ls-files -o --exclude-standard",
+    "clean": "pnpm run git:clean -fdX -e !.* -e !**/_ignore/ -e !**/_ignore/**",
     "clean:install": "pnpm run clean && npm i",
     "format:main": "npx eslint packages/main",
     "sync-source:main": "node packages/utils/drive/builder/sync-source.js --method=symlink --orig=packages --dest=packages/main --view-imports=1 --drive-imports=",
