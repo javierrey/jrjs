@@ -1,8 +1,7 @@
 /*
 lib/.../core.js
-Basic core functionality for all environments.
-Dependencies: none
-update: 2024
+Basic core functionality without dependencies and valid in all contexts.
+update: 2026
 author: javier.rey.eu@gmail.com
 */
 // _@ts-check // @ts-ignore TS7006, TS2339
@@ -71,12 +70,6 @@ export const toRealNumber = (v) => {
     : number > Number.MAX_VALUE ? Number.MAX_VALUE : number < -Number.MAX_VALUE ? -Number.MAX_VALUE : number;
 };
 
-/** Creates a buffer from a string. */
-export const stringToBuffer = (string) => new TextEncoder().encode(string).buffer;
-
-/** Creates a string from a buffer. Optional param `enc` defaults to 'utf-8' and `bom` to false. */
-export const bufferToString = (buffer, enc, bom) => new TextDecoder(enc, { ignoreBOM: !!bom }).decode(buffer);
-
 /** Converts a byte buffer to an ArrayBuffer. @param {Uint8Array} bytes @return {ArrayBuffer} */
 export const bytesToBuffer = (bytes) => {
   const arrayBuffer = new ArrayBuffer(bytes.byteLength);
@@ -86,6 +79,21 @@ export const bytesToBuffer = (bytes) => {
 
 /** Converts an ArrayBuffer to a byte buffer. @param {ArrayBuffer} buffer @return {Uint8Array} */
 export const bufferToBytes = (buffer) => new Uint8Array(buffer);
+
+/**
+Creates a string from a buffer or byte array. Optional param `enc` defaults to 'utf-8' and `bom` to false.
+@param {ArrayBuffer | Uint8Array} bytes
+*/
+export const bytesToString = (bytes, enc, bom) => new TextDecoder(enc, { ignoreBOM: !!bom }).decode(bytes);
+
+/** Creates a byte array from a string. */
+export const stringToBytes = (string) => new TextEncoder().encode(string);
+
+/** Creates a string from a buffer. Same implementation as `bytesToString`. */
+export const bufferToString = bytesToString;
+
+/** Creates a buffer from a string, using `stringToBytes`. */
+export const stringToBuffer = (string) => stringToBytes(string).buffer;
 
 /* Log functionality: */
 
@@ -109,7 +117,7 @@ public static members:
     redact: array of key prefixes to redact values in objects, by default: ['pass', 'auth'].
 */
 export const Log = (config = {}) => {
-  const typename = 'Log', CONSOLE = console;
+  const typename = 'Log', CONSOLE = console, _contextHub = typeof contextHub !== 'undefined' ? contextHub : {};
   const METHODS = ['log', 'error', 'warn', 'info', 'debug'], DAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
   config = typeof config === 'string' ? { name: config } : typeof config === 'number' ? { level: config } : config;
   config = Object.seal({ name: '', level: 3, trace: 0, pretty: 0, limit: 1e4, redact: ['pass', 'auth'], ...config });
@@ -147,7 +155,7 @@ export const Log = (config = {}) => {
     const explicit = METHODS.includes(args[0]); if (!explicit) return args.forEach(print);
     const method = args.shift(), level = METHODS.indexOf(method); if (!config.level && level) return;
     const tron = config.trace && (config.trace >= level || level > 3), stack = trace(level), at = getAt(stack[0]);
-    const wid = contextHub.workerId, worker = isNaN(wid) ? '' : !wid ? ' P0' : ` W${wid}`;
+    const wid = _contextHub.workerId, worker = isNaN(wid) ? '' : !wid ? ' P0' : ` W${wid}`;
     const name = config.name ? ` "${config.name}"` : '';
     CONSOLE[method](`\n[${method.toUpperCase()} ${renderUTC()}]${worker}${name} @${at}`); args.forEach(print);
     tron && stack.length > 1 && CONSOLE.log('TRACE:\n' + stack.slice(1).join('\n'));

@@ -89,6 +89,7 @@ const getFileContentType = (filename, content) => {
     : /^json[5c]?$/i.test(ext) ? 'application/json'
     : /^md$/i.test(ext) ? 'text/markdown'
     : /^x(ht)?ml$/i.test(ext) ? 'application/xml'
+    : /^ya?ml$/i.test(ext) ? 'application/yaml'
     : /^svg$/i.test(ext) ? 'image/svg+xml'
     : /^jpe?g$/i.test(ext) ? 'image/jpeg'
     : /^png$/i.test(ext) ? 'image/png'

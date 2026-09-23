@@ -1,7 +1,6 @@
 // main/core/hub.js
 /*
-Common local dependencies used in all contexts.
-No imported dependencies; multiple contexts need different import paths.
+Basic core functionality without dependencies and valid in all contexts.
 */ 
 // @ts-check
 

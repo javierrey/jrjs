@@ -5,7 +5,7 @@
 @typedef {import('../core/core.js').Scalar} Scalar;
 @typedef {import('../core/core.js').PlainObject} PlainObject;
 @typedef {typeof globalThis} DriveContext;
-@typedef {string | import('node:buffer').Buffer | import('node:fs').ReadStream} FileStream;
+@typedef {string | Uint8Array | import('node:fs').ReadStream} FileStream;
 @typedef {{
   url: string;
   type: string;
@@ -133,24 +133,39 @@ export const copyDir = async (orig, dest) => { // log.info(`copyDir: "${orig}" >
 };
 
 /**
-Reads a file content asynchronously.
-Returns a file object with `url`, `content` and `error` properties.
+Creates a file object with a content fragment, from `offset` through `length`.
+No `length` reads to the end. No `encoding` reads content bytes, 'utf-8' reads as text.
+Returns a file object with `url`, `size`, `content` and `error` properties.
+@param {string} url @param {string} encoding @param {number} offset @param {number} length
 */
-export const readFile = async (url, encoding = null) => {
-  /** @type {Partial<FileObject>} */ const file = { url, content: null, error: null };
-  if (fileExists(url) === 1) {
-    await fsP.readFile(url, { encoding })
-      .then((content) => { file.content = content; })
-      .catch((error) => { file.error = error; });
-  } else { file.error = { message: `not a file "${url}"` }; }
+export const readFile = async (url, encoding = '', offset = 0, length = NaN) => {
+  let handle; const file = { url, size: NaN, content: null, error: null };
+  const fileExists = (path) => !fs.existsSync(path) ? 0 : fs.statSync(path).isFile() ? 1 : -1;
+  if (fileExists(url) !== 1) { file.error = { message: `not a content file "${url}"` }; return file; }
+  try {
+    handle = await fs.promises.open(url, 'r'); file.size = (await handle.stat()).size;
+    const resolveIndex = (ind, len) => ind < 0 ? Math.max(0, len + ind) : Math.min(ind, len);
+    let cursor = 0; offset = resolveIndex(offset, file.size); length ||= file.size - offset;
+    const end = Math.min(offset + length, file.size), content = new Uint8Array(end - offset);
+    while (cursor < content.length) {
+      const { bytesRead } = await handle.read(content, cursor, content.length - cursor, offset + cursor);
+      if (bytesRead) { cursor += bytesRead; } else { break; }
+    }
+    const bytesToString = (bytes, enc, bom) => new TextDecoder(enc, { ignoreBOM: !!bom }).decode(bytes);
+    const subcontent = content.subarray(0, cursor);
+    file.content = encoding ? bytesToString(subcontent, encoding, false) : subcontent;
+  } catch (error) { file.error = error; } finally { await handle?.close(); }
   return file;
 };
 
-/** Creates a file object with a readable stream. */
-export const readFileStream = async (url, encoding) => {
-  /** @type {FileObject} */ const file = { url, type: '', size: fileSize(url), content: null, error: null };
+/**
+Creates a file object with a readable stream content.
+No `encoding` reads content bytes, 'utf-8' reads as text.
+*/
+export const readFileStream = async (url, encoding = '') => {
+  const file = /** @type {FileObject} */ ({ url, size: fileSize(url), content: null, error: null });
   if (file.size > 0) file.content = fs.createReadStream(url, { encoding });
-  else if (Object.is(file.size, 0)) file.content = Buffer.alloc(0);
+  else if (Object.is(file.size, 0)) file.content = new Uint8Array(0);
   else file.error = { message: `not a content file "${url}"` };
   return file;
 };
