@@ -224,10 +224,10 @@ export const serialize = (obj) => JSON.stringify(serializable(obj));
 /** Deserializes a JSON string into an object. */
 export const deserialize = (str) => deserializable(JSON.parse(str));
 
-/** Converts a JSON string into YAML text. */
+/** Converts a JSON object or string into YAML text. */
 export const jsonToYaml = (json) => {
   if (typeof json === 'string') { try { json = JSON.parse(json); } catch { return ''; } };
-  const scalar = (v) => {
+  const scalarString = (v) => {
     if (v === null) { return 'null'; }
     if (typeof v !== 'string') { return String(v); }
     const trimmed = v.trim();
@@ -241,7 +241,7 @@ export const jsonToYaml = (json) => {
     return `'${v.replaceAll("'", "''")}'`;
   };
   const write = (v, level) => {
-    if (v === null || typeof v !== 'object') { return scalar(v); }
+    if (v === null || typeof v !== 'object') { return scalarString(v); }
     const indent = '  '.repeat(level);
     if (!Object.keys(v).length) { return Array.isArray(v) ? '[]' : '{}'; }
     const isBlock = (item) => item !== null && typeof item === 'object' && Object.keys(item).length;
@@ -250,7 +250,7 @@ export const jsonToYaml = (json) => {
         ? `${indent}-\n${write(item, level + 1)}`
         : `${indent}- ${write(item, level + 1)}`).join('\n')
       : Object.entries(v).map(([key, item]) => {
-        const prefix = `${indent}${scalar(key)}:`;
+        const prefix = `${indent}${scalarString(key)}:`;
         return isBlock(item)
           ? `${prefix}\n${write(item, level + 1)}`
           : `${prefix} ${write(item, level + 1)}`;
@@ -259,17 +259,20 @@ export const jsonToYaml = (json) => {
   return write(json, 0);
 };
 
-/** Converts YAML text into a JSON-compatible value. */
+/** Converts YAML text into a JSON object. */
 export const yamlToJson = (yaml) => {
   if (typeof yaml !== 'string') { return null; }
-  const invalid = Symbol('invalid-yaml');
   const removeComment = (line) => {
     let quote = '', escaped = false;
+    const isQuoteStart = (index) => {
+      const prev = line[index - 1], char = line[index];
+      return !quote && (char === '"' || char === "'") && (!prev || /[\s:[\]{}?,-]/.test(prev));
+    };
     for (let i = 0; i < line.length; i++) {
       const char = line[i];
       if (quote === '"' && char === '\\' && !escaped) { escaped = true; continue; }
       if (char === quote && !escaped) { quote = ''; }
-      else if (!quote && (char === '"' || char === "'")) { quote = char; }
+      else if (!quote && isQuoteStart(i)) { quote = char; }
       else if (!quote && char === '#' && (!i || /\s/.test(line[i - 1]))) { return line.slice(0, i); }
       escaped = false;
     }
@@ -277,32 +280,27 @@ export const yamlToJson = (yaml) => {
   };
   const lines = yaml.replace(/\r\n?/g, '\n').split('\n').map(removeComment)
     .filter((line) => line.trim() && !/^\s*(?:---|\.\.\.)\s*$/.test(line));
-  const scalar = (text) => {
+  const invalid = Symbol('invalid-yaml');
+  const containsInvalid = (value) => value === invalid
+    || Array.isArray(value) && value.some(containsInvalid)
+    || value && typeof value === 'object' && (Object.values(value).some(containsInvalid)
+    || Object.getOwnPropertySymbols(value).some((key) => key === invalid));
+  const scalarValue = (text) => {
     const value = text.trim();
     if (!value) { return null; }
     if (value === '{}' || value === '[]') { return value === '{}' ? {} : []; }
     if (/^[\[{]/.test(value)) { return invalid; }
-    if (value[0] === "'") {
-      if (value.at(-1) !== "'") { return invalid; }
-      return value.slice(1, -1).replaceAll("''", "'");
-    }
-    if (value[0] === '"') {
-      try { return JSON.parse(value); } catch { return invalid; }
-    }
+    if (value[0] === "'") { return value.at(-1) === "'" ? value.slice(1, -1).replaceAll("''", "'") : invalid; }
+    if (value[0] === '"') { try { return JSON.parse(value); } catch { return invalid; } }
     if (/^(?:null|~)$/i.test(value)) { return null; }
     if (/^(?:true|false)$/i.test(value)) { return value.toLowerCase() === 'true'; }
     if (/^[+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?$/i.test(value)) { return Number(value); }
     return value;
   };
-  const containsInvalid = (value) => value === invalid
-    || Array.isArray(value) && value.some(containsInvalid)
-    || value && typeof value === 'object' && (Object.values(value).some(containsInvalid)
-    || Object.getOwnPropertySymbols(value).some((key) => key === invalid));
   const getKeyIndex = (text) => {
     let quote = '', escaped = false;
     for (let i = 0; i < text.length; i++) {
-      const char = text[i];
-      if (quote === '"' && char === '\\' && !escaped) { escaped = true; continue; }
+      const char = text[i]; if (quote === '"' && char === '\\' && !escaped) { escaped = true; continue; }
       if (char === quote && !escaped) { quote = ''; }
       else if (!quote && (char === '"' || char === "'")) { quote = char; }
       else if (!quote && char === ':' && (!text[i + 1] || /\s/.test(text[i + 1]))) { return i; }
@@ -311,32 +309,28 @@ export const yamlToJson = (yaml) => {
     return -1;
   };
   const parse = (start, indent) => {
-    const first = lines[start];
-    const content = first.slice(indent);
-    if (content === '{}' || content === '[]') { return { value: scalar(content), index: start + 1 }; }
-    const array = content.startsWith('-') && (!content[1] || /\s/.test(content[1]));
-    const result = array ? [] : {};
+    const first = lines[start], content = first.slice(indent);
+    if (content === '{}' || content === '[]') { return { value: scalarValue(content), index: start + 1 }; }
+    const array = content.startsWith('-') && (!content[1] || /\s/.test(content[1])), result = array ? [] : {};
     let index = start;
     while (index < lines.length) {
-      const line = lines[index];
-      const lineIndent = line.match(/^ */)[0].length;
+      const line = lines[index], lineIndent = line.match(/^ */)[0].length;
       if (lineIndent < indent) { break; }
       if (lineIndent !== indent) { return { value: invalid, index: lines.length }; }
       const current = line.slice(indent);
       if (array) {
         if (!current.startsWith('-') || (current[1] && !/\s/.test(current[1]))) { break; }
-        const value = current.slice(1).trim();
-        const separator = getKeyIndex(value);
+        const value = current.slice(1).trim(), separator = getKeyIndex(value);
         if (separator >= 0) {
-          const item = {}, key = scalar(value.slice(0, separator));
+          const item = {}, key = scalarValue(value.slice(0, separator));
           const itemValue = value.slice(separator + 1).trim();
-          if (itemValue) { item[key] = scalar(itemValue); index++; }
+          if (itemValue) { item[key] = scalarValue(itemValue); index++; }
           else if (lines[index + 1] && lines[index + 1].match(/^ */)[0].length > indent) {
             const childIndent = lines[index + 1].match(/^ */)[0].length;
             const child = parse(index + 1, childIndent); item[key] = child.value; index = child.index;
           } else { item[key] = null; index++; }
           result.push(item);
-        } else if (value) { result.push(scalar(value)); index++; }
+        } else if (value) { result.push(scalarValue(value)); index++; }
         else if (lines[index + 1] && lines[index + 1].match(/^ */)[0].length > indent) {
           const childIndent = lines[index + 1].match(/^ */)[0].length;
           const child = parse(index + 1, childIndent); result.push(child.value); index = child.index;
@@ -351,9 +345,8 @@ export const yamlToJson = (yaml) => {
           const child = parse(index + 1, childIndent); result[current.trim()] = child.value;
           index = child.index; continue;
         }
-        const key = scalar(current.slice(0, separator));
-        const value = current.slice(separator + 1).trim();
-        if (value) { result[key] = scalar(value); index++; }
+        const key = scalarValue(current.slice(0, separator)), value = current.slice(separator + 1).trim();
+        if (value) { result[key] = scalarValue(value); index++; }
         else if (lines[index + 1] && lines[index + 1].match(/^ */)[0].length > indent) {
           const childIndent = lines[index + 1].match(/^ */)[0].length;
           const child = parse(index + 1, childIndent); result[key] = child.value; index = child.index;
@@ -364,14 +357,12 @@ export const yamlToJson = (yaml) => {
   };
   try {
     if (!lines.length) { return null; }
-    const indent = lines[0].match(/^ */)[0].length;
-    const root = lines[0].slice(indent).trim();
+    const indent = lines[0].match(/^ */)[0].length, root = lines[0].slice(indent).trim();
     if (lines.length === 1 && (root === '{}' || root === '[]' || getKeyIndex(root) < 0)) {
-      const value = scalar(root); return containsInvalid(value) ? null : value;
+      const value = scalarValue(root); return containsInvalid(value) ? null : value;
     }
     const result = parse(0, indent);
-    if (result.index !== lines.length || containsInvalid(result.value)) { return null; }
-    return result.value;
+    return result.index === lines.length && !containsInvalid(result.value) ? result.value : null;
   } catch { return null; }
 };
 

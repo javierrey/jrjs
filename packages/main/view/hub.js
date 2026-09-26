@@ -7,7 +7,7 @@
 @typedef {import('./imported/lib/view/view.js').ArrayObject} ArrayObject;
 @typedef {import('./imported/lib/view/view.js').FunctionObject} FunctionObject;
 @typedef {import('./imported/lib/view/view.js').ViewConfig} ViewConfig;
-@typedef {Partial<ViewConfig> & PlainObject} ViewHub;
+@typedef {Partial<ViewConfig> & PlainObject & {}} ViewHub;
 */
 
 import {

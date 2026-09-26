@@ -9,7 +9,7 @@
 @typedef {import('../../../../jrjs/packages/lib/drive/drive.js').DriveConfig} DriveConfig;
 @typedef {import('../../../../jrjs/packages/lib/drive/cluster.js').ClusterConfig} ClusterConfig;
 @typedef {import('../../../../jrjs/packages/lib/drive/server/server.js').ServerConfig} ServerConfig;
-@typedef {DriveConfig & ClusterConfig} DriveHub;
+@typedef {DriveConfig & ClusterConfig & {}} DriveHub;
 */
 
 import {

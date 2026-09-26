@@ -318,7 +318,7 @@ Schedules a resolver call when a `ready` condition is met.
 `when(() => globalThis.document?.body).then(() => log('ready')).catch(() => log('failed'))`
 */
 export const when = (ready = () => true) => new Promise((s, e) => {
-  let g = 50; const l = g * 100, o = Date.now() + l * 10, d = () => (g = Math.min(g * 1.2, l));
+  let p = 50; const l = p * 100, o = Date.now() + l * 10, d = () => (p = Math.min(p * 1.2, l));
   const f = () => { ready() ? s() : Date.now() > o ? e() : setTimeout(f, d()); }; setTimeout(f);
 });
 
@@ -331,7 +331,7 @@ Optionally, a second method can be defined to be called immediately after a posi
 `when(() => globalThis.document?.body).then(() => log('ready')).catch(() => log('failed'))`
 */
 export const when = (ready = () => true, r = () => {}) => new Promise((s, e) => {
-  let g = 50; const l = g * 100, o = Date.now() + l * 10, d = () => (g = Math.min(g * 1.2, l));
+  let p = 50; const l = p * 100, o = Date.now() + l * 10, d = () => (p = Math.min(p * 1.2, l));
   const f = () => { ready() ? s(r()) : Date.now() > o ? e() : setTimeout(f, d()); }; setTimeout(f);
 });
 
@@ -342,7 +342,7 @@ Calls a function when a condition is met.
 `when(() => globalThis.document?.body).then(() => log('ready')).catch(() => log('timeout'))`
 */
 export const when = (ready = () => true) => new Promise((s, e) => {
-  let g = 50; const l = g * 100, o = Date.now() + l * 10, d = () => (g = Math.min(g * 1.2, l));
+  let p = 50; const l = p * 100, o = Date.now() + l * 10, d = () => (p = Math.min(p * 1.2, l));
   (function f() { ready() ? s() : Date.now() > o ? e() : setTimeout(f, d()); })();
 });
 
@@ -353,7 +353,7 @@ Calls a function when a condition is met.
 `when(() => globalThis.document?.body).then(() => log('ready')).catch(() => log('failed'))`
 */
 export const when = (ready = () => true) => new Promise((s, e) => {
-  let g = 50; const l = g * 100, o = Date.now() + l * 10, d = () => (g = Math.min(g * 1.2, l));
+  let p = 50; const l = p * 100, o = Date.now() + l * 10, d = () => (p = Math.min(p * 1.2, l));
   const f = () => { ready() ? s() : Date.now() > o ? e() : setTimeout(f, d()); }; setTimeout(f);
 });
 
@@ -364,7 +364,7 @@ Calls a function when a condition is met.
 `when(() => globalThis.document?.body).then(() => log('ready')).catch(() => log('failed'))`
 */
 export const when = (ready = () => true) => new Promise((s, e) => {
-  let g = 50; const l = g * 100, o = Date.now() + l * 10, d = () => (g = Math.min(g * 1.2, l));
+  let p = 50; const l = p * 100, o = Date.now() + l * 10, d = () => (p = Math.min(p * 1.2, l));
   const f = () => { try { ready() ? s() : Date.now() > o ? e() : setTimeout(f, d()); } catch { e(); } };
   setTimeout(f);
 });

@@ -106,6 +106,32 @@ export const loadHtml = (url, elem, position, norun) => {
 /* * */
 
 /**
+Returns the current view size type number, based on a viewport width and height.
+The chosen thresholds are practical heuristic intermediates in logical pixels.
+Some devices may overlap the defined ranges.
+Coded in numbers to allow layouts fit across a range of size types.
+0: null (no display)
+1: mini (watch)
+2: small (phone)
+3: medium (tablet)
+4: large (desktop)
+5: maxi (ultra large desktop, spatial display)
+*/
+export const getViewSizeType = (width, height) => {
+  let size = height * 16 / 9; if (size > width) { size = width; }
+  return !size || size < 0 ? 0
+    : size < 300 ? 1 : size < 1000 ? 2 : size < 1500 ? 3 : size < 2500 ? 4 : 5;
+};
+
+/** Returns the current window size type, based on width and height. */
+export const getWindowSizeType = () => getViewSizeType(window.innerWidth, window.innerHeight);
+
+/** Returns the container element size type, based on width and height. */
+export const getContainerSizeType = (elem) => getViewSizeType(elem.clientWidth, elem.clientHeight);
+
+/* * */
+
+/**
 CSS functionality.
 Usage:
 `CSSUtils.setCssTheme('dark')`, `CSSUtils.toggleCssTheme()`,

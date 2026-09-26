@@ -170,9 +170,9 @@ const logConnection = ({ request, resource, error, status, headers, body }) => {
 };
 
 const setClientRemarks = (resource) => {
-  const { client, params } = resource, LARGE_PL_RMK = 10e3;
-  if (params.payload?.length > LARGE_PL_RMK) { client.remarks['large-payload'] = params.payload.length; }
-  if (!client.remotePort) { client.remarks['remote-port'] = client.remotePort; }
+  const { client, params } = resource, rmk = (k, v) => { client.remarks[k] = v; };
+  if (params.payload?.length > 10e3) { rmk('large-payload', params.payload.length); }
+  if (!client.remotePort) { rmk('remote-port', client.remotePort); }
 };
 
 const resolveClient = (request) => {

@@ -1,8 +1,8 @@
-// mathfun.assert.mjs //  javier.rey.eu@gmail.com 2024
+// tests/mathfun.assert.mjs //  javier.rey.eu@gmail.com 2024
 // _@ts-check
 
 import assert from 'node:assert';
-import { MathFun } from './mathfun.js';
+import { MathFun } from '../mathfun.js';
 
 const log = (...args) => args.forEach((arg) => console.log(arg && [Object, undefined].includes(arg.constructor) ? JSON.stringify(arg, null, 2) : arg)); // eslint-disable-line
 

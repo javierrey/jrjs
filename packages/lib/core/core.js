@@ -814,7 +814,7 @@ Schedules a resolver call when a `ready` condition is met.
 `when(() => globalThis.document?.body).then(() => log('ready')).catch(() => log('failed'))`
 */
 export const when = (ready = () => true) => new Promise((s, e) => {
-  let g = 50; const l = g * 100, o = Date.now() + l * 10, d = () => (g = Math.min(g * 1.2, l));
+  let p = 50; const l = p * 100, o = Date.now() + l * 10, d = () => (p = Math.min(p * 1.2, l));
   const f = () => { ready() ? s() : Date.now() > o ? e() : setTimeout(f, d()); }; setTimeout(f);
 });
 
@@ -862,8 +862,6 @@ export const callFetch = (url, callback = null, resolver = null, options = null)
     .catch((err) => (error = err))
     .finally(() => callback?.(url, content, error));
 };
-
-/* * */
 
 /** Exposes local members to the specified environment, globalThis by default. Overwrites existing references. */
 export const expose = (props, env = globalThis) => Object.entries(props).forEach(([k, v]) => { env[k] = v; });
