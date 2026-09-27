@@ -7,29 +7,30 @@ import {
 
 const cloneMethod = envInfo.args.method === 'copy' ? copyDir : symlinkDir; // symlink, copy
 
-const origBase = envInfo.args.orig || 'packages';
-const destBase = envInfo.args.dest || 'packages/main';
+const srcBase = envInfo.args.src || 'packages';
+const tgtBase = envInfo.args.tgt || 'packages/main';
+const tgtName = tgtBase.split('/', 2).at(-1) || 'main';
 
-const origCore = destBase + '/core'; // Target package core folder.
+const srcCore = tgtBase + '/core'; // Target package core folder.
 
 /** @param {string} ctx @param {string[]} imports */
 const generateContext = (ctx, imports = []) => {
-  const destCtx = destBase + `/${ctx}/imported`;
-  removeDir(destCtx);
+  const tgtCtx = tgtBase + `/${ctx}/imported`;
+  removeDir(tgtCtx);
 
-  cloneMethod(origBase + '/lib/core', destCtx + '/lib/core');
-  cloneMethod(origBase + `/lib/${ctx}`, destCtx + `/lib/${ctx}`);
-  cloneMethod(origBase + '/utils/core', destCtx + '/utils/core');
-  cloneMethod(origBase + `/utils/${ctx}`, destCtx + `/utils/${ctx}`);
-  cloneMethod(origCore, destCtx + `/_self/core`);
+  cloneMethod(srcBase + '/lib/core', tgtCtx + '/lib/core');
+  cloneMethod(srcBase + `/lib/${ctx}`, tgtCtx + `/lib/${ctx}`);
+  cloneMethod(srcBase + '/utils/core', tgtCtx + '/utils/core');
+  cloneMethod(srcBase + `/utils/${ctx}`, tgtCtx + `/utils/${ctx}`);
+  cloneMethod(srcCore, tgtCtx + `/${tgtName}/core`);
 
   /** @type {string[]} */ const errors = [];
   imports.forEach((folder) => {
-    let orig = origBase + `/imports/${ctx}/${folder}`;
-    fileExists(orig) && cloneMethod(orig, destCtx + `/imports/${ctx}/${folder}`);
-    orig = origBase + `/imports/core/${folder}`;
-    fileExists(orig) ? cloneMethod(orig, destCtx + `/imports/core/${folder}`)
-      : errors.push(`${ctx}-imports not found: ${orig}`);
+    let src = srcBase + `/imports/${ctx}/${folder}`;
+    fileExists(src) && cloneMethod(src, tgtCtx + `/imports/${ctx}/${folder}`);
+    src = srcBase + `/imports/core/${folder}`;
+    fileExists(src) ? cloneMethod(src, tgtCtx + `/imports/core/${folder}`)
+      : errors.push(`${ctx}-imports not found: ${src}`);
   });
   errors.length && log.error(...errors);
 };
@@ -37,9 +38,9 @@ const generateContext = (ctx, imports = []) => {
 /** @param {string} ctxArg */
 const processContextArg = (ctxArg, dfault = '') => {
   let imports = envInfo.args[ctxArg] ?? dfault;
-  const addCtx = !['', 'null', 'false', '0', '!1'].includes(imports);
+  const truthy = !['', 'null', 'false', '0', '!1'].includes(imports);
   if (['null', 'false', '0', '!1', 'true', '1', '!0'].includes(imports)) imports = '';
-  addCtx && generateContext(ctxArg.replace(/-imports$/, ''), imports.split(',').filter(Boolean));
+  truthy && generateContext(ctxArg, imports.split(',').filter(Boolean));
 };
 
 /**
@@ -47,11 +48,11 @@ Clones `view` dependencies into a generated `imported` subfolder, based on the a
 Public `view` dependencies must point to the `imported` subfolder, so they are available on the client side.
 The value can also be a comma-separated list of additional modules from the `imports/view` context.
 */
-processContextArg('view-imports', '1');
+processContextArg('view', '1');
 
 /**
 Clones `drive` dependencies into a generated `imported` subfolder, based on the argument value: default 'false'.
 Unlike `view`, the `drive` folder is not public and its dependencies can be referenced directly.
 The value can also be a comma-separated list of additional modules from the `imports/drive` context.
 */
-processContextArg('drive-imports');
+processContextArg('drive');

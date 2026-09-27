@@ -25,6 +25,7 @@ const registerAlias = (name, depth) => {
 }
 
 const currentDepth = 3; // @define current script nested level.
-const packages = new URL(import.meta.url).searchParams.get('packages')?.split(',').filter(Boolean) ?? [];
+const searchParams = new URL(import.meta.url).searchParams;
+const packages = searchParams.get('packages')?.split(',').filter(Boolean) ?? [];
 
 packages.forEach((name) => registerAlias(name, currentDepth));

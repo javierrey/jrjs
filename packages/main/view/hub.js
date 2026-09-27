@@ -13,7 +13,7 @@
 import {
   envInfo, contextHub, merge, hydrate,
 } from './imported/lib/view/view.js';
-import { coreHub } from './imported/_self/core/hub.js';
+import { coreHub } from './imported/main/core/hub.js';
 
 export * from './imported/lib/view/view.js';
 

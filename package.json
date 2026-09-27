@@ -9,13 +9,13 @@
   "workspaces": ["packages/*"],
   "main": "",
   "scripts": {
-    "node:args": "node --preserve-symlinks --preserve-symlinks-main --import \"./packages/lib/drive/register.js?packages=jrjs\"",
+    "node:args": "node",
     "git:clean": "git -c core.longPaths=true clean",
     "status": "echo CLEAN: && pnpm git:clean -nfdX -e !.* -e !**/_ignore/ -e !**/_ignore/** && echo NEW: && git ls-files -o --exclude-standard",
     "clean": "pnpm git:clean -fdX -e !.* -e !**/_ignore/ -e !**/_ignore/**",
     "clean:install": "pnpm clean && pnpm i",
     "format:main": "npx eslint packages/main",
-    "sync-source:main": "node packages/utils/drive/builder/sync-source.js --method=symlink --orig=packages --dest=packages/main --view-imports=1 --drive-imports=",
+    "sync-source:main": "node packages/utils/drive/builder/sync-source.js --method=symlink --src=packages --tgt=packages/main --view=1",
     "test:main": "pnpm -w packages/main run test",
     "start:dev:main": "pnpm sync-source:main && pnpm node:args packages/main/drive/index.js \"{}\"",
     "format:lib": "npx eslint packages/lib",
@@ -28,12 +28,14 @@
     "stop:dev": "pnpm node:args packages/main/drive/stop.js",
     "start:dev": "pnpm stop:dev && pnpm start:dev:main"
   },
-  "dependencies": {},
-  "devDependencies": {},
+  "devDependencies": {
+    "jrjs": "link:."
+  },
   "_ignore": {
     "jrjs@github": "github:javierrey/jrjs",
     "jrjs@http": "https://github.com/javierrey/jrjs",
     "jrjs@local": "file:../jrjs",
+    "jrjs@repo": "link:.",
     "jrjs@main": "link:../..",
     "local_modules": {
       "dependencies": {},
