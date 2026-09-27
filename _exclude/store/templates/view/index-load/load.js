@@ -26,20 +26,23 @@ const parseValue = (value, ctx, dot) => {
   }
   return value;
 };
-const parseQuery = (query, options) => {
-  const object = {}; let aux; query ??= {}; options ??= {};
-  if (query.constructor === String) {
-    aux = query.indexOf('#'); if (aux !== -1) { query = query.slice(0, aux); }
-    query = query.slice(query.indexOf('?') + 1).trim();
-    query = !query ? [] : query.split('&');
-  } else if (!query.forEach) { return Object.assign(object, query); }
-  query.forEach((item, ind) => {
-    item = String(item ?? ''); aux = item.indexOf('=');
-    const key = decodeURIComponent(item.substring(0, aux)).trim() || String(ind);
-    const value = decodeURIComponent(item.slice(aux + 1)).trim();
-    const pv = value[0] + value[1] + value.at(-1) === '${}';
-    object[key] = pv ? parseValue(value.slice(2, -1), options.ctx, options.dot) : value;
-  });
+const parseArguments = (args) => {
+  const object = {}; args ??= [];
+  if (args.constructor === String) {
+    aux = args.indexOf('#'); if (aux !== -1) { args = args.slice(0, aux); }
+    args = args.slice(args.indexOf('?') + 1).trim();
+    args = !args ? [] : args.split('&');
+  }
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i], name = decodeURIComponent(arg.replace(/^-{1,2}/, '').split('=', 1)[0]);
+    const valid = /^[\w-]+$/.test(name), key = valid ? name : `_${i}`, nextArg = args[i + 1];
+    const followed = /^-{1,2}[\w-]+$/.test(arg) && nextArg && !nextArg.startsWith('-') && !nextArg.includes('=');
+    const val = decodeURIComponent(
+      arg.includes('=') ? arg.slice(arg.indexOf('=') + 1) : followed ? nextArg : valid ? name : arg
+    );
+    object[key] = val[0] + val[1] + val.at(-1) === '${}' ? parseValue(val.slice(2, -1)) : val;
+    followed && i++;
+  }
   return object;
 };
 const UrlFun = (() => {
@@ -207,11 +210,11 @@ const loadHtml = (url, elem, position, norun) => {
 };
  // content: './content/document.md' './content/document.html' './mathfun' './content/mds/tasks.md' '../../../../../www/nn/nnd.htm' '../../../../../simple-3d/index.html'
 const contextHub = {
-  content: parseQuery(location.search).content || '',
+  content: parseArguments(location.search).content || '',
 };
 // globalize:
 expose({
-  contextHub, log, expose, when,
+  envInfo, contextHub, log, expose, when,
   ge, gt, qs, qa,
   appendHtml, prependHtml, replaceHtml, insertHtmlBefore, insertHtmlAfter,
   loadHtml, insertHtml,

@@ -37,21 +37,6 @@ export const fsP = fs.promises;
 export * as pathmod from 'node:path';
 export * from '../core/core.js';
 
-/** Process Arguments functionality: */
-
-/**
-Get command line argument value by name, or undefined if not found.
-Formats: `--name=value`, `-name=value`, `name=value`, `--name value`, `-name value`, `name`.
-@param {string} name
-*/
-export const getArgumentValue = (name, args = process.argv.slice(2)) => {
-  let arg = args.find((a) => new RegExp(`^-{0,2}${name}=`).test(a) && !name.includes('='));
-  if (arg) return arg.slice(arg.indexOf('=') + 1).replace(/^"|"$/g, '');
-  let argi = args.findIndex((a) => new RegExp(`^-{1,2}${name}$`).test(a));
-  if (argi > -1) return argi < args.length - 1 && !args[argi + 1].startsWith('-') ? args[argi + 1] : '';
-  return args.includes(name) ? name : undefined;
-};
-
 /** Test functionality: */
 
 export const assertError = (a, b) => {

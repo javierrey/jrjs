@@ -541,26 +541,28 @@ export const parseValue = (value, ctx, dot) => {
 };
 
 /**
-Parses a URL-encoded query from a string into a query object, e.g. `//urlpath?a=1&b=2`,
-or from an array of strings with encoded key-value pairs, e.g. `['a=1', 'b=2']`.
-If it is not a string or string array, it returns a copy of the query.
-If a query value is enclosed in `${...}`, it is interpreted with `parseValue`,
-using `options` context `ctx` and key separator `dot`.
+Converts an array of URL query or command-line arguments into an object with key-value pairs.
+Observes common argument conventions, so `['--name0=value0', '--name1', 'value1', '--name2']`
+becomes: `{ name0: 'value0', name1: 'value1', name2: 'name2' }`
+Recognises global references, as in: `--name=${globalVariable}`.
+@param {string | string[]} args @return {PlainObject<string, string>}
 */
-export const parseQuery = (query, options) => {
-  const object = {}; let aux; query ??= {}; options ??= {};
-  if (query.constructor === String) {
-    aux = query.indexOf('#'); if (aux !== -1) { query = query.slice(0, aux); }
-    query = query.slice(query.indexOf('?') + 1).trim();
-    query = !query ? [] : query.split('&');
-  } else if (!query.forEach) { return Object.assign(object, query); }
-  query.forEach((item, ind) => {
-    item = String(item ?? ''); aux = item.indexOf('=');
-    const key = decodeURIComponent(item.substring(0, aux)).trim() || String(ind);
-    const value = decodeURIComponent(item.slice(aux + 1)).trim();
-    const pv = value[0] + value[1] + value.at(-1) === '${}';
-    object[key] = pv ? parseValue(value.slice(2, -1), options.ctx, options.dot) : value;
-  });
+export const parseArguments = (args) => {
+  const object = {}; args ??= [];
+  if (args.constructor === String) {
+    const ind = args.indexOf('#'); if (ind !== -1) { args = args.slice(0, ind); }
+    args = args.slice(args.indexOf('?') + 1).trim(); args = !args ? [] : args.split('&');
+  }
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i], name = decodeURIComponent(arg.replace(/^-{1,2}/, '').split('=', 1)[0]);
+    const valid = /^[\w-]+$/.test(name), key = valid ? name : `_${i}`, next = args[i + 1];
+    const followed = /^-{1,2}[\w-]+$/.test(arg) && next && !next.startsWith('-') && !next.includes('=');
+    const val = decodeURIComponent(
+      arg.includes('=') ? arg.slice(arg.indexOf('=') + 1) : followed ? next : valid ? name : arg
+    );
+    object[key] = val[0] + val[1] + val.at(-1) === '${}' ? parseValue(val.slice(2, -1)) : val;
+    followed && i++;
+  }
   return object;
 };
 
@@ -779,28 +781,39 @@ export const mdToHtml = (() => {
 
 /* Flow and event functionality: */
 
-/**
-Builds an environment descriptor for both browser and nodejs contexts.
-Typically called once at the begining of a main thread process, worker or frame.
-*/
-export const getEnvironment = () => {
+/** Builds an environment descriptor for both browser and nodejs contexts. @return {PlainObject} */
+export const envInfo = (() => {
   const env = {}, glo = globalThis;
   env.isBrowser = !glo.process?.argv; // not nodejs
   env.isWindow = typeof Window !== 'undefined' && glo.window === glo; // not worker
   let aux; aux = glo.parent?.frames?.[0]; env.isFrame = !!aux && Object(aux) !== glo; // not top
   if (env.isBrowser) {
     aux = location.pathname; env.root = location.origin;
-    env.params = location.search.slice(1); env.params = !env.params ? [] : env.params.split('&');
+    env.args = parseArguments(location.search);
+    env.os = (() => {
+      const ua = navigator.userAgent.toLowerCase();
+      if (ua.includes('mac') || ua.includes('ipad') || ua.includes('iphone')) return 'mac';
+      if (ua.includes('linux') || ua.includes('android')) return 'lin';
+      if (ua.includes('win')) return 'win';
+      return '';
+    })();
     if (aux.lastIndexOf('.') <= aux.lastIndexOf('/')) { aux += '/'; }
   } else {
     aux = (process.env.PWD || process.cwd() || '').replace(/\\/g, '/');
     env.root = aux.substring(0, aux.indexOf('/')); aux = aux.slice(env.root.length);
-    env.params = glo.process.argv.slice(2);
+    env.args = parseArguments(glo.process.argv.slice(2));
+    env.os = (() => {
+      const pf = process.platform;
+      if (pf === 'darwin') return 'mac';
+      if (pf === 'linux' || pf === 'android') return 'lin';
+      if (pf === 'win32') return 'win';
+      return '';
+    })();
   }
   env.slug = aux.substring(aux.lastIndexOf('/')); env.path = aux.slice(0, -env.slug.length);
   env.slug ||= '/'; env.path = env.path.replace(/\/$/, '');
-  return env;
-};
+  return Object.freeze(env);
+})();
 
 /** Import a module dynamically, returning its default export, optionally a JSON type. */
 export const importModule = async (url, type) =>

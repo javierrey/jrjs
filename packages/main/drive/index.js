@@ -2,9 +2,9 @@
 /* Runtime start script. */
 // @ts-check
 
-import { contextHub, log, jsonStringify, setupClusterWorker } from './hub.js';
+import { envInfo, contextHub, log, jsonStringify, setupClusterWorker } from './hub.js';
 
-log.info(`contextHub: ${jsonStringify(contextHub, null, 2)}`);
+log.info(`envInfo: ${jsonStringify(envInfo, null, 2)}\ncontextHub: ${jsonStringify(contextHub, null, 2)}`);
 
 contextHub.clusterSize && setupClusterWorker(new URL('./worker.js', import.meta.url));
 

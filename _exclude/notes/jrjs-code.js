@@ -1,10 +1,11 @@
-----------------------------------------------------------
-jrjs-code.txt
-----------------------------------------------------------
-----------------------------------------------------------
-----------------------------------------------------------
-----------------------------------------------------------
-----------------------------------------------------------
+// ----------------------------------------------------------
+// jrjs-code.txt
+// @ts-check
+// ----------------------------------------------------------
+// ----------------------------------------------------------
+// ----------------------------------------------------------
+// ----------------------------------------------------------
+// ----------------------------------------------------------
 // From core.js:
 
 var isNul = (v) => [undefined, null, NaN].includes(v);
@@ -44,10 +45,10 @@ var toSca = (v) => {
 var toStr = (v) => isStr(v = toSca(v)) ? v : String(v ?? '');
 var toEmp = (v) => isArr(v) ? [] : {};
 
-----------------------------------------------------------
+// ----------------------------------------------------------
 TS, getProperty, hasProperty
---------------------------------
---------------------------------
+// --------------------------------
+// --------------------------------
 
 /**
 Gets a property value in an unknown type object if present, or undefined otherwise.
@@ -79,7 +80,7 @@ export const hasProperty =
     return true;
   };
 
---------------------------------
+// --------------------------------
 // NestedObject JSDoc:
 
 /**
@@ -100,7 +101,7 @@ export const hasProperty =
 } NestedObject;
 */
 
---------------------------------
+// --------------------------------
 original TS (from core.js):
 
 /**
@@ -128,36 +129,15 @@ export const hasPropertyKey =
     return hasKey(parent, lastKey);
   };
 
---------------------------------
---------------------------------
-----------------------------------------------------------
-// core.js rebasers, using rebaseImports for inline scripts.
-
-/** Rebases a URL from the current location base, or optionally from a custom base. */
-export const rebaseUrl = (url, base = null) =>
-  new URL(url ?? '', new URL(base ?? '', globalThis.location ?? 'file:///')).href;
-
-/** Rebases all quoted URLs in a code text, optionally from a custom base. */
-export const rebaseUrls = (code, base = null) =>
-  code.replace(/(?<=["'`(])(?:\.{1,2}\/?|\/{1,2})[^ "'`)]*(?=["'`)])/gi, (m) => rebaseUrl(m, base));
-
-/** Rebases relative module specifiers in import/export statements, optionally from a custom base. */
-export const rebaseImports = (code, base = null) => code.replace(
-  /\b(?:from|import)\s*\(?\s*(["'])((?:\.{1,2}\/?|\/{1,2})[^"'\r\n]*)\1/gi,
-  (m, _q, path) => m.replace(path, rebaseUrl(path, base)),
-);
-
-/** Rebases all links in an HTML, including inline code, optionally from a custom base. */
-export const rebaseLinks = (html, base = null) => html
-  .replace(/(?<=(?:[\s:-](?:href|src|url)\s*[=(]\s*["']))[^"']*(?=["'])/gi, (m) => rebaseUrl(m, base))
-  .replace(/(<script(?:\s[^>]*)?>)([\s\S]*?)(<\/script>)/gi, (_m, a, b, c) => a + rebaseImports(b, base) + c);
-
-----------------------------------------------------------
+// --------------------------------
+// --------------------------------
+// ----------------------------------------------------------
+// ----------------------------------------------------------
 // drive/server.js resolveConfig
 
 log.info(`resolveConfig "${import.meta.url}" "${cwd}" "${publicFolder}" "${config.publicDir}"`);
 
-----------------------------------------------------------
+// ----------------------------------------------------------
 
 /** Maximum arguments accepted by functions. Test optionally constrained. */
 const maxArgs = (min = 0, max = Number.MAX_SAFE_INTEGER) => {
@@ -166,10 +146,10 @@ const maxArgs = (min = 0, max = Number.MAX_SAFE_INTEGER) => {
   return ar.length;
 };
 
-----------------------------------------------------------
-hydrate:
------------------------------------
------------------------------------
+// ----------------------------------------------------------
+// hydrate:
+// -----------------------------------
+// -----------------------------------
 
 /**
 Populates an object with default values from other objects, when they are absent
@@ -227,7 +207,7 @@ export const hydrate = (obj, def, fill = 0) => {
   return obj;
 };
 
------------------------------------
+// -----------------------------------
 
 // Not replacing empties for non-recursive: '', [], {}
 
@@ -275,14 +255,14 @@ export const setDefaults = (obj, defaults, recursive = false) => {
   return obj;
 };
 
-----------------------------------------------------------
+// ----------------------------------------------------------
 
 export const isNulOrEmp = (v) => {
   if (v == null || Object.is(v, NaN)) return true; if (v[Symbol.iterator]) return !(v.size ?? v.length);
   for (const p in v) return false; return true;
 };
 
-----------------------------------------------------------
+// ----------------------------------------------------------
 // server.js
 
 const log = Log({ name: 'server', level: 4 });
@@ -306,9 +286,9 @@ const resolveRoute = (request, urlParts, props) => {
   return route;
 };
 
-----------------------------------------------------------
+// ----------------------------------------------------------
 // when:
--------------------------------
+// ----------------------------------------------------------
 
 /** Delays a resolver call. `delay(2e3).then(() => log('delayed'))` */
 export const delay = (ms = 0) => new Promise((s) => setTimeout(s, ms));
@@ -322,7 +302,7 @@ export const when = (ready = () => true) => new Promise((s, e) => {
   const f = () => { ready() ? s() : Date.now() > o ? e() : setTimeout(f, d()); }; setTimeout(f);
 });
 
------------------
+// ----------------------------------------------------------
 // Obsolete. No need for a second synchronous method, use ready itself.
 
 /**
@@ -335,7 +315,7 @@ export const when = (ready = () => true, r = () => {}) => new Promise((s, e) => 
   const f = () => { ready() ? s(r()) : Date.now() > o ? e() : setTimeout(f, d()); }; setTimeout(f);
 });
 
------------------
+// ----------------------------------------------------------
 
 /**
 Calls a function when a condition is met.
@@ -346,7 +326,7 @@ export const when = (ready = () => true) => new Promise((s, e) => {
   (function f() { ready() ? s() : Date.now() > o ? e() : setTimeout(f, d()); })();
 });
 
------------------
+// ----------------------------------------------------------
 
 /**
 Calls a function when a condition is met.
@@ -357,7 +337,7 @@ export const when = (ready = () => true) => new Promise((s, e) => {
   const f = () => { ready() ? s() : Date.now() > o ? e() : setTimeout(f, d()); }; setTimeout(f);
 });
 
------------------
+// ----------------------------------------------------------
 
 /**
 Calls a function when a condition is met.
@@ -369,7 +349,7 @@ export const when = (ready = () => true) => new Promise((s, e) => {
   setTimeout(f);
 });
 
--------------------------------
+// ----------------------------------------------------------
 
 /**
 Call function `run` when document body is present.
@@ -382,7 +362,7 @@ Equivalent to self-invoking ready function here:
 */
 export const documentReady = (run) => when(() => document.body, run);
 
--------------------------------
+// ----------------------------------------------------------
 // core.js, old:
 
 /**
@@ -435,7 +415,7 @@ export const waitFor = (state, args) => new Promise((resolve, reject) => {
   return timer();
 });
 
-----------------------------------------------------------
+// ----------------------------------------------------------
 // drive/run.js
 
 /** @param {PlainObject} app @return {void} */
@@ -445,7 +425,7 @@ const addAppConfig = (app) => {
   }
 };
 
-----------------------------------------------------------
+// ----------------------------------------------------------
 
 // drive/index.js
 // @ts-check
@@ -462,19 +442,19 @@ globalThis.globalConfig = {
 
 import('jrjs/packages/lib/drive/run.js');
 
-----------------------------------------------------------
+// ----------------------------------------------------------
 
 import viewX_css from './view-x.css' with { type: 'css' };
 
 document.adoptedStyleSheets.push(viewX_css);
 
----------------------------------
+// ----------------------------------------------------------
 
 /** Dynamically import a module returning its default export or a JSON file if type is 'json'. */
 export const importModule = async (url, type) =>
   (await (type ? import(url, { with: { type } }) : import(url))).default;
 
-----------------------------------------------------------
+// ----------------------------------------------------------
 // drive.js, original:
 
 export const getAllFiles = async function* (folder) {
@@ -487,7 +467,7 @@ export const getAllFiles = async function* (folder) {
   }
 };
 
-----------------------------------------------------------
+// ----------------------------------------------------------
 // core.js:
 
 /**
@@ -531,9 +511,9 @@ export const log = Object.assign(
   }
 );
 
-----------------------------------------------------------
-----------------------------------------------------------
-----------------------------------------------------------
+// ----------------------------------------------------------
+// ----------------------------------------------------------
+// ----------------------------------------------------------
 // core-x.js
 
 /** Date conversions **/
@@ -563,9 +543,9 @@ export const numericStringDate = (s) => {
   return new Date(strd);
 };
 
-----------------------------------------------------------
-----------------------------------------------------------
-----------------------------------------------------------
-----------------------------------------------------------
-----------------------------------------------------------
-----------------------------------------------------------
+// ----------------------------------------------------------
+// ----------------------------------------------------------
+// ----------------------------------------------------------
+// ----------------------------------------------------------
+// ----------------------------------------------------------
+// ----------------------------------------------------------

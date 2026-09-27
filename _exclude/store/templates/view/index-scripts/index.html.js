@@ -2,7 +2,7 @@
 // @ts-check
 
 import {
-  contextHub, log, when, parseQuery, jsonStringify,
+  contextHub, log, when, parseArguments, jsonStringify,
   ge, gt, qs, qa, appendHtml,
 } from './imported/lib/view/view.js';
 import './hub.js';

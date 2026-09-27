@@ -4,7 +4,6 @@
 
 /**
 Minify and copy files from a source directory to a destination directory, preserving the directory structure.
-const buildMethod = getArgumentValue('method') === 'copy' ? copyDir : minifyBuild; // symlink, copy
 Compressible file types: .html .htm .css .js .mjs .cjs .xml .xhtml .svg .dae .json .json5
 Filenames containing .raw. or .min. are not modified, filenames containing .src., .test. or .spec. are skipped.
 All other files are copied unmodified.

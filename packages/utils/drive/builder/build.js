@@ -1,13 +1,13 @@
 // utils/drive/builder/build.js
 // _@ts-check
 
-import { getArgumentValue, copyDir } from '../../../lib/drive/drive.js';
+import { envInfo, copyDir } from '../../../lib/drive/drive.js';
 import { configMinify, minifyBuild } from './minify.js';
 
-const buildMethod = getArgumentValue('method') === 'copy' ? copyDir : minifyBuild; // minify, copy
+const buildMethod = envInfo.args.method === 'copy' ? copyDir : minifyBuild; // minify, copy
 
-const packages = getArgumentValue('packages') || ''; // main, ...
+const packages = envInfo.args.packages || ''; // main, ...
 
-buildMethod === minifyBuild && configMinify(getArgumentValue('config') || '{}');
+buildMethod === minifyBuild && configMinify(envInfo.args.config || '{}');
 
 packages.split(',').forEach((dir) => buildMethod('./packages/' + dir, './dist/' + dir));

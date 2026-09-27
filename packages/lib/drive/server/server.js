@@ -59,8 +59,8 @@ import fs from 'node:fs';
 import pathmod from 'node:path';
 import { pathToFileURL } from 'node:url';
 import {
-  Log, toStr, isNul, isJso, isBin, isTra,
-  urlComponents, parseQuery, resolvePath, getEnvironment,
+  Log, envInfo, toStr, isNul, isJso, isBin, isTra,
+  urlComponents, parseArguments, resolvePath,
   fileSize, readFile, readFileStream, getDistPath,
 } from '../drive.js';
 
@@ -270,7 +270,7 @@ const resolveResource = async (request) => {
   const client = resolveClient(request);
   const urlParts = urlComponents(request.url);
   const route = urlParts.path.split('/').slice(1);
-  const params = parseQuery(urlParts.query); params.payload = Buffer.from([]);
+  const params = parseArguments(urlParts.query); params.payload = Buffer.from([]);
   const DEFAULT_FILE = 'index', STATIC_EXT = ['.html', '.json'], SERVICE_EXT = ['.js', '.mjs', '.cjs'];
   const publicFolder = serverConfig.publicFolder;
   const servicesFolder = serverConfig.servicesFolder;
@@ -372,8 +372,7 @@ const resolver = async (request, response) => {
 
 /** @param {ServerConfig} config @return {ResolvedServerConfig} */
 const resolveConfig = (config) => {
-  const env = getEnvironment();
-  const baseFolder = getDistPath(process.cwd().replace(/\\/g, '/') || (env.root + env.path));
+  const baseFolder = getDistPath(process.cwd().replace(/\\/g, '/') || (envInfo.root + envInfo.path));
   const privateFolder = getDistPath(resolvePath(baseFolder, config.privateDir));
   const publicFolder = getDistPath(resolvePath(baseFolder, config.publicDir));
   const servicesFolder = config.servicesDir ? getDistPath(resolvePath(baseFolder, config.servicesDir)) : '';

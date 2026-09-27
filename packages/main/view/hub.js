@@ -11,7 +11,7 @@
 */
 
 import {
-  contextHub, merge, hydrate, parseQuery,
+  envInfo, contextHub, merge, hydrate,
 } from './imported/lib/view/view.js';
 import { coreHub } from './imported/_self/core/hub.js';
 
@@ -23,8 +23,6 @@ const viewHub = {
   href: location.href,
 };
 
-const viewParams = /** @type {ViewHub} */ (parseQuery(location.search) ?? {});
-
 /** @type {ViewHub} */
 const viewDefaults = {
   load: './home.html',
@@ -33,4 +31,4 @@ const viewDefaults = {
 };
 
 merge(contextHub, coreHub, viewHub);
-hydrate(contextHub, viewParams, viewDefaults);
+hydrate(contextHub, envInfo.args, viewDefaults);

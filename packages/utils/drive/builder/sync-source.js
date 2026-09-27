@@ -2,13 +2,13 @@
 // @ts-check
 
 import {
-  log, getArgumentValue, fileExists, removeDir, copyDir, symlinkDir,
+  envInfo, log, fileExists, removeDir, copyDir, symlinkDir,
 } from '../../../lib/drive/drive.js';
 
-const cloneMethod = getArgumentValue('method') === 'copy' ? copyDir : symlinkDir; // symlink, copy
+const cloneMethod = envInfo.args.method === 'copy' ? copyDir : symlinkDir; // symlink, copy
 
-const origBase = getArgumentValue('orig') || 'packages';
-const destBase = getArgumentValue('dest') || 'packages/main';
+const origBase = envInfo.args.orig || 'packages';
+const destBase = envInfo.args.dest || 'packages/main';
 
 const origCore = destBase + '/core'; // Target package core folder.
 
@@ -36,7 +36,7 @@ const generateContext = (ctx, imports = []) => {
 
 /** @param {string} ctxArg */
 const processContextArg = (ctxArg, dfault = '') => {
-  let imports = getArgumentValue(ctxArg) ?? dfault;
+  let imports = envInfo.args[ctxArg] ?? dfault;
   const addCtx = !['', 'null', 'false', '0', '!1'].includes(imports);
   if (['null', 'false', '0', '!1', 'true', '1', '!0'].includes(imports)) imports = '';
   addCtx && generateContext(ctxArg.replace(/-imports$/, ''), imports.split(',').filter(Boolean));

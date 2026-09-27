@@ -13,7 +13,7 @@
 */
 
 import {
-  contextHub, merge, hydrate, jsonParse,
+  envInfo, contextHub, merge, hydrate,
 } from '../../../../jrjs/packages/lib/drive/drive.js';
 import { coreHub } from '../core/hub.js';
 
@@ -29,7 +29,6 @@ const distFolder = fileFolders.at(distPos) ?? '';
 const privateDir = '_exclude/_ignore/store';
 const publicDir = `${distFolder}/${moduleName}/view`;
 const servicesDir = `${distFolder}/${moduleName}/drive/services`;
-const inputArgs = process.argv.slice(2).at(-1) || '{}';
 
 /** @type {DriveHub} */
 const driveHub = {
@@ -56,7 +55,5 @@ const driveHub = {
   ],
 };
 
-const driveParams = /** @type {Partial<DriveHub>} */ (jsonParse(inputArgs) ?? {});
-
 merge(contextHub, coreHub, driveHub);
-hydrate(contextHub, driveParams);
+hydrate(contextHub, envInfo.args);

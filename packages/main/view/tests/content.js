@@ -2,7 +2,7 @@
 // _@ts-check
 
 import {
-  contextHub, log, when, jsonStringify, CSSUtils, getEnvironment,
+  contextHub, log, when, jsonStringify, CSSUtils,
   ge, gt, qs, qa, appendHtml,
 } from '../hub.js';
 when(() => document.body && CSSUtils.getCssVariable('--lib-view-md-css'))

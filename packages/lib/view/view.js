@@ -16,7 +16,7 @@
 */
 
 import {
-  log, callFetch, mdToHtml, UrlFun,
+  envInfo, callFetch, mdToHtml, UrlFun,
 } from '../core/core.js';
 
 export * from '../core/core.js';
@@ -244,6 +244,11 @@ export const CSSUtils = (() => {
 
   return Object.freeze(members);
 })();
+
+/** Event key modifiers. @param {KeyboardEvent | MouseEvent | TouchEvent} ev */
+export const getModifierKeys = (ev) => ({
+  shift: ev.shiftKey, alt: ev.altKey, primary: envInfo.os === 'mac' ? ev.metaKey : ev.ctrlKey,
+});
 
 /** Download content as a local document. Browser-specific behaviour. */
 export const saveContent = (content = '', filename = 'content.txt', type = 'text/plain;charset=utf-8;') => {
