@@ -7,4 +7,4 @@ import { contextHub, merge, jsonParse, getEnvHubName } from './hub.js';
 /** Populate latest contextHub stored in environment variable if available. */
 merge(contextHub, jsonParse(process.env[getEnvHubName()] ?? ''));
 
-import('../../../../jrjs/packages/lib/drive/run.js');
+import('jrjs/packages/lib/drive/run.js');

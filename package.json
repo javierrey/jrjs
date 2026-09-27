@@ -9,7 +9,7 @@
   "workspaces": ["packages/*"],
   "main": "",
   "scripts": {
-    "node:args": "node --preserve-symlinks --preserve-symlinks-main",
+    "node:args": "node --preserve-symlinks --preserve-symlinks-main --import \"./packages/lib/drive/register.js?packages=jrjs\"",
     "git:clean": "git -c core.longPaths=true clean",
     "status": "echo CLEAN: && pnpm git:clean -nfdX -e !.* -e !**/_ignore/ -e !**/_ignore/** && echo NEW: && git ls-files -o --exclude-standard",
     "clean": "pnpm git:clean -fdX -e !.* -e !**/_ignore/ -e !**/_ignore/**",
@@ -25,7 +25,7 @@
     "format": "pnpm format:lib && pnpm format:utils && pnpm format:main",
     "sync-source": "pnpm sync-source:main",
     "test": "pnpm test:lib && pnpm test:utils && pnpm test:main",
-    "stop:dev": "node packages/main/drive/stop.js",
+    "stop:dev": "pnpm node:args packages/main/drive/stop.js",
     "start:dev": "pnpm stop:dev && pnpm start:dev:main"
   },
   "dependencies": {},
@@ -34,6 +34,7 @@
     "jrjs@github": "github:javierrey/jrjs",
     "jrjs@http": "https://github.com/javierrey/jrjs",
     "jrjs@local": "file:../jrjs",
+    "jrjs@main": "link:../..",
     "local_modules": {
       "dependencies": {},
       "devDependencies": {

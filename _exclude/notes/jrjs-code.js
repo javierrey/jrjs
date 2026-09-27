@@ -102,7 +102,7 @@ export const hasProperty =
 */
 
 // --------------------------------
-original TS (from core.js):
+// original TS (from core.js):
 
 /**
 Gets a property value in an unknown type object if present, or undefined otherwise.
@@ -132,6 +132,24 @@ export const hasPropertyKey =
 // --------------------------------
 // --------------------------------
 // ----------------------------------------------------------
+// packages/utils/drive/register-jrjs.js
+
+import { registerHooks } from 'node:module';
+
+const registerAlias = (name, depth) => {
+	const rootUrl = new URL('../'.repeat(depth), import.meta.url), prefix = `${name}/`;
+	registerHooks({
+		resolve(specifier, context, nextResolve) {
+			if (specifier.startsWith(prefix)) {
+				return nextResolve(new URL(specifier.slice(prefix.length), rootUrl).href, context);
+			}
+			return nextResolve(specifier, context);
+		},
+	});
+};
+
+registerAlias('jrjs', 3);
+
 // ----------------------------------------------------------
 // drive/server.js resolveConfig
 

@@ -6,6 +6,7 @@
     "lib": ["ESNext", "DOM", "WebWorker"],
     "types": ["node"],
     "typeRoots": ["./packages/imports/drive/dev_modules/@types"],
+    "paths": { "jrjs/*": ["./*"] },
     "allowJs": true,
     "maxNodeModuleJsDepth": 2,
     "declaration": true,
