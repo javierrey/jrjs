@@ -16,86 +16,86 @@ author: javier.rey.eu@gmail.com
 /* Types functionality: */
 
 /** Core persistence container available in all contexts. @type {PlainObject} */
-export const contextHub = {};
+var contextHub = {};
 
 /** AsyncFunction constructor (globalThis.AsyncFunction does not exist). */
-export const AsyncFunction = (async () => {}).constructor;
+var AsyncFunction = (async () => {}).constructor;
 
 /**
 Quick heuristic type checks and casts.
 Short and practical, they can also be copied inside pure independent functions.
 */
 
-export const isNul = (v) => [undefined, null, NaN].includes(v);
-export const isEmp = (v) => { if (v) for (const p in v) return false; return true; };
-export const isObj = (v) => !!v && [Object, undefined].includes(v.constructor);
-export const isArr = (v) => !!v?.[Symbol.iterator] && v.constructor !== String;
-export const isSca = (v) => !v || [Boolean, Number, String, BigInt].includes(v.constructor);
-export const isPri = (v) => !v || !(v instanceof Object || !v.constructor);
+var isNul = (v) => [undefined, null, NaN].includes(v);
+var isEmp = (v) => { if (v) for (const p in v) return false; return true; };
+var isObj = (v) => !!v && [Object, undefined].includes(v.constructor);
+var isArr = (v) => !!v?.[Symbol.iterator] && v.constructor !== String;
+var isSca = (v) => !v || [Boolean, Number, String, BigInt].includes(v.constructor);
+var isPri = (v) => !v || !(v instanceof Object || !v.constructor);
 
-export const isFun = (v) => typeof v === 'function';
-export const isNum = (v) => parseFloat(v) === Number(v);
-export const isInt = (v) => Math.floor(parseFloat(v)) === Number(v);
-export const isStr = (v) => v?.constructor === String;
+var isFun = (v) => typeof v === 'function';
+var isNum = (v) => parseFloat(v) === Number(v);
+var isInt = (v) => Math.floor(parseFloat(v)) === Number(v);
+var isStr = (v) => v?.constructor === String;
 
-export const isXml = (v) => /^\s*</.test(v) && />\s*$/.test(v);
-export const isJso = (v) => /^\s*\[?\s*\{/.test(v) && /\}\s*\]?\s*$/.test(v);
-export const isBuf = (v) => v instanceof ArrayBuffer || ArrayBuffer.isView(v);
-export const isKey = (v) =>
+var isXml = (v) => /^\s*</.test(v) && />\s*$/.test(v);
+var isJso = (v) => /^\s*\[?\s*\{/.test(v) && /\}\s*\]?\s*$/.test(v);
+var isBuf = (v) => v instanceof ArrayBuffer || ArrayBuffer.isView(v);
+var isKey = (v) =>
   Number.isInteger(v) && v > -1 || typeof v === 'string' && v.length > 0 && v.length < 1025 && !/\s/.test(v);
 
-export const toNum = (v) =>
+var toNum = (v) =>
   [Number, Boolean, Date].includes(v?.constructor) ? +v : parseFloat(v) === (v = Number(v)) ? v : NaN;
-export const toSam = (v) => {
+var toSam = (v) => {
   if (!v?.slice) { v = String(v ?? ''); }
   const R = 512, c = ~~((v.byteLength ?? v.length ?? 0) / 2), b = Math.max(0, c - R), s = v.slice(b, b + 2 * R);
   return isBuf(s) ? new TextDecoder().decode(s) : s;
 };
 
-export const isTra = (v) => isObj(v) || !!(v?.every?.(isObj) && v.length); // isObj(v?.[0]) && isObj(v.at(-1))
-export const isBin = (v) => isBuf(v) || toSam(v).includes('\x00');
+var isTra = (v) => isObj(v) || !!(v?.every?.(isObj) && v.length); // isObj(v?.[0]) && isObj(v.at(-1))
+var isBin = (v) => isBuf(v) || toSam(v).includes('\x00');
 
-export const toSca = (v) => {
+var toSca = (v) => {
   if (isObj(v) || Array.isArray(v)) try { return JSON.stringify(v); } catch {}
   return !v ? v : [Boolean, Number, Date, String].includes(v.constructor) ? v.valueOf()
     : isBuf(v) ? new TextDecoder().decode(v) : v[Symbol.iterator] ? `[${v}]` : String(v);
 };
-export const toStr = (v) => isStr(v = toSca(v)) ? v : String(v ?? '');
-export const toBoo = (v) => !!v && !(isArr(v) && !v.length && !v.size) && !(isObj(v) && isEmp(v))
+var toStr = (v) => isStr(v = toSca(v)) ? v : String(v ?? '');
+var toBoo = (v) => !!v && !(isArr(v) && !v.length && !v.size) && !(isObj(v) && isEmp(v))
   && !['null', 'undefined', 'NaN', 'false', '0', '!1', "''", '""', '[]', '{}'].includes(v);
-export const toEmp = (v) => isArr(v) ? [] : {};
+var toEmp = (v) => isArr(v) ? [] : {};
 
 /** Returns a real number from a numeric value, limiting infinity to the max number. */
-export const toRealNumber = (v) => {
+var toRealNumber = (v) => {
   const number = toNum(v);
   return isNaN(number) || (number > -Number.MIN_VALUE && number < Number.MIN_VALUE) ? 0
     : number > Number.MAX_VALUE ? Number.MAX_VALUE : number < -Number.MAX_VALUE ? -Number.MAX_VALUE : number;
 };
 
 /** Converts a byte buffer to an ArrayBuffer. @param {Uint8Array} bytes @return {ArrayBuffer} */
-export const bytesToBuffer = (bytes) => {
+var bytesToBuffer = (bytes) => {
   const arrayBuffer = new ArrayBuffer(bytes.byteLength);
   new Uint8Array(arrayBuffer).set(bytes);
   return arrayBuffer;
 };
 
 /** Converts an ArrayBuffer to a byte buffer. @param {ArrayBuffer} buffer @return {Uint8Array} */
-export const bufferToBytes = (buffer) => new Uint8Array(buffer);
+var bufferToBytes = (buffer) => new Uint8Array(buffer);
 
 /**
 Creates a string from a buffer or byte array. Optional param `enc` defaults to 'utf-8' and `bom` to false.
 @param {ArrayBuffer | Uint8Array} bytes
 */
-export const bytesToString = (bytes, enc, bom) => new TextDecoder(enc, { ignoreBOM: !!bom }).decode(bytes);
+var bytesToString = (bytes, enc, bom) => new TextDecoder(enc, { ignoreBOM: !!bom }).decode(bytes);
 
 /** Creates a byte array from a string. */
-export const stringToBytes = (string) => new TextEncoder().encode(string);
+var stringToBytes = (string) => new TextEncoder().encode(string);
 
 /** Creates a string from a buffer. Same implementation as `bytesToString`. */
-export const bufferToString = bytesToString;
+var bufferToString = bytesToString;
 
 /** Creates a buffer from a string, using `stringToBytes`. */
-export const stringToBuffer = (string) => stringToBytes(string).buffer;
+var stringToBuffer = (string) => stringToBytes(string).buffer;
 
 /* Log functionality: */
 
@@ -118,7 +118,7 @@ public static members:
     limit: 0, 1e3, 1e4, ... limit string output sizes, removing the middle part.
     redact: array of key prefixes to redact values in objects, by default: ['pass', 'auth'].
 */
-export const Log = (config = {}) => {
+var Log = (config = {}) => {
   const typename = 'Log', CONSOLE = console, _contextHub = typeof contextHub !== 'undefined' ? contextHub : {};
   const METHODS = ['log', 'error', 'warn', 'info', 'debug'], DAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
   config = typeof config === 'string' ? { name: config } : typeof config === 'number' ? { level: config } : config;
@@ -168,7 +168,7 @@ export const Log = (config = {}) => {
   return Object.freeze(Object.assign(log, members));
 };
 
-export const log = Log(3);
+var log = Log(3);
 
 /* String and RegExp transformations: */
 
@@ -179,7 +179,7 @@ const rex = REX('abBbc'), regexp = /bb/i;
 [rex.indexOf(regexp), rex.lastIndexOf(regexp)]; // [1, 2]
 ```
 */
-export const REX = (() => {
+var REX = (() => {
   const typename = 'REX';
 
   /**
@@ -284,7 +284,7 @@ export const REX = (() => {
 })();
 
 /** Capitalizes or lower-cases the first character of a text. */
-export const firstToCase = (text, capital = true) => {
+var firstToCase = (text, capital = true) => {
   const first = capital ? text[0].toUpperCase() : text[0].toLowerCase();
   return first + text.slice(1);
 };
@@ -297,7 +297,7 @@ toCamelCase('JSON_RESPONSE_DATA_URL', true); // 'JsonResponseDataUrl'
 toCamelCase('JSON response data url'); // 'jsonResponseDataUrl'
 ```
 */
-export const toCamelCase = (text, capital = false) => {
+var toCamelCase = (text, capital = false) => {
   text = text.trim().toLowerCase()
     .replace(/[^a-zA-Z0-9]+/g, '-')
     .replace(/-{2,}/g, '-')
@@ -315,7 +315,7 @@ fromCamelCase('JSONResponseDataURL', '_').toUpperCase(); // 'JSON_RESPONSE_DATA_
 fromCamelCase('JSONResponseDataURL', ' ', true); // 'Json response data url'
 ```
 */
-export const fromCamelCase = (text, joint = '-', capital = false) => {
+var fromCamelCase = (text, joint = '-', capital = false) => {
   const jointReplacer = `$1${joint}$2`;
   const jointRE = joint.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
   text = text
@@ -329,10 +329,10 @@ export const fromCamelCase = (text, joint = '-', capital = false) => {
 };
 
 /** Escapes sensitive characters into numeric HTML encoded entities to avoid inline javascript injection. */
-export const sanitize = (text) => text?.replace(/[<>"'`\\=(]/g, (m) => `&#${m.charCodeAt(0)};`);
+var sanitize = (text) => text?.replace(/[<>"'`\\=(]/g, (m) => `&#${m.charCodeAt(0)};`);
 
 /** Unescapes numeric HTML encoded entities into characters. */
-export const unsanitize = (text) => text?.replace(/&#\d+;/g, (m) => String.fromCharCode(+m.slice(2, -1)));
+var unsanitize = (text) => text?.replace(/&#\d+;/g, (m) => String.fromCharCode(+m.slice(2, -1)));
 
 /* Object transformations and String parsers: */
 
@@ -340,7 +340,7 @@ export const unsanitize = (text) => text?.replace(/&#\d+;/g, (m) => String.fromC
 Safely stringifies a value to JSON, returning undefined on failure.
 Replacer and indentation are optional. @param {any} v
 */
-export const jsonStringify = (v, r = null, i = 0) => {
+var jsonStringify = (v, r = null, i = 0) => {
   try { return JSON.stringify(v, r, i); } catch { return undefined; }
 };
 
@@ -348,7 +348,7 @@ export const jsonStringify = (v, r = null, i = 0) => {
 Safely parses a JSON string, returning undefined on failure.
 Reviver is optional. @param {string} s
 */
-export const jsonParse = (s, r = undefined) => {
+var jsonParse = (s, r = undefined) => {
   try { return JSON.parse(s, r); } catch { return undefined; }
 };
 
@@ -359,12 +359,12 @@ Parses a code expression by generating and invoking a function.
 Usage: `parse('{ json5prop: 1 }')`, `parse('x + 1', { x: 2 })`.
 Warning: Avoid unintended injections on any use of `Function`.
 */
-export const parse = (exp, ctx = {}) => {
+var parse = (exp, ctx = {}) => {
   try { return Function(`{${Object.keys(ctx)}}`, `return(${exp})`)(ctx); } catch { return undefined; }
 };
 
 /** Checks if two objects are equal recursively. */
-export const equal = (o1, o2) => {
+var equal = (o1, o2) => {
   if (o1 === o2 || Object.is(o1, o2)) { return true; }
   if (typeof o1 !== 'object' || o1 === null || typeof o2 !== 'object' || o2 === null) { return false; }
   const k1 = Object.keys(o1), k2 = Object.keys(o2);
@@ -384,7 +384,7 @@ in the partial, missing or falsy properties in the filter are excluded.
 Both object and filter parameters should be plain objects.
 `partial({ a: 2, b: { c: 2, d: 2 } }, { b: { c: 0, d: 1 } }); // { b: { d: 2 } }`
 */
-export const partial = (obj, flt) => {
+var partial = (obj, flt) => {
   const part = {}, isObj = (v) => !!v && [Object, undefined].includes(v.constructor);
   const travel = (p, o, m) => Object.entries(o).forEach(([k, v]) => {
     isObj(m[k]) && isObj(v) ? (p[k] = {}) && travel(p[k], v, m[k]) : m[k] && (p[k] = v);
@@ -394,7 +394,7 @@ export const partial = (obj, flt) => {
 };
 
 /** Clones a plain object or array recursively. Non-plain object properties are assigned by reference. */
-export const clone = (obj) => {
+var clone = (obj) => {
   const isObj = (v) => !!v && [Object, undefined].includes(v.constructor);
   const isTra = (v) => v !== globalThis && isObj(v) || !!(v?.every?.(isObj) && v.length);
   const map = (v) => typeof v?.slice === 'function' && !v.substring ? v.slice() : v;
@@ -410,7 +410,7 @@ export const clone = (obj) => {
 };
 
 /** Remaps a plain object or array recursively calling a mapping function on each non-traversable property. */
-export const remap = (obj, map) => {
+var remap = (obj, map) => {
   const isObj = (v) => !!v && [Object, undefined].includes(v.constructor);
   const isTra = (v) => v !== globalThis && isObj(v) || !!(v?.every?.(isObj) && v.length);
   const travel = (o) => Object.entries(o).forEach(([k, v]) => isTra(v) ? travel(v) : map(o, k, obj));
@@ -419,7 +419,7 @@ export const remap = (obj, map) => {
 };
 
 /** Updates the content of a target object with properties from one or more source objects recursively. */
-export const merge = (tgt, ...srcs) => {
+var merge = (tgt, ...srcs) => {
   const set = (o, k, v) => { v === undefined ? delete o[k] : (o[k] = v); };
   const isObj = (v) => !!v && [Object, undefined].includes(v.constructor);
   const travs = (o, k, v) => v !== globalThis && isObj(v) && isObj(o[k]);
@@ -435,7 +435,7 @@ Populates a target object with default values from other sources recursively,
 as long as they are absent or less curated in the target than in the source:
 undefined, null, NaN, '', [] and {}.
 */
-export const hydrate = (tgt, ...srcs) => {
+var hydrate = (tgt, ...srcs) => {
   const set = (o, k, v) => v !== undefined && v !== o[k] && (
     v === null ? o[k] === undefined : (
       o[k] == null || Object.is(o[k], NaN) || (!Object.is(v, NaN) && (
@@ -454,7 +454,7 @@ export const hydrate = (tgt, ...srcs) => {
 Gets a property value in an unknown type object if present, or undefined otherwise.
 Accepts a list of nested keys: `getProperty(object, 'items', 0, 'title', 'en-US')`
 */
-export const getProperty = (object, ...keys) => {
+var getProperty = (object, ...keys) => {
   for (const key of keys) {
     if (!object || typeof object !== 'object' || !(key in object)) return undefined;
     object = object[key];
@@ -466,21 +466,21 @@ export const getProperty = (object, ...keys) => {
 Compares two type objects by matching one or more nested properties.
 `matchObjects(objA, objB, ['fields', 'name', 'en-US'], ['contentType', 'sys', 'id'])`
 */
-export const matchObjects = (a, b, ...fields) =>
+var matchObjects = (a, b, ...fields) =>
   a === b || fields.every((field) => getProperty(a, ...field) === getProperty(b, ...field)) && !!fields.length;
 
 /**
 Finds the index of an object in an array by matching one or more nested properties.
 `objectIndex(objArray, obj, ['fields', 'name', 'en-US'], ['contentType', 'sys', 'id'])`
 */
-export const objectIndex = (array, object, ...fields) =>
+var objectIndex = (array, object, ...fields) =>
   array.findIndex((item) => matchObjects(item, object, ...fields));
 
 /**
 Removes duplicates from an array of objects by matching one or more nested properties.
 `removeObjectDuplicates(objArray, ['fields', 'name', 'en-US'], ['contentType', 'sys', 'id'])`
 */
-export const removeObjectDuplicates = (array, ...fields) => {
+var removeObjectDuplicates = (array, ...fields) => {
   for (let i = array.length - 1; i > 0; i--) {
     objectIndex(array, array[i], ...fields) < i && array.splice(i, 1);
   }
@@ -490,7 +490,7 @@ export const removeObjectDuplicates = (array, ...fields) => {
 Sorts an array of objects by matching one or more nested properties.
 `sortObjects(objArray, ['contentType', 'sys', 'id'], ['fields', 'name', 'en-US'])`
 */
-export const sortObjects = (array, ...fields) => {
+var sortObjects = (array, ...fields) => {
   !fields.length && fields.push([]);
   array.sort((a, b) => {
     for (const field of fields) {
@@ -516,7 +516,7 @@ The dot separator can be any string, but it must not contain characters expected
 names (e.g. a dash `-`), and it should not contain any quotes or square brackets, `\`'"[]`.
 Common valid separators: `.`, `:`, `/`, `\\`, `|`, `&`, `>`, `,`, ...
 */
-export const parseKey = (key, ctx, dot) => {
+var parseKey = (key, ctx, dot) => {
   ctx ??= globalThis; dot ??= '.';
   if (typeof key === 'string') {
     if (!dot || !key.includes(dot)) return ctx[key];
@@ -533,7 +533,7 @@ Valid numeric strings return numbers.
 Other strings, including objects `{...}` and arrays, `[...]`, try `JSON.parse`.
 If `JSON.parse` fails, `parseKey` is called, along with `ctx` and `dot` parameters.
 */
-export const parseValue = (value, ctx, dot) => {
+var parseValue = (value, ctx, dot) => {
   if (typeof value === 'string') {
     if (!isNaN(Number(value)) && value.trim() || value === 'NaN') return Number(value);
     if (isJso(value)) try { return JSON.parse(value); } catch {}
@@ -549,7 +549,7 @@ becomes: `{ name0: 'value0', name1: 'value1', name2: true }`
 Recognises global references, as in: `--name=${globalVariable}`.
 @param {string | string[]} args @return {PlainObject}
 */
-export const parseArguments = (args) => {
+var parseArguments = (args) => {
   args ??= []; const object = {}, repeated = new Set(), onlyVal = (t) => !t.startsWith('-') && !t.includes('=');
   if (args.constructor === String) {
     const ind = args.indexOf('#'); if (ind !== -1) { args = args.slice(0, ind); }
@@ -576,10 +576,10 @@ export const parseArguments = (args) => {
 Alphanumeric compare for string array sorting. Example:
 `['a10', 'a2', 'a', 'A10', 'A2', 'A'].sort(alphanumericCompare); // ['A', 'a', 'A2', 'a2', 'A10', 'a10']`
 */
-export const { compare: alphanumericCompare } = Intl.Collator('en', { numeric: true, caseFirst: 'upper' });
+var { compare: alphanumericCompare } = Intl.Collator('en', { numeric: true, caseFirst: 'upper' });
 
 /** Indices of all occurrences in an array-like iterable, matching a value, expression or function. */
-export const arrayIndicesOf = (array, match, from, to, not) => {
+var arrayIndicesOf = (array, match, from, to, not) => {
   from = !from ? 0 : from < 0 ? Math.max(from, -array.length) + array.length : from;
   if (from || to) { array = array.slice(from, to); }
   const matcher = match instanceof Function ? match
@@ -595,7 +595,7 @@ export const arrayIndicesOf = (array, match, from, to, not) => {
 /* URL and path functionality: */
 
 /** Static URL base functionality for resolving relative URLs. */
-export const UrlFun = (() => {
+var UrlFun = (() => {
   const typename = 'UrlFun';
 
   /** Default URL base for resolving relative URLs. */
@@ -635,7 +635,7 @@ Values are normalized with forward slash separators.
 The last part of the path becomes the slug if it is a dotted name, otherwise the slug is a slash `/`.
 Property `open` is true when the given URL path does not end with a slash `/`.
 */
-export const urlComponents = (url) => {
+var urlComponents = (url) => {
   let index, root = '', query = '', anchor = ''; url = String(url ?? '');
   index = url.indexOf('#'); if (index > -1) { anchor = url.slice(index); url = url.slice(0, index); }
   index = url.indexOf('?'); if (index > -1) { query = url.slice(index); url = url.slice(0, index); }
@@ -649,7 +649,7 @@ export const urlComponents = (url) => {
 };
 
 /** Resolves a folder path from multiple absolute and relative paths combined. */
-export const resolvePath = (...paths) => {
+var resolvePath = (...paths) => {
   const normalizePath = (path) => {
     const res = [], abs = path[0] === '/', folders = path.split('/');
     for (let i = 0; i < folders.length; i++) {
@@ -684,7 +684,7 @@ Relative sub-path inclusion: `('/' + urlCore(absoluteUrl) + '/').includes('/' + 
 In a browser document, selector inclusion: `document.querySelector('[href*="' + urlCore(url) + '"]')`
 Warning: Use with care, different relative endpoints may contain a coincident core.
 */
-export const urlCore = (url) => {
+var urlCore = (url) => {
   let i; url = url == null ? '' : ('' + url).slice(0, 1e3);
   i = url.indexOf('#'); if (i > -1) { url = url.slice(0, i); }
   i = url.indexOf('?'); if (i > -1) { url = url.slice(0, i); }
@@ -699,7 +699,7 @@ export const urlCore = (url) => {
 Convert MD content into HTML.
 Supports lists, code blocks and inline HTML with CSS styles and media resources.
 */
-export const mdToHtml = (() => {
+var mdToHtml = (() => {
   let inCode = 0; const HD = 16, CH = '\\[!]#{()}*+-._',
   SE ='script|style|pre|code', SE0 = new RegExp(`<(${SE})[ >]`, 'i'), SE1 = new RegExp(`<\\/(${SE})>`, 'i'),
   RE1 = /^\s{0,3}(\#{1,6})\s+(.*?)\s*#*\s*$/, RE2 = /^\s*<[^>]+(?:>\s*<)?[^>]+>\s*$/,
@@ -792,7 +792,7 @@ Environment descriptor for both view (browser) and drive (nodejs) contexts.
   root: string; path: string; slug: string; args: PlainObject;
 }}
 */
-export const envInfo = (() => {
+var envInfo = (() => {
   const env = {}, g = globalThis; let aux;
   env.isBrowser = !g.process?.argv; // not nodejs
   env.isWindow = typeof Window !== 'undefined' && g.window === g; // not worker
@@ -824,17 +824,17 @@ export const envInfo = (() => {
 })();
 
 /** Import a module dynamically, returning its default export, optionally a JSON type. */
-export const importModule = async (url, type) =>
+var importModule = async (url, type) =>
   (await (type ? import(url, { with: { type } }) : import(url))).default;
 
 /** Delays a resolver call. `delay(2e3).then(() => log('delayed'))` */
-export const delay = (ms = 0) => new Promise((s) => setTimeout(s, ms));
+var delay = (ms = 0) => new Promise((s) => setTimeout(s, ms));
 
 /**
 Schedules a resolver call when a `ready` condition is met.
 `when(() => globalThis.document?.body).then(() => log('ready')).catch(() => log('failed'))`
 */
-export const when = (ready = () => true) => new Promise((s, e) => {
+var when = (ready = () => true) => new Promise((s, e) => {
   let p = 50; const l = p * 100, o = Date.now() + l * 10, d = () => (p = Math.min(p * 1.2, l));
   const f = () => { ready() ? s() : Date.now() > o ? e() : setTimeout(f, d()); }; setTimeout(f);
 });
@@ -845,7 +845,7 @@ Debounces concurrent event triggers in favor of the last dispatch, or the first 
 @param {number} delay The interval threshold below which the dispatch is postponed. The default value is 300 ms.
 Example: element.onresize = debounce((ev) => {...});
 */
-export const debounce = (fun, delay = 300, lead = false) => {
+var debounce = (fun, delay = 300, lead = false) => {
   let timeout = 0;
   return (...args) => {
     const callnow = lead && !timeout;
@@ -860,7 +860,7 @@ Throttles concurrent event triggers below a frequency interval.
 @param {number} delay The frequency threshold below which the dispatch is skipped. The default value is 300 ms.
 Example: element.onresize = throttle((ev) => {...});
 */
-export const throttle = (fun, delay = 300) => {
+var throttle = (fun, delay = 300) => {
   let last = null, timeout = 0;
   return (...args) => {
     if (last != null) {
@@ -872,7 +872,7 @@ export const throttle = (fun, delay = 300) => {
 };
 
 /** Simple fetch wrapper with an optional callback. */
-export const callFetch = (url, callback = null, resolver = null, options = null) => {
+var callFetch = (url, callback = null, resolver = null, options = null) => {
   let content, error;
   return fetch(url, options ?? {})
     .then((response) => {
@@ -885,6 +885,6 @@ export const callFetch = (url, callback = null, resolver = null, options = null)
 };
 
 /** Exposes local members to the specified environment, globalThis by default. Overwrites existing references. */
-export const expose = (props, env = globalThis) => Object.entries(props).forEach(([k, v]) => { env[k] = v; });
+var expose = (props, env = globalThis) => Object.entries(props).forEach(([k, v]) => { env[k] = v; });
 
 /* * */

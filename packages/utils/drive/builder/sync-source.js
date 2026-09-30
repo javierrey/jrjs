@@ -2,7 +2,7 @@
 // @ts-check
 
 import {
-  envInfo, log, fileExists, removeDir, copyDir, symlinkDir,
+  envInfo, log, toBoo, fileExists, removeDir, copyDir, symlinkDir,
 } from '../../../lib/drive/drive.js';
 
 const cloneMethod = envInfo.args.method === 'copy' ? copyDir : symlinkDir; // symlink, copy
@@ -37,9 +37,9 @@ const generateContext = (ctx, imports = []) => {
 
 /** @param {string} ctxArg */
 const processContextArg = (ctxArg, dfault = '') => {
-  let imports = envInfo.args[ctxArg] ?? dfault;
-  const truthy = !['', 'null', 'false', '0', '!1'].includes(imports);
-  if (['null', 'false', '0', '!1', 'true', '1', '!0'].includes(imports)) imports = '';
+  let imports = envInfo.args[ctxArg] ?? dfault; const truthy = toBoo(imports);
+  if (['null', 'undefined', 'NaN', 'false', '0', '!1', 'true', '1', '!0', "''", '""', '[]', '{}'].includes(imports))
+    imports = '';
   truthy && generateContext(ctxArg, imports.split(',').filter(Boolean));
 };
 

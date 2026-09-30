@@ -43,10 +43,12 @@ var toSca = (v) => {
     : isBuf(v) ? new TextDecoder().decode(v) : v[Symbol.iterator] ? `[${v}]` : String(v);
 };
 var toStr = (v) => isStr(v = toSca(v)) ? v : String(v ?? '');
+var toBoo = (v) => !!v && !(isArr(v) && !v.length && !v.size) && !(isObj(v) && isEmp(v))
+  && !['null', 'undefined', 'NaN', 'false', '0', '!1', "''", '""', '[]', '{}'].includes(v);
 var toEmp = (v) => isArr(v) ? [] : {};
 
 // ----------------------------------------------------------
-TS, getProperty, hasProperty
+// TS, getProperty, hasProperty
 // --------------------------------
 // --------------------------------
 
@@ -119,7 +121,7 @@ export const hasKey = (object: unknown, key: PropertyKey): object is { [key]: un
 ```
 
 --------------------------------
-// Using getProperty, hasKey and type NestedObject:
+// Using getProperty, hasKey and type NestedObject (old):
 
 /** Asserts an unknown type object has a nested property key, using `getProperty` and `hasKey`. */
 export const hasPropertyKey =

@@ -324,7 +324,17 @@ export const yamlToJson = (yaml) => {
         if (separator >= 0) {
           const item = {}, key = scalarValue(value.slice(0, separator));
           const itemValue = value.slice(separator + 1).trim();
-          if (itemValue) { item[key] = scalarValue(itemValue); index++; }
+          if (itemValue) {
+            item[key] = scalarValue(itemValue); index++;
+            if (lines[index]?.match(/^ */)[0].length > indent) {
+              const childIndent = lines[index].match(/^ */)[0].length;
+              const child = parse(index, childIndent);
+              if (!child.value || typeof child.value !== 'object' || Array.isArray(child.value)) {
+                return { value: invalid, index: lines.length };
+              }
+              Object.assign(item, child.value); index = child.index;
+            }
+          }
           else if (lines[index + 1] && lines[index + 1].match(/^ */)[0].length > indent) {
             const childIndent = lines[index + 1].match(/^ */)[0].length;
             const child = parse(index + 1, childIndent); item[key] = child.value; index = child.index;
@@ -346,7 +356,14 @@ export const yamlToJson = (yaml) => {
           index = child.index; continue;
         }
         const key = scalarValue(current.slice(0, separator)), value = current.slice(separator + 1).trim();
-        if (value) { result[key] = scalarValue(value); index++; }
+        if (/^[|>][+-]?\d*$/.test(value)) {
+          const nextLine = lines[index + 1], childIndent = nextLine?.match(/^ */)?.[0].length ?? indent + 1;
+          const block = []; index++;
+          while (index < lines.length && lines[index].match(/^ */)[0].length > indent) {
+            block.push(lines[index].slice(childIndent)); index++;
+          }
+          result[key] = block.join(value[0] === '>' ? ' ' : '\n');
+        } else if (value) { result[key] = scalarValue(value); index++; }
         else if (lines[index + 1] && lines[index + 1].match(/^ */)[0].length > indent) {
           const childIndent = lines[index + 1].match(/^ */)[0].length;
           const child = parse(index + 1, childIndent); result[key] = child.value; index = child.index;
