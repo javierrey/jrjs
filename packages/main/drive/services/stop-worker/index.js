@@ -5,7 +5,7 @@
 @typedef {import('../hub.js').PlainObject} PlainObject;
 */
 
-import { contextHub, delay, stopWorkerProcess } from '../hub.js';
+import { environ, delay, stopWorkerProcess } from '../hub.js';
 
 /** @param {PlainObject} [params] @return {Promise<PlainObject>} */
 export default async (params = {}) => {
@@ -13,7 +13,7 @@ export default async (params = {}) => {
   delay(1).then(stopWorkerProcess);
   return {
     pid: process.pid,
-    workerId: contextHub.workerId,
+    workerId: environ.hub.workerId,
     params,
     updated: Date.now(),
     status: 'worker process stop scheduled',

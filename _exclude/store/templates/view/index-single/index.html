@@ -80,7 +80,7 @@
     /* * */
   </style>
   <script type="module">// _@ts-check 'use strict'; // import * as view from './imported/lib/view/view.js';
-    const contextHub = {};
+    const environ.hub = {};
     const log = console.log; // eslint-disable-line
     const expose = (props, env = globalThis) => Object.entries(props).forEach(([k, v]) => { env[k] = v; });
     const when = (ready = () => true, run = () => {}) => new Promise((s) => {
@@ -97,7 +97,7 @@
     const insertHtmlBefore = (elem, html) => elem?.insertAdjacentHTML?.('beforebegin', html);
     const insertHtmlAfter = (elem, html) => elem?.insertAdjacentHTML?.('afterend', html);
     expose({
-      contextHub, log, expose, when,
+      environ.hub, log, expose, when,
       ge, gt, qs, qa,
       appendHtml, prependHtml, replaceHtml, insertHtmlBefore, insertHtmlAfter
     });

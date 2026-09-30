@@ -15,9 +15,6 @@ author: javier.rey.eu@gmail.com
 
 /* Types functionality: */
 
-/** Core persistence container available in all contexts. @type {PlainObject} */
-var contextHub = {};
-
 /** AsyncFunction constructor (globalThis.AsyncFunction does not exist). */
 var AsyncFunction = (async () => {}).constructor;
 
@@ -65,37 +62,122 @@ var toBoo = (v) => !!v && !(isArr(v) && !v.length && !v.size) && !(isObj(v) && i
   && !['null', 'undefined', 'NaN', 'false', '0', '!1', "''", '""', '[]', '{}'].includes(v);
 var toEmp = (v) => isArr(v) ? [] : {};
 
-/** Returns a real number from a numeric value, limiting infinity to the max number. */
-var toRealNumber = (v) => {
-  const number = toNum(v);
-  return isNaN(number) || (number > -Number.MIN_VALUE && number < Number.MIN_VALUE) ? 0
-    : number > Number.MAX_VALUE ? Number.MAX_VALUE : number < -Number.MAX_VALUE ? -Number.MAX_VALUE : number;
-};
-
-/** Converts a byte buffer to an ArrayBuffer. @param {Uint8Array} bytes @return {ArrayBuffer} */
-var bytesToBuffer = (bytes) => {
-  const arrayBuffer = new ArrayBuffer(bytes.byteLength);
-  new Uint8Array(arrayBuffer).set(bytes);
-  return arrayBuffer;
-};
-
-/** Converts an ArrayBuffer to a byte buffer. @param {ArrayBuffer} buffer @return {Uint8Array} */
-var bufferToBytes = (buffer) => new Uint8Array(buffer);
+/* Value and arguments parsers: */
 
 /**
-Creates a string from a buffer or byte array. Optional param `enc` defaults to 'utf-8' and `bom` to false.
-@param {ArrayBuffer | Uint8Array} bytes
+Parses a key name or key path in a context object, and returns its value, or undefined if not found.
+If the `ctx` context object parameter is omitted or null, `globalThis` is used by default.
+If the `dot` separator parameter is omitted or null, character `.` is used by default.
+If the `key` is a string and parameter `dot` is not empty, the `key` will be interpreted
+as a dot separated nested path, e.g. `items[0].title['en-US']` (or `items.0.title.en-US`).
+If `dot` is the empty string, the key is interpreted as a direct property and not as a path.
+If the `key` is a string array, the `dot` separator is not used.
+The dot separator can be any string, but it must not contain characters expected in key
+names (e.g. a dash `-`), and it should not contain any quotes or square brackets, `\`'"[]`.
+Common valid separators: `.`, `:`, `/`, `\\`, `|`, `&`, `>`, `,`, ...
 */
-var bytesToString = (bytes, enc, bom) => new TextDecoder(enc, { ignoreBOM: !!bom }).decode(bytes);
+var parseKey = (key, ctx, dot) => {
+  ctx ??= globalThis; dot ??= '.';
+  if (typeof key === 'string') {
+    if (!dot || !key.includes(dot)) return ctx[key];
+    key = key.replace(/\[/g, dot).replace(/["'`\]]/g, '').split(dot); // .map((k) => k.trim()); // trim?
+  }
+  let value = !key[0] ? undefined : ctx;
+  while (value != null && key[0]) value = value[key.shift()];
+  return key.length ? undefined : value;
+};
 
-/** Creates a byte array from a string. */
-var stringToBytes = (string) => new TextEncoder().encode(string);
+/**
+Parses a string value or returns the given value if it is not a parseable string.
+Valid numeric strings return numbers.
+Other strings, including objects `{...}` and arrays, `[...]`, try `JSON.parse`.
+If `JSON.parse` fails, `parseKey` is called, along with `ctx` and `dot` parameters.
+*/
+var parseValue = (value, ctx, dot) => {
+  if (typeof value === 'string') {
+    if (!isNaN(Number(value)) && value.trim() || value === 'NaN') return Number(value);
+    if (isJso(value)) try { return JSON.parse(value); } catch {}
+    if (isKey(value)) return parseKey(value, ctx, dot) ?? value;
+  }
+  return value;
+};
 
-/** Creates a string from a buffer. Same implementation as `bytesToString`. */
-var bufferToString = bytesToString;
+/**
+Converts an array of URL query or command-line arguments into an object with key-value pairs.
+Observes common argument conventions, so `['--name0=value0', '--name1', 'value1', '--name2']`
+becomes: `{ name0: 'value0', name1: 'value1', name2: true }`
+Recognises global references, as in: `--name=${globalVariable}`.
+@param {string | string[]} args @return {PlainObject}
+*/
+var parseArguments = (args) => {
+  args ??= []; const object = {}, repeated = new Set(), onlyVal = (t) => !t.startsWith('-') && !t.includes('=');
+  if (args.constructor === String) {
+    const ind = args.indexOf('#'); if (ind !== -1) { args = args.slice(0, ind); }
+    args = args.slice(args.indexOf('?') + 1).trim(); args = !args ? [] : args.split('&');
+  }
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i], next = args[i + 1];
+    const name = decodeURIComponent(arg.replace(/^-{1,2}/, '').split('=', 1)[0]).trim();
+    const key = /^[\w.-]+$/.test(name) ? name : `_${i}`;
+    const followed = arg.startsWith('-') && !arg.includes('=') && next !== undefined && onlyVal(next);
+    const v = decodeURIComponent(arg.includes('=') ? arg.slice(arg.indexOf('=') + 1) : followed ? next : name);
+    const val = v === name && key === name ? true : v[0] + v[1] + v.at(-1) === '${}' ? parseValue(v.slice(2, -1)) : v;
+    if (repeated.has(key)) object[key].push(val);
+    else if (Object.hasOwn(object, key)) { object[key] = [object[key], val]; repeated.add(key); }
+    else object[key] = val;
+    followed && i++;
+  }
+  return object;
+};
 
-/** Creates a buffer from a string, using `stringToBytes`. */
-var stringToBuffer = (string) => stringToBytes(string).buffer;
+/* Descriptor constants: */
+
+/**
+Environment descriptor for both view and drive contexts (browser and nodejs).
+@type {{
+  isView: boolean; isWorker: boolean; isFrame: boolean; browser: string; os: string;
+  desc: string; root: string; path: string; slug: string; args: PlainObject; hub: PlainObject;
+}}
+*/
+var environ = (() => {
+  const g = globalThis, isView = !g.process?.argv; let aux = g.parent?.frames?.[0];
+  const desc = `${!g.process?.argv ? navigator.userAgent : process.platform}`.toLowerCase();
+  const env = {
+    hub: {}, desc, isView, // not nodejs
+    isFrame: !!aux && Object(aux) !== g, // not top
+    isWorker: (() => {
+      if (isView) return typeof Window === 'undefined' || g.window !== g;
+      return !!g.process?.getBuiltinModule?.('node:cluster')?.isWorker
+        || g.process?.getBuiltinModule?.('node:worker_threads')?.isMainThread === false
+    })(), // not window/primary
+    browser: (() => {
+      if (!isView) return '';
+      if (desc.includes('chrom')) return 'chrome';
+      if (desc.includes('firefox')) return 'firefox';
+      if (desc.includes('safari')) return 'safari'; // last
+      return 'other';
+    })(),
+    os: (() => {
+      if (desc.includes('win')) return 'win';
+      if (desc.includes('mac') || desc.includes('ipad') || desc.includes('iphone')) return 'mac';
+      if (desc.includes('linux') || desc.includes('android')) return 'lin';
+      return '';
+    })(),
+  };
+  if (isView) {
+    aux = location.pathname; env.root = location.origin;
+    if (aux.lastIndexOf('.') <= aux.lastIndexOf('/')) { aux += '/'; }
+    env.args = parseArguments(location.search);
+  } else {
+    aux = (process.env.PWD || process.cwd() || '').replace(/\\/g, '/');
+    env.root = aux.substring(0, aux.indexOf('/')); aux = aux.slice(env.root.length);
+    env.args = parseArguments(g.process.argv.slice(2));
+  }
+  env.slug = aux.substring(aux.lastIndexOf('/')); env.path = aux.slice(0, -env.slug.length);
+  if (!env.slug.includes('.')) { env.path += env.slug; env.slug = ''; }
+  env.slug ||= '/'; env.path = env.path.replace(/\/$/, '');
+  return Object.freeze(env);
+})();
 
 /* Log functionality: */
 
@@ -117,12 +199,16 @@ public static members:
     pretty: indent stringified objects output if value is truthy, otherwise skips stringification.
     limit: 0, 1e3, 1e4, ... limit string output sizes, removing the middle part.
     redact: array of key prefixes to redact values in objects, by default: ['pass', 'auth'].
+    hub: optional, defaults to core's `environ.hub`.
 */
 var Log = (config = {}) => {
-  const typename = 'Log', CONSOLE = console, _contextHub = typeof contextHub !== 'undefined' ? contextHub : {};
+  const typename = 'Log', CONSOLE = console;
   const METHODS = ['log', 'error', 'warn', 'info', 'debug'], DAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
   config = typeof config === 'string' ? { name: config } : typeof config === 'number' ? { level: config } : config;
-  config = Object.seal({ name: '', level: 3, trace: 0, pretty: 0, limit: 1e4, redact: ['pass', 'auth'], ...config });
+  config = Object.seal({
+    name: '', level: 3, trace: 0, pretty: 0, limit: 1e4, redact: ['pass', 'auth'],
+    hub: typeof environ === 'undefined' ? {} : environ.hub ?? {}, ...config,
+  });
   const redactStr = `(${config.redact.join('|')})`, redactRE = new RegExp(`(^|[-_.])${redactStr}`, 'i');
   const jsonRedactRE = new RegExp(`["-_.]${redactStr}.*":`, 'i'), formatCharsRE = /(?:\\[\\ntfv])+/g;
   const isStr = (v) => v?.constructor === String;
@@ -157,7 +243,7 @@ var Log = (config = {}) => {
     const explicit = METHODS.includes(args[0]); if (!explicit) return args.forEach(print);
     const method = args.shift(), level = METHODS.indexOf(method); if (!config.level && level) return;
     const tron = config.trace && (config.trace >= level || level > 3), stack = trace(level), at = getAt(stack[0]);
-    const wid = _contextHub.workerId, worker = isNaN(wid) ? '' : !wid ? ' P0' : ` W${wid}`;
+    const wid = config.hub.workerId, worker = isNaN(wid) ? '' : !wid ? ' P0' : ` W${wid}`;
     const name = config.name ? ` "${config.name}"` : '';
     CONSOLE[method](`\n[${method.toUpperCase()} ${renderUTC()}]${worker}${name} @${at}`); args.forEach(print);
     tron && stack.length > 1 && CONSOLE.log('TRACE:\n' + stack.slice(1).join('\n'));
@@ -169,6 +255,40 @@ var Log = (config = {}) => {
 };
 
 var log = Log(3);
+
+/* Type conversions: */
+
+/** Returns a real number from a numeric value, limiting infinity to the max number. */
+var toRealNumber = (v) => {
+  const number = toNum(v);
+  return isNaN(number) || (number > -Number.MIN_VALUE && number < Number.MIN_VALUE) ? 0
+    : number > Number.MAX_VALUE ? Number.MAX_VALUE : number < -Number.MAX_VALUE ? -Number.MAX_VALUE : number;
+};
+
+/** Converts a byte buffer to an ArrayBuffer. @param {Uint8Array} bytes @return {ArrayBuffer} */
+var bytesToBuffer = (bytes) => {
+  const arrayBuffer = new ArrayBuffer(bytes.byteLength);
+  new Uint8Array(arrayBuffer).set(bytes);
+  return arrayBuffer;
+};
+
+/** Converts an ArrayBuffer to a byte buffer. @param {ArrayBuffer} buffer @return {Uint8Array} */
+var bufferToBytes = (buffer) => new Uint8Array(buffer);
+
+/**
+Creates a string from a buffer or byte array. Optional param `enc` defaults to 'utf-8' and `bom` to false.
+@param {ArrayBuffer | Uint8Array} bytes
+*/
+var bytesToString = (bytes, enc, bom) => new TextDecoder(enc, { ignoreBOM: !!bom }).decode(bytes);
+
+/** Creates a byte array from a string. */
+var stringToBytes = (string) => new TextEncoder().encode(string);
+
+/** Creates a string from a buffer. Same implementation as `bytesToString`. */
+var bufferToString = bytesToString;
+
+/** Creates a buffer from a string, using `stringToBytes`. */
+var stringToBuffer = (string) => stringToBytes(string).buffer;
 
 /* String and RegExp transformations: */
 
@@ -504,72 +624,6 @@ var sortObjects = (array, ...fields) => {
   });
 };
 
-/**
-Parses a key name or key path in a context object, and returns its value, or undefined if not found.
-If the `ctx` context object parameter is omitted or null, `globalThis` is used by default.
-If the `dot` separator parameter is omitted or null, character `.` is used by default.
-If the `key` is a string and parameter `dot` is not empty, the `key` will be interpreted
-as a dot separated nested path, e.g. `items[0].title['en-US']` (or `items.0.title.en-US`).
-If `dot` is the empty string, the key is interpreted as a direct property and not as a path.
-If the `key` is a string array, the `dot` separator is not used.
-The dot separator can be any string, but it must not contain characters expected in key
-names (e.g. a dash `-`), and it should not contain any quotes or square brackets, `\`'"[]`.
-Common valid separators: `.`, `:`, `/`, `\\`, `|`, `&`, `>`, `,`, ...
-*/
-var parseKey = (key, ctx, dot) => {
-  ctx ??= globalThis; dot ??= '.';
-  if (typeof key === 'string') {
-    if (!dot || !key.includes(dot)) return ctx[key];
-    key = key.replace(/\[/g, dot).replace(/["'`\]]/g, '').split(dot); // .map((k) => k.trim()); // trim?
-  }
-  let value = !key[0] ? undefined : ctx;
-  while (value != null && key[0]) value = value[key.shift()];
-  return key.length ? undefined : value;
-};
-
-/**
-Parses a string value or returns the given value if it is not a parseable string.
-Valid numeric strings return numbers.
-Other strings, including objects `{...}` and arrays, `[...]`, try `JSON.parse`.
-If `JSON.parse` fails, `parseKey` is called, along with `ctx` and `dot` parameters.
-*/
-var parseValue = (value, ctx, dot) => {
-  if (typeof value === 'string') {
-    if (!isNaN(Number(value)) && value.trim() || value === 'NaN') return Number(value);
-    if (isJso(value)) try { return JSON.parse(value); } catch {}
-    if (isKey(value)) return parseKey(value, ctx, dot) ?? value;
-  }
-  return value;
-};
-
-/**
-Converts an array of URL query or command-line arguments into an object with key-value pairs.
-Observes common argument conventions, so `['--name0=value0', '--name1', 'value1', '--name2']`
-becomes: `{ name0: 'value0', name1: 'value1', name2: true }`
-Recognises global references, as in: `--name=${globalVariable}`.
-@param {string | string[]} args @return {PlainObject}
-*/
-var parseArguments = (args) => {
-  args ??= []; const object = {}, repeated = new Set(), onlyVal = (t) => !t.startsWith('-') && !t.includes('=');
-  if (args.constructor === String) {
-    const ind = args.indexOf('#'); if (ind !== -1) { args = args.slice(0, ind); }
-    args = args.slice(args.indexOf('?') + 1).trim(); args = !args ? [] : args.split('&');
-  }
-  for (let i = 0; i < args.length; i++) {
-    const arg = args[i], next = args[i + 1];
-    const name = decodeURIComponent(arg.replace(/^-{1,2}/, '').split('=', 1)[0]).trim();
-    const key = /^[\w.-]+$/.test(name) ? name : `_${i}`;
-    const followed = arg.startsWith('-') && !arg.includes('=') && next !== undefined && onlyVal(next);
-    const v = decodeURIComponent(arg.includes('=') ? arg.slice(arg.indexOf('=') + 1) : followed ? next : name);
-    const val = v === name && key === name ? true : v[0] + v[1] + v.at(-1) === '${}' ? parseValue(v.slice(2, -1)) : v;
-    if (repeated.has(key)) object[key].push(val);
-    else if (Object.hasOwn(object, key)) { object[key] = [object[key], val]; repeated.add(key); }
-    else object[key] = val;
-    followed && i++;
-  }
-  return object;
-};
-
 /* Arrays and iterables: */
 
 /**
@@ -784,44 +838,6 @@ var mdToHtml = (() => {
 })();
 
 /* Flow and event functionality: */
-
-/**
-Environment descriptor for both view (browser) and drive (nodejs) contexts.
-@type {{
-  isBrowser: boolean; isWindow: boolean; isFrame: boolean; os: string; 
-  root: string; path: string; slug: string; args: PlainObject;
-}}
-*/
-var environ = (() => {
-  const env = {}, g = globalThis; let aux;
-  env.isBrowser = !g.process?.argv; // not nodejs
-  env.isWindow = typeof Window !== 'undefined' && g.window === g; // not worker
-  aux = g.parent?.frames?.[0]; env.isFrame = !!aux && Object(aux) !== g; // not top
-  if (env.isBrowser) {
-    aux = location.pathname; env.root = location.origin;
-    env.args = parseArguments(location.search);
-    env.os = (() => {
-      const d = navigator.userAgent.toLowerCase(); if (d.includes('win')) return 'win';
-      if (d.includes('mac') || d.includes('ipad') || d.includes('iphone')) return 'mac';
-      if (d.includes('linux') || d.includes('android')) return 'lin';
-      return '';
-    })();
-    if (aux.lastIndexOf('.') <= aux.lastIndexOf('/')) { aux += '/'; }
-  } else {
-    aux = (process.env.PWD || process.cwd() || '').replace(/\\/g, '/');
-    env.root = aux.substring(0, aux.indexOf('/')); aux = aux.slice(env.root.length);
-    env.args = parseArguments(g.process.argv.slice(2));
-    env.os = (() => {
-      const d = process.platform; if (d === 'win32') return 'win';
-      if (d === 'darwin') return 'mac';
-      if (d === 'linux' || d === 'android') return 'lin';
-      return '';
-    })();
-  }
-  env.slug = aux.substring(aux.lastIndexOf('/')); env.path = aux.slice(0, -env.slug.length);
-  env.slug ||= '/'; env.path = env.path.replace(/\/$/, '');
-  return Object.freeze(env);
-})();
 
 /** Import a module dynamically, returning its default export, optionally a JSON type. */
 var importModule = async (url, type) =>

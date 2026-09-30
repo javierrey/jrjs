@@ -209,12 +209,12 @@ const loadHtml = (url, elem, position, norun) => {
   callFetch(url, cb, 'text');
 };
  // content: './content/document.md' './content/document.html' './mathfun' './content/mds/tasks.md' '../../../../../www/nn/nnd.htm' '../../../../../simple-3d/index.html'
-const contextHub = {
+const environ.hub = {
   content: parseArguments(location.search).content || '',
 };
 // globalize:
 expose({
-  environ, contextHub, log, expose, when,
+  environ, log, expose, when,
   ge, gt, qs, qa,
   appendHtml, prependHtml, replaceHtml, insertHtmlBefore, insertHtmlAfter,
   loadHtml, insertHtml,

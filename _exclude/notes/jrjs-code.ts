@@ -441,7 +441,7 @@ export const waitFor = (state, args) => new Promise((resolve, reject) => {
 /** @param {PlainObject} app @return {void} */
 const addAppConfig = (app) => {
   if (app.name && app.config) {
-    contextHub[app.name + 'Config'] = app.config;
+    environ.hub[app.name + 'Config'] = app.config;
   }
 };
 

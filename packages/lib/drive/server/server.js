@@ -416,6 +416,7 @@ export const runServer = (listener, config) => {
   server.timeout = serverConfig.timeout;
   server.listen(serverConfig.port, serverConfig.host, () => {
     log.info(`Server listening on ${serverConfig.protocol}://${serverConfig.host}:${serverConfig.port}`);
+    log.info(`environ`, environ);
   });
   return server;
 };

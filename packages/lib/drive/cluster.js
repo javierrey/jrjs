@@ -24,13 +24,13 @@
 import cluster from 'node:cluster';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { contextHub, fs, jsonStringify, log } from './drive.js';
+import { environ, fs, jsonStringify, log } from './drive.js';
 
 /* Apps functionality: */
 
-const clusterConfig = /** @type {ClusterConfig} */ (contextHub);
+const clusterConfig = /** @type {ClusterConfig} */ (environ.hub);
 
-/** Get contextHub app runner. @param {string} name @return {AppLoader} */
+/** Get environ.hub app runner. @param {string} name @return {AppLoader} */
 export const getAppLoader = (name) =>
   clusterConfig.apps.find((app) => app.name === name) ?? { name, path: '', config: {} };
 
@@ -50,12 +50,12 @@ const importApps = async (imports) => {
 /* Cluster functionality: */
 
 /** @param {number} id @return {void} */
-const updateWorkerId = (id) => { contextHub.workerId = id; };
-updateWorkerId(contextHub.workerId ?? NaN);
+const updateWorkerId = (id) => { environ.hub.workerId = id; };
+updateWorkerId(environ.hub.workerId ?? NaN);
 
 /** @param {number} id @return {void} */
-const updateLatestWorkerId = (id) => { contextHub.latestWorkerId = id; };
-updateLatestWorkerId(contextHub.latestWorkerId ?? NaN);
+const updateLatestWorkerId = (id) => { environ.hub.latestWorkerId = id; };
+updateLatestWorkerId(environ.hub.latestWorkerId ?? NaN);
 
 /** @param {number} id @return {number} */
 // const getWorkerPid = (id) => cluster.workers?.[id]?.process?.pid ?? -1;
@@ -128,12 +128,12 @@ const clusterPrimary = () => {
   !clusterSize && imports.push(...getAppLoaders(false));
 
   log.info([
-    `Primary id ${contextHub.workerId}`,
+    `Primary id ${environ.hub.workerId}`,
     `pid ${process.pid}, clusterSize ${clusterSize}, saved ${saved}`,
     `[${imports.map(app => app.name)}]`,
   ].join(', '));
 
-  const fork = () => cluster.fork({ [getEnvHubName()]: jsonStringify(contextHub) });
+  const fork = () => cluster.fork({ [getEnvHubName()]: jsonStringify(environ.hub) });
   for (let i = 0; i < clusterSize; i++) { fork(); }
 
   cluster.on('online', (worker) => {
@@ -158,7 +158,7 @@ const clusterPrimary = () => {
 const clusterWorker = () => {
   updateWorkerId(cluster.worker?.id ?? -1);
   const imports = getAppLoaders(false);
-  log.info(`Worker id ${contextHub.workerId}, pid ${process.pid}, [${imports.map(app => app.name)}]`);
+  log.info(`Worker id ${environ.hub.workerId}, pid ${process.pid}, [${imports.map(app => app.name)}]`);
 
   importApps(imports);
 };
@@ -171,19 +171,19 @@ export const runCluster = () => cluster.isPrimary ? clusterPrimary() : clusterWo
 /** Configure the worker entry module before the primary forks workers. @param {string | URL} workerUrl */
 export const setupClusterWorker = (workerUrl) => cluster.setupPrimary({ exec: fileURLToPath(workerUrl) });
 
-/** Latest contextHub name from moduleName to use as an environment constant. */
-export const getEnvHubName = () => (contextHub.moduleName || '').toUpperCase() + '_CONTEXT_HUB';
+/** Latest environ.hub name from moduleName to use as an environment constant. */
+export const getEnvHubName = () => (environ.hub.moduleName || '').toUpperCase() + '_CONTEXT_HUB';
 
 /** Stop the worker process as a crash, so cluster will resume it in a new worker. */
 export const stopWorkerProcess = () => {
-  log.warn(`stopWorkerProcess pid ${process.pid}, worker ${contextHub.workerId}`);
+  log.warn(`stopWorkerProcess pid ${process.pid}, worker ${environ.hub.workerId}`);
   process.exit(1);
 };
 
 /** Stop the primary process runtime, from itself or a worker. */
 export const stopPrimaryProcess = () => {
-  const pid = contextHub.workerId ? process.ppid : process.pid;
-  log.warn(`stopPrimaryProcess pid ${pid} (from worker ${contextHub.workerId}, pid ${process.pid})`);
+  const pid = environ.hub.workerId ? process.ppid : process.pid;
+  log.warn(`stopPrimaryProcess pid ${pid} (from worker ${environ.hub.workerId}, pid ${process.pid})`);
   process.kill(pid, 'SIGINT');
 };
 

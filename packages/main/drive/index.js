@@ -2,11 +2,11 @@
 /* Runtime start script. */
 // @ts-check
 
-import { environ, contextHub, log, jsonStringify, setupClusterWorker } from './hub.js';
+import { environ, log, jsonStringify, setupClusterWorker } from './hub.js';
 
-log.info(`environ: ${jsonStringify(environ, null, 2)}\ncontextHub: ${jsonStringify(contextHub, null, 2)}`);
+log.info(`environ: ${jsonStringify(environ, null, 2)}`);
 
-contextHub.clusterSize && setupClusterWorker(new URL('./worker.js', import.meta.url));
+environ.hub.clusterSize && setupClusterWorker(new URL('./worker.js', import.meta.url));
 
 import('jrjs/packages/lib/drive/run.js');
 

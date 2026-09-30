@@ -11,7 +11,7 @@
 */
 
 import {
-  environ, contextHub, merge, hydrate,
+  environ, merge, hydrate,
 } from './imported/lib/view/view.js';
 import { coreHub } from './imported/main/core/hub.js';
 
@@ -30,5 +30,5 @@ const viewDefaults = {
   theme: 'light',
 };
 
-merge(contextHub, coreHub, viewHub);
-hydrate(contextHub, environ.args, viewDefaults);
+merge(environ.hub, coreHub, viewHub);
+hydrate(environ.hub, environ.args, viewDefaults);

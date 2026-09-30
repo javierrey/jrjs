@@ -15,9 +15,6 @@ author: javier.rey.eu@gmail.com
 
 /* Types functionality: */
 
-/** Core persistence container available in all contexts. @type {PlainObject} */
-export const contextHub = {};
-
 /** AsyncFunction constructor (globalThis.AsyncFunction does not exist). */
 export const AsyncFunction = (async () => {}).constructor;
 
@@ -202,7 +199,7 @@ public static members:
     pretty: indent stringified objects output if value is truthy, otherwise skips stringification.
     limit: 0, 1e3, 1e4, ... limit string output sizes, removing the middle part.
     redact: array of key prefixes to redact values in objects, by default: ['pass', 'auth'].
-    hub: optional, defaults to core's `contextHub`.
+    hub: optional, defaults to core's `environ.hub`.
 */
 export const Log = (config = {}) => {
   const typename = 'Log', CONSOLE = console;
@@ -210,7 +207,7 @@ export const Log = (config = {}) => {
   config = typeof config === 'string' ? { name: config } : typeof config === 'number' ? { level: config } : config;
   config = Object.seal({
     name: '', level: 3, trace: 0, pretty: 0, limit: 1e4, redact: ['pass', 'auth'],
-    hub: typeof contextHub !== 'undefined' ? (contextHub ?? {}) : {}, ...config,
+    hub: typeof environ === 'undefined' ? {} : environ.hub ?? {}, ...config,
   });
   const redactStr = `(${config.redact.join('|')})`, redactRE = new RegExp(`(^|[-_.])${redactStr}`, 'i');
   const jsonRedactRE = new RegExp(`["-_.]${redactStr}.*":`, 'i'), formatCharsRE = /(?:\\[\\ntfv])+/g;
