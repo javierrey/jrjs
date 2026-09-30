@@ -13,7 +13,7 @@
 */
 
 import {
-  envInfo, contextHub, merge, hydrate,
+  environ, contextHub, merge, hydrate,
 } from 'jrjs/packages/lib/drive/drive.js';
 import { coreHub } from '../core/hub.js';
 
@@ -56,4 +56,4 @@ const driveHub = {
 };
 
 merge(contextHub, coreHub, driveHub);
-hydrate(contextHub, envInfo.args);
+hydrate(contextHub, environ.args);

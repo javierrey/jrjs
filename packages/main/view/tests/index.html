@@ -13,10 +13,10 @@
   <link rel="stylesheet" href="../imported/lib/view/view.css"/>
   <script type="module">// _@ts-check 'use strict';
     import {
-      envInfo, contextHub, log, when, expose, jsonStringify,
+      environ, contextHub, log, when, expose, jsonStringify,
       ge, gt, qs, qa, loadHtml,
     } from '../hub.js';
-    log.info(`envInfo: ${jsonStringify(envInfo, null, 2)}\ncontextHub: ${jsonStringify(contextHub, null, 2)}`);
+    log.info(`environ: ${jsonStringify(environ, null, 2)}\ncontextHub: ${jsonStringify(contextHub, null, 2)}`);
     contextHub.expose && expose(await import('../hub.js'));
     when(() => document.body)
     .then(() => loadHtml(contextHub.load))

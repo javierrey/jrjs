@@ -214,7 +214,7 @@ const contextHub = {
 };
 // globalize:
 expose({
-  envInfo, contextHub, log, expose, when,
+  environ, contextHub, log, expose, when,
   ge, gt, qs, qa,
   appendHtml, prependHtml, replaceHtml, insertHtmlBefore, insertHtmlAfter,
   loadHtml, insertHtml,

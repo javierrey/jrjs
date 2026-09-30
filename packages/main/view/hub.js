@@ -11,7 +11,7 @@
 */
 
 import {
-  envInfo, contextHub, merge, hydrate,
+  environ, contextHub, merge, hydrate,
 } from './imported/lib/view/view.js';
 import { coreHub } from './imported/main/core/hub.js';
 
@@ -31,4 +31,4 @@ const viewDefaults = {
 };
 
 merge(contextHub, coreHub, viewHub);
-hydrate(contextHub, envInfo.args, viewDefaults);
+hydrate(contextHub, environ.args, viewDefaults);

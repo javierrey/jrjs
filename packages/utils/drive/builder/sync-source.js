@@ -2,13 +2,13 @@
 // @ts-check
 
 import {
-  envInfo, log, toBoo, fileExists, removeDir, copyDir, symlinkDir,
+  environ, log, toBoo, fileExists, removeDir, copyDir, symlinkDir,
 } from '../../../lib/drive/drive.js';
 
-const cloneMethod = envInfo.args.method === 'copy' ? copyDir : symlinkDir; // symlink, copy
+const cloneMethod = environ.args.method === 'copy' ? copyDir : symlinkDir; // symlink, copy
 
-const srcBase = envInfo.args.src || 'packages';
-const tgtBase = envInfo.args.tgt || 'packages/main';
+const srcBase = environ.args.src || 'packages';
+const tgtBase = environ.args.tgt || 'packages/main';
 const tgtName = tgtBase.split('/', 2).at(-1) || 'main';
 
 const srcCore = tgtBase + '/core'; // Target package core folder.
@@ -37,7 +37,7 @@ const generateContext = (ctx, imports = []) => {
 
 /** @param {string} ctxArg */
 const processContextArg = (ctxArg, dfault = '') => {
-  let imports = envInfo.args[ctxArg] ?? dfault; const truthy = toBoo(imports);
+  let imports = environ.args[ctxArg] ?? dfault; const truthy = toBoo(imports);
   if (['null', 'undefined', 'NaN', 'false', '0', '!1', 'true', '1', '!0', "''", '""', '[]', '{}'].includes(imports))
     imports = '';
   truthy && generateContext(ctxArg, imports.split(',').filter(Boolean));

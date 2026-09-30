@@ -792,7 +792,7 @@ Environment descriptor for both view (browser) and drive (nodejs) contexts.
   root: string; path: string; slug: string; args: PlainObject;
 }}
 */
-var envInfo = (() => {
+var environ = (() => {
   const env = {}, g = globalThis; let aux;
   env.isBrowser = !g.process?.argv; // not nodejs
   env.isWindow = typeof Window !== 'undefined' && g.window === g; // not worker

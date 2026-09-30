@@ -59,7 +59,7 @@ import fs from 'node:fs';
 import pathmod from 'node:path';
 import { pathToFileURL } from 'node:url';
 import {
-  Log, envInfo, toStr, isNul, isJso, isBin, isTra,
+  Log, environ, toStr, isNul, isJso, isBin, isTra,
   urlComponents, parseArguments, resolvePath,
   fileSize, readFile, readFileStream, getDistPath,
 } from '../drive.js';
@@ -372,7 +372,7 @@ const resolver = async (request, response) => {
 
 /** @param {ServerConfig} config @return {ResolvedServerConfig} */
 const resolveConfig = (config) => {
-  const baseFolder = getDistPath(process.cwd().replace(/\\/g, '/') || (envInfo.root + envInfo.path));
+  const baseFolder = getDistPath(process.cwd().replace(/\\/g, '/') || (environ.root + environ.path));
   const privateFolder = getDistPath(resolvePath(baseFolder, config.privateDir));
   const publicFolder = getDistPath(resolvePath(baseFolder, config.publicDir));
   const servicesFolder = config.servicesDir ? getDistPath(resolvePath(baseFolder, config.servicesDir)) : '';
