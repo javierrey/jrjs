@@ -60,8 +60,7 @@ import pathmod from 'node:path';
 import { pathToFileURL } from 'node:url';
 import {
   Log, environ, toStr, isNul, isJso, isBin, isTra,
-  urlComponents, parseArguments, resolvePath,
-  fileSize, readFile, readFileStream, getDistPath,
+  UrlFun, parseArguments, fileSize, readFile, readFileStream, getDistPath,
 } from '../drive.js';
 
 const fsP = fs.promises;
@@ -268,7 +267,7 @@ For services, only `/<servicename>/` is accessible publicly.
 */
 const resolveResource = async (request) => {
   const client = resolveClient(request);
-  const urlParts = urlComponents(request.url);
+  const urlParts = UrlFun.urlComponents(request.url);
   const route = urlParts.path.split('/').slice(1);
   const params = parseArguments(urlParts.query); params.payload = Buffer.from([]);
   const DEFAULT_FILE = 'index', STATIC_EXT = ['.html', '.json'], SERVICE_EXT = ['.js', '.mjs', '.cjs'];
@@ -348,7 +347,7 @@ const responder = async (response, status, headers, body) => { // @todo status =
 /** @type {RequestListener} */
 const resolver = async (request, response) => {
   const empty = resolveEmpty(request); if (empty) { return responder(response, empty.status); }
-  const urlParts = urlComponents(request.url);
+  const urlParts = UrlFun.urlComponents(request.url);
   const directory = urlParts.open && urlParts.slug === '/'
     ? safePathFromUrl(urlParts.path, serverConfig.publicFolder) : null;
   if (directory && fileSize(directory) < 0 && (request.method === 'GET' || request.method === 'HEAD')) {
@@ -373,9 +372,9 @@ const resolver = async (request, response) => {
 /** @param {ServerConfig} config @return {ResolvedServerConfig} */
 const resolveConfig = (config) => {
   const baseFolder = getDistPath(process.cwd().replace(/\\/g, '/') || (environ.root + environ.path));
-  const privateFolder = getDistPath(resolvePath(baseFolder, config.privateDir));
-  const publicFolder = getDistPath(resolvePath(baseFolder, config.publicDir));
-  const servicesFolder = config.servicesDir ? getDistPath(resolvePath(baseFolder, config.servicesDir)) : '';
+  const privateFolder = getDistPath(UrlFun.resolvePath(baseFolder, config.privateDir));
+  const publicFolder = getDistPath(UrlFun.resolvePath(baseFolder, config.publicDir));
+  const servicesFolder = config.servicesDir ? getDistPath(UrlFun.resolvePath(baseFolder, config.servicesDir)) : '';
   const isSSL = ['https', 'wss', 'ftps'].includes(config.protocol);
 
   return {

@@ -680,72 +680,75 @@ export const UrlFun = (() => {
     return path.endsWith('/') || /\.[^/]*$/.test(path) ? url : url.replace(/([?#]|$)/, '/$1');
   };
 
-  return Object.freeze({ typename, newUrl, rebaseUrl, rebaseDoc, rebaseHtml, closeDirUrl }); // static
-})();
-
-/**
-Splits a URL or file path into components `{ root, path, slug, query, anchor, open }`.
-Values are normalized with forward slash separators.
-The last part of the path becomes the slug if it is a dotted name, otherwise the slug is a slash `/`.
-Property `open` is true when the given URL path does not end with a slash `/`.
-*/
-export const urlComponents = (url) => {
-  let index, root = '', query = '', anchor = ''; url = String(url ?? '');
-  index = url.indexOf('#'); if (index > -1) { anchor = url.slice(index); url = url.slice(0, index); }
-  index = url.indexOf('?'); if (index > -1) { query = url.slice(index); url = url.slice(0, index); }
-  url = url.replace(/\\/g, '/');
-  index = (url.indexOf('/', (url.indexOf('://') + 1 || -2) + 2) + 1 || url.length + 1) - 1;
-  root = url.slice(0, index); url = url.slice(index);
-  index = url.indexOf(':/') + 1; if (index) { root += url.slice(0, index); url = url.slice(index); }
-  let open = +(url.at(-1) !== '/'), slug = url.slice(url.lastIndexOf('/')), path = url.slice(0, -slug.length);
-  if (!slug.includes('.')) { path += slug; slug = '/'; path = path.replace(/\/+$/, ''); } else { open = 0; }
-  return { root, path, slug, query, anchor, open };
-};
-
-/** Resolves a folder path from multiple absolute and relative paths combined. */
-export const resolvePath = (...paths) => {
-  const normalizePath = (path) => {
-    const res = [], abs = path[0] === '/', folders = path.split('/');
-    for (let i = 0; i < folders.length; i++) {
-      const pth = folders[i]; if (!pth || pth === '.') { continue; }
-      if (pth === '..') {
-        if (res.length && res.at(-1) !== '..') { res.pop(); }
-        else if (!abs) { res.push('..'); }
-      } else { res.push(pth); }
+  /** Resolves a folder path from multiple absolute and relative paths combined. */
+  const resolvePath = (...paths) => {
+    const normalizePath = (path) => {
+      const res = [], abs = path[0] === '/', folders = path.split('/');
+      for (let i = 0; i < folders.length; i++) {
+        const pth = folders[i]; if (!pth || pth === '.') { continue; }
+        if (pth === '..') {
+          if (res.length && res.at(-1) !== '..') { res.pop(); }
+          else if (!abs) { res.push('..'); }
+        } else { res.push(pth); }
+      }
+      return res.join('/');
+    };
+    let resolvedPath = '', resolvedAbsolute = false;
+    for (let i = paths.length - 1; i > -1 && !resolvedAbsolute; i--) {
+      const path = paths[i]; if (!path) { continue; }
+      resolvedPath = path + '/' + resolvedPath;
+      resolvedAbsolute = path[0] === '/';
     }
-    return res.join('/');
+    resolvedPath = normalizePath(resolvedPath);
+    return (resolvedAbsolute ? '/' : '') + resolvedPath || '.';
   };
-  let resolvedPath = '', resolvedAbsolute = false;
-  for (let i = paths.length - 1; i > -1 && !resolvedAbsolute; i--) {
-    const path = paths[i]; if (!path) { continue; }
-    resolvedPath = path + '/' + resolvedPath;
-    resolvedAbsolute = path[0] === '/';
-  }
-  resolvedPath = normalizePath(resolvedPath);
-  return (resolvedAbsolute ? '/' : '') + resolvedPath || '.';
-};
 
-/**
-Extracts a relative path from a URL string, to match equivalent URLs resolved in different ways.
-The returned path is normalized with forward slash separators.
-e.g. The following URLs give the same normalized URI core, 'dir/dir/file.ext':
-`urlCore('http://localhost/dir/dir/file.ext?p1=v1#a1')`
-`urlCore('../../dir/dir/file.ext?p2=v2#a2')`
-`urlCore('https://127.0.0.1:80/dir/dir/file.ext/?p3=v3#a3')`
-Usages:
-Equality test: `urlCore(firstUrl) === urlCore(secondUrl)`
-Relative sub-path inclusion: `('/' + urlCore(absoluteUrl) + '/').includes('/' + urlCore(relativeUrl) + '/')`
-In a browser document, selector inclusion: `document.querySelector('[href*="' + urlCore(url) + '"]')`
-Warning: Use with care, different relative endpoints may contain a coincident core.
-*/
-export const urlCore = (url) => {
-  let i; url = url == null ? '' : ('' + url).slice(0, 1e3);
-  i = url.indexOf('#'); if (i > -1) { url = url.slice(0, i); }
-  i = url.indexOf('?'); if (i > -1) { url = url.slice(0, i); }
-  url = url.replace(/\\/g, '/').replace(/^([a-z\d]*:)?\/{2,}[^/]+\/?/i, '')
-    .replace(/^(\.*\/+)+/, '').replace(/\/+$/, '');
-  return url;
-};
+  /**
+  Extracts a relative path from a URL string, to match equivalent URLs resolved in different ways.
+  The returned path is normalized with forward slash separators.
+  e.g. The following URLs all have the same normalized URI core, 'dir/dir/file.ext':
+  `urlCore('http://localhost/dir/dir/file.ext?p1=v1#a1')`
+  `urlCore('../../dir/dir/file.ext?p2=v2#a2')`
+  `urlCore('https://127.0.0.1:80/dir/dir/file.ext/?p3=v3#a3')`
+  Usages:
+  Equality test: `urlCore(firstUrl) === urlCore(secondUrl)`
+  Relative sub-path inclusion: "`/${urlCore(absoluteUrl)}/`.endsWith(`/${urlCore(relativeUrl)}/`)"
+  In a browser document, selector inclusion: 'document.querySelector(`[href*="${urlCore(url)}"]`)'
+  Warning: Use with care, different relative endpoints may contain a coincident core.
+  */
+  const urlCore = (url) => {
+    let i; url = url == null ? '' : ('' + url).slice(0, 1e3);
+    i = url.indexOf('#'); if (i > -1) { url = url.slice(0, i); }
+    i = url.indexOf('?'); if (i > -1) { url = url.slice(0, i); }
+    url = url.replace(/\\/g, '/').replace(/^([a-z\d]*:)?\/{2,}[^/]+\/?/i, '')
+      .replace(/^(\.*\/+)+/, '').replace(/\/+$/, '');
+    return url;
+  };
+
+  /**
+  Splits a URL or file path into components `{ root, path, slug, query, anchor, open }`.
+  Values are normalized with forward slash separators.
+  The last part of the path becomes the slug if it is a dotted name, otherwise the slug is a slash `/`.
+  Property `open` is true when the given URL path does not end with a slash `/`.
+  */
+  const urlComponents = (url) => {
+    let index, root = '', query = '', anchor = ''; url = String(url ?? '');
+    index = url.indexOf('#'); if (index > -1) { anchor = url.slice(index); url = url.slice(0, index); }
+    index = url.indexOf('?'); if (index > -1) { query = url.slice(index); url = url.slice(0, index); }
+    url = url.replace(/\\/g, '/');
+    index = (url.indexOf('/', (url.indexOf('://') + 1 || -2) + 2) + 1 || url.length + 1) - 1;
+    root = url.slice(0, index); url = url.slice(index);
+    index = url.indexOf(':/') + 1; if (index) { root += url.slice(0, index); url = url.slice(index); }
+    let open = +(url.at(-1) !== '/'), slug = url.slice(url.lastIndexOf('/')), path = url.slice(0, -slug.length);
+    if (!slug.includes('.')) { path += slug; slug = '/'; path = path.replace(/\/+$/, ''); } else { open = 0; }
+    return { root, path, slug, query, anchor, open };
+  };
+
+  return Object.freeze({
+    typename, newUrl, rebaseUrl, rebaseDoc, rebaseHtml,
+    closeDirUrl, resolvePath, urlCore, urlComponents,
+  }); // static
+})();
 
 /* Content string functionality: */
 
