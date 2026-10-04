@@ -6,7 +6,9 @@ import { environ, log, jsonStringify, setupClusterWorker } from './hub.js';
 
 log.info(`environ: ${jsonStringify(environ, null, 2)}`);
 
-environ.hub.clusterSize && setupClusterWorker(new URL('./worker.js', import.meta.url));
+environ.hub.clusterSize && setupClusterWorker(
+	import.meta.resolve('jrjs/packages/lib/drive/worker.js'), environ.hub.moduleName,
+);
 
 import('jrjs/packages/lib/drive/run.js');
 

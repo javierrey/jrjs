@@ -168,8 +168,12 @@ export const runCluster = () => cluster.isPrimary ? clusterPrimary() : clusterWo
 
 /* utilities: */
 
-/** Configure the worker entry module before the primary forks workers. @param {string | URL} workerUrl */
-export const setupClusterWorker = (workerUrl) => cluster.setupPrimary({ exec: fileURLToPath(workerUrl) });
+/**
+Configure the worker entry module before the primary forks workers.
+@param {string | URL} workerUrl @param {string} [moduleName]
+*/
+export const setupClusterWorker = (workerUrl, moduleName = '') =>
+  cluster.setupPrimary({ exec: fileURLToPath(workerUrl), args: [`--moduleName=${moduleName}`] });
 
 /** Latest environ.hub name from moduleName to use as an environment constant. */
 export const getEnvHubName = () => (environ.hub.moduleName || '').toUpperCase() + '_CONTEXT_HUB';

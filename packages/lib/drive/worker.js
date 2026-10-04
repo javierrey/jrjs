@@ -1,10 +1,12 @@
-// main/drive/worker.js
+// lib/drive/worker.js
 /* Worker thread start, set by the main process in clustered runtimes. */
 // @ts-check
 
-import { environ, merge, jsonParse, getEnvHubName } from './hub.js';
+import { environ, merge, jsonParse, getEnvHubName } from './drive.js';
+
+if (environ.args.moduleName) { environ.hub.moduleName = environ.args.moduleName; }
 
 /** Populate latest environ.hub stored in environment variable if available. */
 merge(environ.hub, jsonParse(process.env[getEnvHubName()] ?? ''));
 
-import('jrjs/packages/lib/drive/run.js');
+import('./run.js');
