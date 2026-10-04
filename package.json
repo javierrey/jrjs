@@ -25,8 +25,8 @@
     "format": "pnpm format:lib && pnpm format:utils && pnpm format:main",
     "sync-source": "pnpm sync-source:main",
     "test": "pnpm test:lib && pnpm test:utils && pnpm test:main",
-    "stop:dev": "pnpm node:args packages/lib/drive/stop.js --privateDir=_exclude/_ignore/store --savePid=1",
-    "start:dev": "pnpm stop:dev && pnpm start:dev:main"
+    "stop": "pnpm node:args packages/lib/drive/stop.js --privateDir=_exclude/_ignore/store --savePid",
+    "start:dev": "pnpm stop && pnpm start:dev:main"
   },
   "devDependencies": {
     "jrjs": "link:."
