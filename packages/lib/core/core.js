@@ -130,6 +130,17 @@ export const parseArguments = (args) => {
   return object;
 };
 
+/** Compose command line arguments from a parameters object. @param {PlainObject} params @return {string[]} */
+export const stringifyArguments = (params, dashed = false) => Object.entries(params ?? {}).map(([key, value]) => {
+  if (!value && value !== 0) { value = ''; }
+  else if (typeof value === 'boolean') { value = value ? '1' : ''; }
+  else if (typeof value === 'object') { try { value = JSON.stringify(value); } catch { value = String(value); } }
+  else { value = String(value); }
+  if (!dashed) { value = encodeURIComponent(value); } else if (/\s/.test(value)) { value = `"${value}"`; }
+  const prefix = dashed ? key.length === 1 ? '-' : '--' : ''; if (/\s/.test(key)) { key = `"${key}"`; }
+  return `${prefix}${key}=${value}`;
+});
+
 /* Descriptor constants: */
 
 /**
@@ -594,19 +605,6 @@ export const hasProperty = (object, ...keys) => {
   }
   return true;
 };
-
-/** Compose command line arguments from a parameters object. @return {string[]} */
-export const stringifyArgs = (params, dashed = false) => Object.entries(params ?? {}).map(([key, value]) => {
-  if (!value && value !== 0) { value = ''; }
-  else if (typeof value === 'boolean') { value = value ? '1' : ''; }
-  else if (typeof value === 'object') { try { value = JSON.stringify(value); } catch { value = String(value); } }
-  else { value = String(value); }
-  if (!dashed) { value = encodeURIComponent(value); }
-  else if (/\s/.test(value)) { value = `"${value}"`; }
-  const prefix = dashed ? key.length === 1 ? '-' : '--' : '';
-  if (/\s/.test(key)) { key = `"${key}"`; }
-  return `${prefix}${key}=${value}`;
-});
 
 /** Depletes an object of all its properties. */
 export const emptyObject = (obj) => Object.keys(obj).forEach((k) => delete obj[k]);

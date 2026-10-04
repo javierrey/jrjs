@@ -24,7 +24,7 @@
 import cluster from 'node:cluster';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { environ, Log, fs, jsonStringify, stringifyArgs } from './drive.js';
+import { environ, Log, fs, jsonStringify, stringifyArguments } from './drive.js';
 
 /* Apps functionality: */
 
@@ -172,7 +172,7 @@ export const runCluster = () => cluster.isPrimary ? clusterPrimary() : clusterWo
 
 /** Configure the worker entry module before the primary forks workers. @param {string | URL} workerUrl */
 export const setupClusterWorker = (workerUrl, params = {}) => {
-  cluster.setupPrimary({ exec: fileURLToPath(workerUrl), args: stringifyArgs(params, true) });
+  cluster.setupPrimary({ exec: fileURLToPath(workerUrl), args: stringifyArguments(params, true) });
 };
 
 /** Latest environ.hub name from moduleName to use as an environment constant. */
