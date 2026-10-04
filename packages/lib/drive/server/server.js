@@ -59,7 +59,7 @@ import fs from 'node:fs';
 import pathmod from 'node:path';
 import { pathToFileURL } from 'node:url';
 import {
-  Log, environ, toStr, isNul, isJso, isBin, isTra,
+  environ, Log, toStr, isNul, isJso, isBin, isTra,
   UrlFun, parseArguments, fileSize, readFile, readFileStream, getDistPath,
 } from '../drive.js';
 
