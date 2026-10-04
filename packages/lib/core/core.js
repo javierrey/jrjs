@@ -454,7 +454,7 @@ export const sanitize = (text) => text?.replace(/[<>"'`\\=(]/g, (m) => `&#${m.ch
 /** Unescapes numeric HTML encoded entities into characters. */
 export const unsanitize = (text) => text?.replace(/&#\d+;/g, (m) => String.fromCharCode(+m.slice(2, -1)));
 
-/* Object transformations and String parsers: */
+/* Object, array and string mappings: */
 
 /**
 Safely stringifies a value to JSON, returning undefined on failure.
@@ -563,8 +563,9 @@ export const hydrate = (tgt, ...srcs) => {
           !Object.keys(o[k]).length && Object.keys(v).length))))
   ) && (o[k] = v);
   const isObj = (v) => !!v && [Object, undefined].includes(v.constructor);
+  const travs = (o, k, v) => v !== globalThis && isObj(v) && isObj(o[k]);
   const travel = (t, s) => s !== t && Object.entries(s)
-    .forEach(([k, v]) => isObj(t[k]) && isObj(v) ? travel(t[k], v) : set(t, k, v));
+    .forEach(([k, v]) => travs(t, k, v) ? travel(t[k], v) : set(t, k, v));
   tgt = Object.assign(tgt ?? {});
   srcs.forEach((src) => { src = Object.assign(src ?? {}); travel(tgt, src); });
   return tgt;
@@ -581,6 +582,21 @@ export const getProperty = (object, ...keys) => {
   }
   return object;
 };
+
+/**
+Asserts an unknown type object has a nested property key. Accepts a list of nested keys:
+`hasProperty(obj, 'data', 'count') && typeof obj.data.count === 'number' && obj.data.count++`
+*/
+export const hasProperty = (object, ...keys) => {
+  for (const key of keys) {
+    if (!object || typeof object !== 'object' || !(key in object)) return false;
+    object = object[key];
+  }
+  return true;
+};
+
+/** Depletes an object of all its properties. */
+export const emptyObject = (obj) => Object.keys(obj).forEach((k) => delete obj[k]);
 
 /**
 Compares two type objects by matching one or more nested properties.
@@ -623,8 +639,6 @@ export const sortObjects = (array, ...fields) => {
     return 0;
   });
 };
-
-/* Arrays and iterables: */
 
 /**
 Alphanumeric compare for string array sorting. Example:
@@ -770,8 +784,8 @@ export const mdToHtml = (() => {
     (_a, b, _c, d, e) => b + '<i>' + d + '</i>' + e
   ).replace(/(!?)\[([^\]<>]+)\]\((\+?)([^ )<>]+)(?: "([^()"]+)")?\)/g, (_a, b, c, d, e, f) => {
     let h = f ? ' title="' + f + '"' : '';
-    return b ? '<img src="' + main.href(e) + '" alt="' + c + '"' + h + '/>' : (d && (h += ' target="_blank"'),
-      '<a href="' + main.href(e) + '"' + h + '>' + c + '</a>');
+    return b ? '<img src="' + e + '" alt="' + c + '"' + h + '/>' : (d && (h += ' target="_blank"'),
+      '<a href="' + e + '"' + h + '>' + c + '</a>');
   }),
   finish = (t) => t.replace(/\x01([\x0f-\x1c])/g, (_a, b) => CH[b.charCodeAt(0) - HD])
     .replace(/<p>\s*(?=<\/)(?!<\/p>)/gi, ''),
@@ -829,7 +843,7 @@ export const mdToHtml = (() => {
       } else {
         while (o.length) n += '</li></' + o.pop()[0] + '>';
         if (q?.trim()) {
-          if (r) n += 'hr' === r ? '<hr/>' : '<' + r + s + main.headAttrs(s, q) + '>' + q + '</' + r + s + '>';
+          if (r) n += 'hr' === r ? '<hr/>' : '<' + r + s + '>' + q + '</' + r + s + '>';
           else n += q;
         }
       }
@@ -837,7 +851,7 @@ export const mdToHtml = (() => {
     while (o.length) n += '</li></' + o.pop()[0] + '>';
     return finish(n);
   });
-  return main.href = (a) => a, main.headAttrs = (_a, _b) => '', main;
+  return main;
 })();
 
 /* Flow and event functionality: */

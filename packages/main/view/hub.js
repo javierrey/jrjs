@@ -7,28 +7,27 @@
 @typedef {import('./imported/lib/view/view.js').ArrayObject} ArrayObject;
 @typedef {import('./imported/lib/view/view.js').FunctionObject} FunctionObject;
 @typedef {import('./imported/lib/view/view.js').ViewConfig} ViewConfig;
-@typedef {Partial<ViewConfig> & PlainObject & {}} ViewHub;
+@typedef {ViewConfig & PlainObject & {
+}} ViewHub;
 */
 
 import {
-  environ, merge, hydrate,
+  environ, hydrate,
 } from './imported/lib/view/view.js';
 import { coreHub } from './imported/main/core/hub.js';
 
 export * from './imported/lib/view/view.js';
 
-/** @type {ViewHub} */
-const viewHub = {
-  moduleName: 'main', // @define (not in filepath).
-  href: location.href,
-};
-
-/** @type {ViewHub} */
-const viewDefaults = {
+/** @type {Partial<ViewHub>} */
+const defaults = {
   load: './home.html',
   locale: 'en-US',
   theme: 'light',
 };
 
-merge(environ.hub, coreHub, viewHub);
-hydrate(environ.hub, environ.args, viewDefaults);
+/** @type {Partial<ViewHub>} */
+const viewHub = {
+  moduleName: 'main', // @define (not in filepath).
+};
+
+hydrate(environ.hub, viewHub, coreHub, environ.args, defaults);

@@ -1,6 +1,7 @@
 // main/view/.../load.js
 // _@ts-check
 
+const environ = {};
 const log = console.log; // eslint-disable-line
 // core.js:
 const expose = (props, env = globalThis) => Object.entries(props).forEach(([k, v]) => { env[k] = v; });
@@ -90,7 +91,7 @@ const mdToHtml = (() => {
   SE ='script|style|pre|code', SE0 = new RegExp(`<(${SE})[ >]`, 'i'), SE1 = new RegExp(`<\\/(${SE})>`, 'i'),
   RE1 = /^\s{0,3}(\#{1,6})\s+(.*?)\s*#*\s*$/, RE2 = /^\s*<[^>]+(?:>\s*<)?[^>]+>\s*$/,
   RE3 = /^(\s*)(?:[-*]|(\d+[.)])) (.+)$/, RE4 = /^\s{0,3}([-])(\s*\1){2,}\s*$/,
-  RE5 = /^\s*\|?(?:\s*:?-{3,}:?\s*\|)+\s*:?-{3,}:?\s*\|?\s*$/,
+  RE5 = /^\s*\|?(?:\s*:?-{3,}:?\s*\|)+\s*:?-{3,}:?\s*\|?\s*$/, RE6 = /^\s{0,3}>/,
   start = (t) => t.replace(/\\([-(){}[\]#*+.!_\\])/g,
     (_a, b, _c, d) => String.fromCharCode(1, CH.indexOf(b) + d)
   ).replace(/(\*\*|__|~~)(\S(?:[\s\S]*?\S)?)\1/g,
@@ -99,8 +100,8 @@ const mdToHtml = (() => {
     (_a, b, _c, d, e) => b + '<i>' + d + '</i>' + e
   ).replace(/(!?)\[([^\]<>]+)\]\((\+?)([^ )<>]+)(?: "([^()"]+)")?\)/g, (_a, b, c, d, e, f) => {
     let h = f ? ' title="' + f + '"' : '';
-    return b ? '<img src="' + main.href(e) + '" alt="' + c + '"' + h + '/>' : (d && (h += ' target="_blank"'),
-      '<a href="' + main.href(e) + '"' + h + '>' + c + '</a>');
+    return b ? '<img src="' + e + '" alt="' + c + '"' + h + '/>' : (d && (h += ' target="_blank"'),
+      '<a href="' + e + '"' + h + '>' + c + '</a>');
   }),
   finish = (t) => t.replace(/\x01([\x0f-\x1c])/g, (_a, b) => CH[b.charCodeAt(0) - HD])
     .replace(/<p>\s*(?=<\/)(?!<\/p>)/gi, ''),
@@ -133,7 +134,11 @@ const mdToHtml = (() => {
     for (let f, h = start(a).split('\n'), i = 0; i < h.length; i++) {
       const k = h[i], u = RE2.test(k), p = u || inCode || (s0 && s1) ? '' : 'p'; let m = RE1.exec(k);
       if (!m) {
-        if (/\|/.test(k) && RE5.test(h[i + 1] ?? '')) {
+        if (RE6.test(k)) {
+          const q = 'blockquote', j = i; while (RE6.test(h[i + 1] ?? '')) i++;
+          g.push([`<${q}>` + main(h.slice(j, i + 1).map((line) => line.replace(/^\s{0,3}>[ \t]?/, '')).join('\n'))
+            + `</${q}>`, '']);
+        } else if (/\|/.test(k) && RE5.test(h[i + 1] ?? '')) {
           const j = [k, h[++i]];
           while (/\|/.test(h[i + 1] ?? '')) j.push(h[++i]);
           g.push(f = [table(j), '', '']);
@@ -154,7 +159,7 @@ const mdToHtml = (() => {
       } else {
         while (o.length) n += '</li></' + o.pop()[0] + '>';
         if (q?.trim()) {
-          if (r) n += 'hr' === r ? '<hr/>' : '<' + r + s + main.headAttrs(s, q) + '>' + q + '</' + r + s + '>';
+          if (r) n += 'hr' === r ? '<hr/>' : '<' + r + s + '>' + q + '</' + r + s + '>';
           else n += q;
         }
       }
@@ -162,7 +167,7 @@ const mdToHtml = (() => {
     while (o.length) n += '</li></' + o.pop()[0] + '>';
     return finish(n);
   });
-  return main.href = (a) => a, main.headAttrs = (_a, _b) => '', main;
+  return main;
 })();
 // view.js:
 const ge = (id) => document.getElementById(id);
@@ -200,17 +205,17 @@ const insertHtml = (html, elem = document.body, position = '', norun = false) =>
 };
 const loadHtml = (url, elem, position, norun) => {
   const cb = (uri, cont, err) => {
-    uri = UrlFun.closeDirUrl(uri);
-    cont ??= '', cont = `\n<!--loadHtml "${uri}" "${cont.length}B" "${err ?? ''}"-->\n`
+    uri = UrlFun.closeDirUrl(uri); cont ??= '';
+    cont = `\n<!--loadHtml "${uri}" "${cont.length} C" "${err ?? ''}"-->\n`
       + UrlFun.rebaseHtml(/[^?#]+\.md([?#]|$)/i.test(uri) ? mdToHtml(cont) : cont, uri)
       + `\n<!--/loadHtml-->\n`;
     insertHtml(cont, elem, position, norun);
   };
   callFetch(url, cb, 'text');
 };
- // content: './content/document.md' './content/document.html' './mathfun' './content/mds/tasks.md' '../../../../../www/nn/nnd.htm' '../../../../../simple-3d/index.html'
-const environ.hub = {
-  content: parseArguments(location.search).content || '',
+ // load: './content/document.md' './content/document.html' './mathfun' './content/mds/tasks.md' '../../../../../www/nn/nnd.htm' '../../../../../simple-3d/index.html'
+environ.hub = {
+  load: parseArguments(location.search).load || '',
 };
 // globalize:
 expose({

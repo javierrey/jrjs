@@ -5,7 +5,7 @@
 @typedef {import('./cluster.js').ClusterConfig} ClusterConfig;
 */
 
-import { environ, log, hydrate, } from './drive.js';
+import { environ, log, hydrate } from './drive.js';
 import { runCluster } from './cluster.js';
 
 /** @type {ClusterConfig} */

@@ -7,7 +7,6 @@
 @typedef {typeof globalThis & Window & WorkerGlobalScope} ViewContext;
 @typedef {{
   moduleName: string;
-  href: string;
   load: string;
   locale: string;
   theme: string;
@@ -36,6 +35,8 @@ export const prependHtml = (parent, html) => parent?.insertAdjacentHTML?.('after
 export const replaceHtml = (parent, html) => { if (parent) parent.innerHTML = html; };
 export const insertHtmlBefore = (elem, html) => elem?.insertAdjacentHTML?.('beforebegin', html);
 export const insertHtmlAfter = (elem, html) => elem?.insertAdjacentHTML?.('afterend', html);
+
+/* * */
 
 /**
 Loads CSS code from a URL `href`, or from a given text, if `code` is not null.
@@ -94,8 +95,8 @@ New scripts in the content are also loaded and run, unless `norun` is true.
 */
 export const loadHtml = (url, elem, position, norun) => {
   const cb = (uri, cont, err) => {
-    uri = UrlFun.closeDirUrl(uri);
-    cont ??= '', cont = `\n<!--loadHtml "${uri}" "${cont.length} C" "${err ?? ''}"-->\n`
+    uri = UrlFun.closeDirUrl(uri); cont ??= '';
+    cont = `\n<!--loadHtml "${uri}" "${cont.length} C" "${err ?? ''}"-->\n`
       + UrlFun.rebaseHtml(/[^?#]+\.md([?#]|$)/i.test(uri) ? mdToHtml(cont) : cont, uri)
       + `\n<!--/loadHtml-->\n`;
     insertHtml(cont, elem, position, norun);
@@ -106,10 +107,10 @@ export const loadHtml = (url, elem, position, norun) => {
 /* * */
 
 /**
-Returns the current view size type number, based on a viewport width and height.
-The chosen thresholds are practical heuristic intermediates in logical pixels.
+Returns the current view size rank, based on a viewport width and height.
+The chosen rank thresholds are practical heuristic intermediates in logical pixels.
 Some devices may overlap the defined ranges.
-Coded in numbers to allow layouts fit across a range of size types.
+Numeric ranks allow layouts to fit across a range of size types.
 0: null (no display)
 1: mini (watch)
 2: small (phone)
@@ -117,17 +118,20 @@ Coded in numbers to allow layouts fit across a range of size types.
 4: large (desktop)
 5: maxi (ultra large desktop, spatial display)
 */
-export const getViewSizeType = (width, height) => {
+export const getViewSizeRank = (width, height) => {
   let size = height * 16 / 9; if (size > width) { size = width; }
   return !size || size < 0 ? 0
     : size < 300 ? 1 : size < 1000 ? 2 : size < 1500 ? 3 : size < 2500 ? 4 : 5;
 };
 
-/** Returns the current window size type, based on width and height. */
-export const getWindowSizeType = () => getViewSizeType(window.innerWidth, window.innerHeight);
-
-/** Returns the container element size type, based on width and height. */
-export const getContainerSizeType = (elem) => getViewSizeType(elem.clientWidth, elem.clientHeight);
+/**
+Returns the container size rank for an element, window or screen.
+Based on the container's width and height logical pixels (implicit pixel ratio).
+*/
+export const getContainerSizeRank = (container) => getViewSizeRank(
+  container.clientWidth ?? container.innerWidth ?? container.width ?? NaN,
+  container.clientHeight ?? container.innerHeight ?? container.height ?? NaN,
+);
 
 /* * */
 
@@ -165,7 +169,7 @@ export const CSSUtils = (() => {
     return reg;
   };
 
-  const emptyObject = (obj) => Object.keys(obj).forEach((k) => delete obj[k]);
+  const emptyObject = (obj) => Object.keys(obj).forEach((k) => delete obj[k]); // Ported from core.js
 
   const updateRegistry = (
     theme = registry.theme || 'theme',
@@ -245,17 +249,32 @@ export const CSSUtils = (() => {
   return Object.freeze(members);
 })();
 
+/* * */
+
 /** Event key modifiers. @param {KeyboardEvent | MouseEvent | TouchEvent} ev */
 export const getModifierKeys = (ev) => ({
   shift: ev.shiftKey, alt: ev.altKey, primary: environ.os === 'mac' ? ev.metaKey : ev.ctrlKey,
 });
 
-/** Download content as a local document. Browser-specific behaviour. */
-export const saveContent = (content = '', filename = 'content.txt', type = 'text/plain;charset=utf-8;') => {
+/** Change the URL search parameters. `null` values remove the parameter. */
+export const setUrlParams = (obj) => {
+  if (!window || !obj) { return; }
+  const url = new URL(window.location);
+  for (const k in obj) obj[k] == null ? url.searchParams.delete(k) : url.searchParams.set(k, obj[k]);
+  window.history.replaceState(null, '', url);
+};
+
+/** Saves content to a local file. Browser-specific behaviour. Call from a user interaction event handler. */
+export const saveToLocal = (content = '', filename = 'content.txt', type = 'text/plain;charset=utf-8;') => {
   content = new Blob([content], { type });
   const link = document.createElement('a'), url = URL.createObjectURL(content);
-  link.setAttribute('href', url); link.setAttribute('download', filename); link.style.visibility = 'hidden';
+  link.setAttribute('href', url); link.setAttribute('download', filename); // link.style.visibility = 'hidden';
   document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
+};
+
+/** Copy content to clipboard. Call from a user interaction event handler. */
+export const copyToClipboard = async (content = '') => {
+  try { await navigator.clipboard.writeText(content); } catch {}
 };
 
 /* * */
