@@ -2,7 +2,7 @@
 /* Runtime start script. */
 // @ts-check
 
-import { environ, log, jsonStringify, setupClusterWorker, stringifyArgs } from './hub.js';
+import { environ, log, jsonStringify, setupClusterWorker } from './hub.js';
 
 log.info(`environ: ${jsonStringify(environ, null, 2)}`);
 
