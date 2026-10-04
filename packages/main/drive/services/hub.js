@@ -8,7 +8,6 @@
 import { environ, Log, delay } from '../hub.js';
 
 export * from 'jrjs/packages/lib/drive/drive.js';
-export { stopPrimaryProcess, stopWorkerProcess } from 'jrjs/packages/lib/drive/cluster.js';
 
 export const log = Log({ name: 'services', level: 3 });
 

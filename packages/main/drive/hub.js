@@ -19,9 +19,6 @@ import {
 import { coreHub } from '../core/hub.js';
 
 export * from 'jrjs/packages/lib/drive/drive.js';
-export {
-  getEnvHubName, setupClusterWorker, stopSavedPrimaryProcess,
-} from 'jrjs/packages/lib/drive/cluster.js';
 
 const fileFolders = import.meta.url.split('/'), modulePos = -3, distPos = modulePos - 1;
 const moduleName = fileFolders.at(modulePos) ?? '';

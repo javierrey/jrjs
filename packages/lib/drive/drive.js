@@ -36,6 +36,10 @@ export * as fs from 'node:fs';
 export const fsP = fs.promises;
 export * as pathmod from 'node:path';
 export * from '../core/core.js';
+export {
+  setupClusterWorker, getEnvHubName,
+  stopPrimaryProcess, stopWorkerProcess, stopSavedPrimaryProcess,
+} from './cluster.js';
 
 /** Test functionality: */
 
