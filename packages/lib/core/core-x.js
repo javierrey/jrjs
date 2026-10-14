@@ -14,7 +14,7 @@
 */
 
 import {
-  isBin, isTra, toEmp, toSca, toStr, REX,
+  isBin, isTra, toSca, toStr, toEmp, REX,
 } from './core.js';
 
 export * from './core.js';
@@ -77,7 +77,7 @@ export const getRandomString = (length = 11, base = 36) => {
 /* Object transformations and String parsers: */
 
 /**
-Clones a plain object or array recursively. Other object types are assigned by reference.
+Clones a plain object or array recursively. Non-plain subobjects are assigned by reference.
 Same as method `clone`, but the behaviour is configurable and avoids cyclic redundancy.
 Returns a cloned object, or the object itself if it is not clonable.
 The `opt` parameter can be null or an array with property names and object references
@@ -162,67 +162,76 @@ export const customMerge = (opt, tgt, ...srcs) => {
   return tgt;
 };
 
-/**
-Creates a serializable clone of an object, where cyclic redundancy is prevented
-by replacing redundant values with path references to existing properties.
-Scalable types are cast to scalar values.
-@todo serializable
-*/
-export const serializable = (source) => {
-  if (!isTra(source)) { return toSca(source); }
-  const target = toEmp(source), path = ['@root'];
-  const ex = new WeakMap([[source, path]]);
-  const traverse = (s, t, p) => {
-    Object.keys(s).forEach((k) => {
-      const v = s[k];
-      if (isTra(v)) {
-        const kp = p.concat(k);
-        if (!ex.has(v)) {
-          ex.set(v, kp); t[k] = toEmp(v); traverse(v, t[k], kp);
-        } else { t[k] = ex.get(v); }
-      } else { t[k] = toSca(v); }
-    });
+/** @todo Static functionality to serialize/deserialize objects. Depends on core.js. */
+export const Serial = (() => {
+  const typename = 'Serial';
+
+  /**
+  Creates a serializable clone of an object, where cyclic redundancy is prevented
+  by replacing redundant values with path references to existing properties.
+  Scalable types are cast to scalar values.
+  @todo serializable
+  */
+  const serializable = (source) => {
+    if (!isTra(source)) { return toSca(source); }
+    const target = toEmp(source), path = ['@root'];
+    const ex = new WeakMap([[source, path]]);
+    const traverse = (s, t, p) => {
+      Object.keys(s).forEach((k) => {
+        const v = s[k];
+        if (isTra(v)) {
+          const kp = p.concat(k);
+          if (!ex.has(v)) {
+            ex.set(v, kp); t[k] = toEmp(v); traverse(v, t[k], kp);
+          } else { t[k] = ex.get(v); }
+        } else { t[k] = toSca(v); }
+      });
+    };
+    traverse(source, target, path);
+    return target;
   };
-  traverse(source, target, path);
-  return target;
-};
 
-/**
-Creates a deserializable object generated with `serializable`.
-The process is not strictly symetric to `serializable`, as `isSca` is used for values
-that can be cast to scalars.
-@todo deserializable
-*/
-export const deserializable = (source) => {
-  if (!isTra(source)) { return toSca(source); }
-  const target = toEmp(source);
-  const isReference = (v) => v?.[0] === '@root';
-  const getReference = (v) => { const a = v.slice(1); return a.reduce((acc, cur) => acc[cur], source); };
-  const getValue = (v) => isReference(v) ? getReference(v) : v;
-  const ex = new WeakSet([source]);
-  const traverse = (s, t) => {
-    Object.keys(s).forEach((k) => {
-      const v = getValue(s[k]);
-      if (isTra(v)) {
-        if (!ex.has(v)) {
-          ex.add(v);
-          t[k] = toEmp(v);
-          traverse(v, t[k]);
-        } else {
-          t[k] = v === s ? t : Object.assign(toEmp(v), v);
-        }
-      } else { t[k] = toSca(v); }
-    });
+  /**
+  Creates a deserializable object generated with `serializable`.
+  The process is not strictly symetric to `serializable`, as `isSca` is used for values
+  that can be cast to scalars.
+  @todo deserializable
+  */
+  const deserializable = (source) => {
+    if (!isTra(source)) { return toSca(source); }
+    const target = toEmp(source);
+    const isReference = (v) => v?.[0] === '@root';
+    const getReference = (v) => { const a = v.slice(1); return a.reduce((acc, cur) => acc[cur], source); };
+    const getValue = (v) => isReference(v) ? getReference(v) : v;
+    const ex = new WeakSet([source]);
+    const traverse = (s, t) => {
+      Object.keys(s).forEach((k) => {
+        const v = getValue(s[k]);
+        if (isTra(v)) {
+          if (!ex.has(v)) {
+            ex.add(v);
+            t[k] = toEmp(v);
+            traverse(v, t[k]);
+          } else {
+            t[k] = v === s ? t : Object.assign(toEmp(v), v);
+          }
+        } else { t[k] = toSca(v); }
+      });
+    };
+    traverse(source, target);
+    return target;
   };
-  traverse(source, target);
-  return target;
-};
 
-/** Serializes an object into a JSON string. */
-export const serialize = (obj) => JSON.stringify(serializable(obj));
+  /** Serializes an object into a JSON string. */
+  const serialize = (obj) => jsonStringify(serializable(obj));
 
-/** Deserializes a JSON string into an object. */
-export const deserialize = (str) => deserializable(JSON.parse(str));
+  /** Deserializes a JSON string into an object. */
+  const deserialize = (str) => deserializable(JsonParse(str));
+
+  return Object.freeze({
+    typename, serializable, deserializable, serialize, deserialize,
+  }); // static
+})();
 
 /** Converts a JSON object or string into YAML text. */
 export const jsonToYaml = (json) => {
@@ -383,20 +392,65 @@ export const yamlToJson = (yaml) => {
   } catch { return null; }
 };
 
-/** Remove all own properties of an object. */
-export const emptyObject = (obj) => Object.keys(obj).forEach((k) => delete obj[k]);
-
 /** Assign readonly properties to a target object from a source object. */
 export const assignReadonly = (t, s) => Object.entries(s).forEach(([k, v]) =>
   Object.defineProperty(t, k, { value: v, enumerable: true, writable: false })) ?? t;
 
 /* Arrays and iterables: */
 
+/** Static functionality to handle arrays of objects. */
+export const OArray = (() => {
+  const typename = 'OArray';
+
+  /** Compares two type objects by matching one or more nested properties. Ported from core.js. */
+  const matchObjects = (a, b, ...fields) =>
+    a === b || !!fields.length && fields.every((field) => getProperty(a, ...field) === getProperty(b, ...field));
+
+  /**
+  Finds the index of an object in an array by matching one or more nested properties.
+  `objectIndex(objArray, obj, ['fields', 'name', 'en-US'], ['contentType', 'sys', 'id'])`
+  */
+  const objectIndex = (array, object, ...fields) =>
+    array.findIndex((item) => matchObjects(item, object, ...fields));
+
+  /**
+  Removes duplicates from an array of objects by matching one or more nested properties.
+  `removeObjectDuplicates(objArray, ['fields', 'name', 'en-US'], ['contentType', 'sys', 'id'])`
+  */
+  const removeObjectDuplicates = (array, ...fields) => {
+    for (let i = array.length - 1; i > 0; i--) {
+      objectIndex(array, array[i], ...fields) < i && array.splice(i, 1);
+    }
+  };
+
+  /**
+  Sorts an array of objects by matching one or more nested properties.
+  `sortObjects(objArray, ['contentType', 'sys', 'id'], ['fields', 'name', 'en-US'])`
+  */
+  const sortObjects = (array, ...fields) => {
+    !fields.length && fields.push([]);
+    array.sort((a, b) => {
+      for (const field of fields) {
+        const aValue = String(getProperty(a, ...field) ?? a).toLowerCase();
+        const bValue = String(getProperty(b, ...field) ?? b).toLowerCase();
+        if (aValue !== bValue) {
+          return aValue < bValue ? -1 : 1;
+        }
+      }
+      return 0;
+    });
+  };
+
+  return Object.freeze({
+    typename, matchObjects, objectIndex, removeObjectDuplicates, sortObjects,
+  }); // static
+})();
+
 /* URL and path functionality: */
 
 /* Content string functionality: */
 
-/** Appends content to an HTML string container and returns the result string. */
+/** @todo Appends content to an HTML string container and returns the result string. */
 export const appendHTMLContent = (parent, content, tag) => {
   let end = -1;
   if (tag) {
@@ -497,8 +551,7 @@ export const readStream = async (url, options = {}) => {
     const response = await fetch(url, options);
     if (!response.ok) { throw new Error(`${response.status} ${response.statusText}`); }
     file.type = response.headers.get('content-type') ?? '';
-    const size = response.headers.get('content-length');
-    file.size = size === null ? NaN : Number(size);
+    file.size = Number(response.headers.get('content-length') ?? NaN);
     file.content = response.body;
   } catch (error) { file.error = error; }
   return file;

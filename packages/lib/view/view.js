@@ -169,12 +169,12 @@ export const CSSUtils = (() => {
     return reg;
   };
 
-  const emptyObject = (obj) => Object.keys(obj).forEach((k) => delete obj[k]); // Ported from core.js
+  const clear = (o) => Object.keys(o ?? {}).forEach((k) => delete o[k]);
 
   const updateRegistry = (
     theme = registry.theme || 'theme',
     themes = registry.themes?.length ? registry.themes : ['light', 'dark'],
-  ) => { emptyObject(registry); Object.assign(registry, buildRegistry(theme, themes)); };
+  ) => { clear(registry); Object.assign(registry, buildRegistry(theme, themes)); };
 
   const initRegistry = () => (!registry.themes?.length || !registry.theme) && updateRegistry();
 
@@ -194,9 +194,10 @@ export const CSSUtils = (() => {
   /** @param {HTMLElement} element */
   const getElementStyle = (element, pseudo = '') => {
     const style = element.style, classes = element.classList;
-    const resolved = getComputedStyle(element, pseudo), computed = element.computedStyleMap?.();
-    const get = (prop) => resolved[prop];
+    const computed = getComputedStyle(element, pseudo), map = element.computedStyleMap?.();
+    const get = (prop) => computed[prop];
     const set = (prop, value, priority = '') => style.setProperty(prop, value ?? '', priority);
+    const del = (prop) => style.removeProperty(prop);
     const add = (...names) => classes.add(...names);
     const remove = (...names) => classes.remove(...names);
     const update = (...props) => props.forEach((prop) => set(prop, get(prop)));
@@ -204,7 +205,7 @@ export const CSSUtils = (() => {
       remove(...oldNames?.split ? [oldNames] : oldNames ?? []);
       add(...newNames?.split ? [newNames] : newNames ?? []);
     };
-    return { resolved, computed, get, set, add, remove, update, replace };
+    return { computed, map, get, set, del, add, remove, update, replace };
   };
 
   const toggleCssTheme = (themeIndex = -1) => {

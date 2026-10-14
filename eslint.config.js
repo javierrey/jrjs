@@ -10,7 +10,7 @@ export default [
   ...tseslint.configs.recommended,
   { languageOptions: { ecmaVersion: 'latest', sourceType: 'module', globals: { ...globals.browser, ...globals.node } } },
   { files: ['**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'] },
-  { ignores: ['**/ignore/', '**/exclude/', '*_ignore_*', '**/_keep/'] },
+  { ignores: ['**/_ignore/', '**/_exclude/'] },
   { ...config },
   { rules: {} },
 ];

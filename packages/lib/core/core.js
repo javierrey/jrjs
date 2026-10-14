@@ -467,6 +467,9 @@ export const unsanitize = (text) => text?.replace(/&#\d+;/g, (m) => String.fromC
 
 /* Object, array and string mappings: */
 
+/** Clears all object properties. */
+export const clear = (o) => Object.keys(o ?? {}).forEach((k) => delete o[k]);
+
 /**
 Safely stringifies a value to JSON, returning undefined on failure.
 Replacer and indentation are optional. @param {any} v
@@ -524,7 +527,7 @@ export const partial = (obj, flt) => {
   return part;
 };
 
-/** Clones a plain object or array recursively. Non-plain object properties are assigned by reference. */
+/** Clones a plain object or array recursively. Non-plain subobjects5 are assigned by reference. */
 export const clone = (obj) => {
   const isObj = (v) => !!v && [Object, undefined].includes(v.constructor);
   const isTra = (v) => v !== globalThis && isObj(v) || !!(v?.every?.(isObj) && v.length);
@@ -606,50 +609,12 @@ export const hasProperty = (object, ...keys) => {
   return true;
 };
 
-/** Depletes an object of all its properties. */
-export const emptyObject = (obj) => Object.keys(obj).forEach((k) => delete obj[k]);
-
 /**
 Compares two type objects by matching one or more nested properties.
 `matchObjects(objA, objB, ['fields', 'name', 'en-US'], ['contentType', 'sys', 'id'])`
 */
 export const matchObjects = (a, b, ...fields) =>
-  a === b || fields.every((field) => getProperty(a, ...field) === getProperty(b, ...field)) && !!fields.length;
-
-/**
-Finds the index of an object in an array by matching one or more nested properties.
-`objectIndex(objArray, obj, ['fields', 'name', 'en-US'], ['contentType', 'sys', 'id'])`
-*/
-export const objectIndex = (array, object, ...fields) =>
-  array.findIndex((item) => matchObjects(item, object, ...fields));
-
-/**
-Removes duplicates from an array of objects by matching one or more nested properties.
-`removeObjectDuplicates(objArray, ['fields', 'name', 'en-US'], ['contentType', 'sys', 'id'])`
-*/
-export const removeObjectDuplicates = (array, ...fields) => {
-  for (let i = array.length - 1; i > 0; i--) {
-    objectIndex(array, array[i], ...fields) < i && array.splice(i, 1);
-  }
-};
-
-/**
-Sorts an array of objects by matching one or more nested properties.
-`sortObjects(objArray, ['contentType', 'sys', 'id'], ['fields', 'name', 'en-US'])`
-*/
-export const sortObjects = (array, ...fields) => {
-  !fields.length && fields.push([]);
-  array.sort((a, b) => {
-    for (const field of fields) {
-      const aValue = String(getProperty(a, ...field) ?? a).toLowerCase();
-      const bValue = String(getProperty(b, ...field) ?? b).toLowerCase();
-      if (aValue !== bValue) {
-        return aValue < bValue ? -1 : 1;
-      }
-    }
-    return 0;
-  });
-};
+  a === b || !!fields.length && fields.every((field) => getProperty(a, ...field) === getProperty(b, ...field));
 
 /**
 Alphanumeric compare for string array sorting. Example:
