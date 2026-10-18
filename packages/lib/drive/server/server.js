@@ -32,6 +32,7 @@
   privateFolder: string;
   publicFolder: string;
   servicesFolder: string;
+  libServicesFolder: string;
   isSSL: boolean;
   cert: string | null;
   key: string | null;
@@ -57,7 +58,7 @@ import https from 'node:https';
 import net from 'node:net';
 import fs from 'node:fs';
 import pathmod from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
   environ, Log, toStr, isNul, isJso, isBin, isTra,
   UrlFun, parseArguments, fileSize, readFile, readFileStream, getDistPath,
@@ -76,7 +77,7 @@ const getFileExtension = (filename) => filename.slice(filename.lastIndexOf('.') 
 
 const getContentType = (content, defType = 'text/html') =>
   isBin(content) ? 'application/octet-stream'
-  : isTra(content) || isJso(content) ? 'application/json'
+  : Array.isArray(content) || isTra(content) || isJso(content) ? 'application/json'
   : defType;
 
 const getFileContentType = (filename, content) => {
@@ -273,6 +274,7 @@ const resolveResource = async (request) => {
   const DEFAULT_FILE = 'index', STATIC_EXT = ['.html', '.json'], SERVICE_EXT = ['.js', '.mjs', '.cjs'];
   const publicFolder = serverConfig.publicFolder;
   const servicesFolder = serverConfig.servicesFolder;
+  const libServicesFolder = serverConfig.libServicesFolder;
   const filename = urlParts.slug?.replace(/^\//, '') ?? '';
   const routePath = route.join('/');
   let filepath = safePathFromUrl(`/${routePath}/${filename}`, publicFolder) ?? '';
@@ -283,13 +285,21 @@ const resolveResource = async (request) => {
       filepath = safePathFromUrl(`/${routePath}/${DEFAULT_FILE}${STATIC_EXT[i]}`, publicFolder) ?? '';
       filesize = filepath ? fileSize(filepath) : NaN;
     }
-    if (servicesFolder && nonFileSize(filesize)) {
-      let serviceSize = NaN, servicePath = '';
-      for (let i = 0; nonFileSize(serviceSize) && i < SERVICE_EXT.length; i++) {
-        servicePath = safePathFromUrl(`/${routePath}/${DEFAULT_FILE}${SERVICE_EXT[i]}`, servicesFolder) ?? '';
-        serviceSize = servicePath ? fileSize(servicePath) : NaN;
+    if (nonFileSize(filesize)) {
+      const serviceNames = [DEFAULT_FILE, route.at(-1)].filter(Boolean);
+      for (const folder of [servicesFolder, libServicesFolder]) {
+        if (!folder) { continue; }
+        let serviceSize = NaN, servicePath = '';
+        for (const serviceName of serviceNames) {
+          for (let i = 0; nonFileSize(serviceSize) && i < SERVICE_EXT.length; i++) {
+            servicePath = safePathFromUrl(`/${routePath}/${serviceName}${SERVICE_EXT[i]}`, folder) ?? '';
+            serviceSize = servicePath ? fileSize(servicePath) : NaN;
+          }
+        }
+        if (!nonFileSize(serviceSize)) {
+          filepath = servicePath; filesize = serviceSize; isService = true; break;
+        }
       }
-      if (!nonFileSize(serviceSize)) { filepath = servicePath; filesize = serviceSize; isService = true; }
     }
   }
   if (nonFileSize(filesize)) { filepath = directFilepath; }
@@ -362,7 +372,8 @@ const resolver = async (request, response) => {
   const error = file.error ?? (isNul(file.content) ? { message: 'no content' } : null);
   const missing = !Number.isFinite(resource.filesize) || resource.filesize < 0 || error?.code === 'ENOENT';
   const status = !error ? 200 : missing ? 404 : 500; // @ts-expect-error:
-  const body = error?.message ?? (file.content?.pipe || file.content?.slice ? file.content : toStr(file.content));
+  const content = Array.isArray(file.content) ? toStr(file.content) : file.content;
+  const body = error?.message ?? (content?.pipe || content?.slice ? content : toStr(content));
   const headers = { 'content-type': file.type };
   request.info = { main: isMainRequest(request, resource, headers) };
   responder(response, status, headers, body);
@@ -375,6 +386,7 @@ const resolveConfig = (config) => {
   const privateFolder = getDistPath(UrlFun.resolvePath(baseFolder, config.privateDir));
   const publicFolder = getDistPath(UrlFun.resolvePath(baseFolder, config.publicDir));
   const servicesFolder = config.servicesDir ? getDistPath(UrlFun.resolvePath(baseFolder, config.servicesDir)) : '';
+  const libServicesFolder = getDistPath(fileURLToPath(new URL('../services/', import.meta.url)));
   const isSSL = ['https', 'wss', 'ftps'].includes(config.protocol);
 
   return {
@@ -383,6 +395,7 @@ const resolveConfig = (config) => {
     privateFolder,
     publicFolder,
     servicesFolder,
+    libServicesFolder,
     isSSL,
     cert: isSSL ? fs.readFileSync(privateFolder + config.sslCert, 'utf-8') : null,
     key: isSSL ? fs.readFileSync(privateFolder + config.sslKey, 'utf-8') : null,

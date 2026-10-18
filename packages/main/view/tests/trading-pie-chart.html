@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trading 212 Pie Comparison - Yahoo Finance</title>
+<script>
+const clear = (o) => Object.keys(o ?? {}).forEach((k) => delete o[k]);
+const toBoolean = (v) => !!v &&
+  !/^(|0|!1|f(alse)?|n(ull|an|o|one|il|\/a)?|undef(ined)?|off|disabled|-|''|""|\[]|{})$/i.test(v.trim?.() ?? 1);
+const resolveParams = () => {
+  const params = new URLSearchParams(location.search), theme = params.get('theme');
+  const currency = (params.get('currency') ?? '').trim(), refresh = (params.get('refresh') ?? '').trim();
+  const rawRefresh = /(?:^|[?&])refresh=([^&]*)/.exec(location.search)?.[1] ?? ''; // URLSearchParams turns a plain + into a space, so read the raw text
+  return {
+    theme: theme === 'light' || theme === 'dark' ? theme : matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
+    log: toBoolean(params.get('log')),
+    refresh: Math.abs(parseFloat(refresh)) || 0, // minutes
+    includeZeros: /^(\+|%2b)/i.test(rawRefresh), // a leading + (+5, %2B5, or just +) also queries and shows zero-weight holdings
+    currency: /^[a-z]{3}$/i.test(currency) ? currency.toUpperCase() : 'GBP', // USD, EUR, GBP
+  };
+};
+const urlParams = resolveParams();
+const CURRENCY = urlParams.currency;
+const log = urlParams.log ? console.log : () => {};
+document.documentElement.dataset.theme = urlParams.theme;
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root { --bg:#fff; --fg:#1b1b1f; --mut:#6b6b76; --line:#dcdce2; --card:#f6f6f9; --acc:#2563eb; }
+  :root[data-theme=dark] { --bg:#16161a; --fg:#ececf1; --mut:#9a9aa6; --line:#34343c; --card:#1f1f25; --acc:#60a5fa; color-scheme:dark; }
+  * { box-sizing: border-box; }
+  body { margin:0; padding:20px; background:var(--bg); color:var(--fg); font:15px/1.45 system-ui, sans-serif; max-width:1000px; margin-inline:auto; }
+  h1 { font-size:20px; margin:0 0 4px; } .sub { color:var(--mut); margin-bottom:16px; }
+  .grid { display:grid; grid-template-columns:repeat(6, minmax(0, 1fr)); gap:8px; } @media (max-width:700px){ .grid{grid-template-columns:1fr;} }
+  label { display:block; font-size:12px; color:var(--mut); margin:8px 0 3px; }
+  textarea, input, select { width:100%; background:var(--card); color:var(--fg); border:1px solid var(--line); border-radius:8px; padding:8px; font:13px ui-monospace, monospace; }
+  textarea { height:215px; resize:vertical; }
+  .row { display:flex; gap:12px; flex-wrap:wrap; align-items:end; margin-top:6px; } .row > div { flex:1; min-width:140px; }
+  .row > .fit { flex:0 0 auto; min-width:0; }
+  button { background:var(--acc); color:#fff; border:0; border-radius:8px; padding:10px 18px; font-size:14px; cursor:pointer; }
+  button:disabled { opacity:.5; }
+  #status { margin:12px 0; color:var(--mut); font-size:13px; white-space:pre-wrap; }
+  #status.err { color:#c2410c; }
+  :root[data-theme=dark] #status.err { color:#fb923c; }
+  .chartbox { position:relative; height:380px; background:var(--card); border-radius:12px; padding:10px; margin:10px 0; }
+  .chartbox canvas { touch-action:none; }
+  .tablewrap { overflow-x:auto; } table { border-collapse:collapse; width:100%; font-size:13px; margin:8px 0 16px; }
+  th, td { text-align:right; padding:6px 10px; border-bottom:1px solid var(--line); } th:first-child, td:first-child { text-align:left; }
+  .pos { color:#16a34a; } .neg { color:#dc2626; } .zero { color:var(--mut); }
+  small { color:var(--mut); }
+  .center { text-align:center; }
+  .mkt-open { color:#15803d; } .mkt-closed { color:#b91c1c; }
+  :root[data-theme=dark] .mkt-open { color:#4ade80; } :root[data-theme=dark] .mkt-closed { color:#f87171; }
+  span[id^="_"] { color:#c2410c; }
+  :root[data-theme=dark] span[id^="_"] { color:#fb923c; }
+</style>
+</head>
+<body>
+<h1>Trading 212 Pie Comparison (<span class="ccy">GBP</span>) - Yahoo Finance</h1>
+<div class="sub">All values converted to <span class="ccy">GBP</span>, shown as a ratio starting at 1. Same dates for every holding.</div>
+
+<div class="grid">
+  <div><label>P0 [ticker %]</label>
+    <textarea id="p0">
+* VUAG.L 1%
+VWRP.L 1%
+VALL.L 1%
+VUAA.L 1%
+WLDS.L 1%
+VDPG.L 1%
+LCJG.L 1%
+FLXC.L 1%
+IRSA.L 1%
+    </textarea>
+  </div>
+  <div><label>P1 [ticker %]</label>
+    <textarea id="p1">
+SBUX 68%
+MCD 24%
+V 12% # *
+# JPM 1% # 50
+NVO 1%
+AAPL 1%
+MSFT 1%
+GOOGL 1%
+NVDA 1%
+* JNJ 1%
+SHOP 1%
+    </textarea>
+  </div>
+  <div><label>P2 [ticker %]</label>
+    <textarea id="p2">
+BARC.L 1%
+* HSBA.L 1%
+AZN.L 1%
+SHEL.L 1%
+OR.PA 1%
+MC.PA 1%
+OREGE.PA 1%
+SAP.DE 1%
+SIE.DE 1%
+ALV.DE 1%
+ROG.SW 1%
+PRX.AS 1%
+ASML.AS 1%
+ABI.BR 1%
+KBC.BR 1%
+UCB.BR 1%
+RACE.MI 1%
+ENEL.MI 1%
+ISP.MI 1%
+ITX.MC 1%
+IBE.MC 1%
+SAN.MC 1%
+EDP.LS 1%
+GALP.LS 1%
+RYA.IR 1%
+EQNR 1%
+INVE.ST 1%
+NOKIA.HE 1%
+NDA-FI.HE 1%
+SAMPO.HE 1%
+    </textarea>
+  </div>
+  <div><label>P3 [ticker %]</label>
+    <textarea id="p3">
+* TEVA 1%
+189A.F 1%
+ARBK 1%
+FAB 1%
+    </textarea>
+  </div>
+  <div><label>P4 [ticker %]</label>
+    <textarea id="p4">
+* TM 1%
+BABA 1%
+SONY 1%
+TCEHY 1%
+BYDDY 1%
+TSM 1%
+SSU.F 1%
+DBSDY 1%
+HNHPF 1%
+BHP 1%
+FPH 1%
+    </textarea>
+  </div>
+  <div><label>P5 [ticker %]</label>
+    <textarea id="p5">
+* SBUX 1%
+OREGE.PA 1%
+TEVA 1%
+TM 1%
+    </textarea>
+  </div>
+</div>
+
+<div class="row">
+  <div><label>Period</label>
+    <select id="period">
+      <option value="2">Day (prev close to latest)</option>
+      <option value="6">Week (5 trading days)</option>
+      <option value="22">Month (21 trading days)</option>
+      <option value="253">Year (252 trading days)</option>
+    </select></div>
+  <div><label>Pie behaviour</label>
+    <select id="mode"><option value="bh">Buy and hold</option><option value="rb">Rebalanced daily</option></select></div>
+  <div class="fit"><button id="go">Update</button></div>
+</div>
+
+<div id="status"></div>
+<div class="chartbox"><canvas id="chart"></canvas></div>
+<div id="out"></div>
+
+<div id="stock_locations">
+  <pre>
+
+<b>Stock Exchange codes and UTC times</b>
+
+🍁 North & South America
+
+<span id="__US">(US)</span> NYSE / Nasdaq (United States) <span class="opening_times">14:30-21:00</span>
+<span id="_PK">.PK</span> US Pink Sheets / OTC Markets <span class="opening_times">14:30-21:00</span>
+<span id="_TO">.TO</span> Toronto Stock Exchange (Canada) <span class="opening_times">14:30-21:00</span>
+<span id="_V">.V</span> TSX Venture Exchange (Canada) <span class="opening_times">14:30-21:00</span>
+<span id="_MX">.MX</span> Bolsa Mexicana de Valores (Mexico) <span class="opening_times">14:30-21:00</span>
+<span id="_SA">.SA</span> B3 / São Paulo Stock Exchange (Brazil) <span class="opening_times">13:00-20:00</span>
+<span id="_SN">.SN</span> Santiago Stock Exchange (Chile) <span class="opening_times">13:30-20:00</span>
+<span id="_BA">.BA</span> Buenos Aires Stock Exchange (Argentina) <span class="opening_times">14:00-20:00</span>
+
+🌍 Europe
+
+<span id="_L">.L</span> London Stock Exchange (UK) <span class="opening_times">08:00-16:30</span>
+<span id="_IR">.IR</span> Euronext Dublin (Ireland) <span class="opening_times">08:00-16:30</span>
+<span id="_PA">.PA</span> Euronext Paris (France) <span class="opening_times">08:00-16:30</span>
+<span id="_DE">.DE</span> Xetra / Frankfurt Stock Exchange (Germany) <span class="opening_times">08:00-16:30</span>
+<span id="_SW">.SW</span> SIX Swiss Exchange (Switzerland) <span class="opening_times">08:00-16:30</span>
+<span id="_AS">.AS</span> Euronext Amsterdam (Netherlands) <span class="opening_times">08:00-16:30</span>
+<span id="_MI">.MI</span> Borsa Italiana / Milan (Italy) <span class="opening_times">08:00-16:30</span>
+<span id="_MC">.MC</span> Bolsa de Madrid (Spain) <span class="opening_times">08:00-16:30</span>
+<span id="_BR">.BR</span> Euronext Brussels (Belgium) <span class="opening_times">08:00-16:30</span>
+<span id="_LS">.LS</span> Euronext Lisbon (Portugal) <span class="opening_times">08:00-16:30</span>
+<span id="_OL">.OL</span> Oslo Stock Exchange (Norway) <span class="opening_times">08:00-16:30</span>
+<span id="_ST">.ST</span> Nasdaq Stockholm (Sweden) <span class="opening_times">08:00-16:30</span>
+<span id="_CO">.CO</span> Nasdaq Copenhagen (Denmark) <span class="opening_times">08:00-16:30</span>
+<span id="_HE">.HE</span> Nasdaq Helsinki (Finland) <span class="opening_times">08:00-16:30</span>
+
+🗺️ Eastern Europe, Eurasia & Middle East
+
+<span id="_WA">.WA</span> Warsaw Stock Exchange (Poland) <span class="opening_times">08:00-15:50</span>
+<span id="_PR">.PR</span> Prague Stock Exchange (Czech Republic) <span class="opening_times">08:00-15:20</span>
+<span id="_BU">.BU</span> Budapest Stock Exchange (Hungary) <span class="opening_times">08:00-16:00</span>
+<span id="_RO">.RO</span> Bucharest Stock Exchange (Romania) <span class="opening_times">07:45-15:00</span>
+<span id="_IS">.IS</span> Borsa Istanbul (Turkey) <span class="opening_times">07:00-15:00</span>
+<span id="_ME">.ME</span> Moscow Exchange / MOEX (Russia) <span class="opening_times">06:00-16:00</span>
+<span id="_KZ">.KZ</span> Kazakhstan Stock Exchange / KASE (Kazakhstan) <span class="opening_times">06:30-12:30</span>
+<span id="_KV">.KV</span> Ukraine Stock Exchange / UX (Ukraine) <span class="opening_times">08:00-14:15</span>
+<span id="_TA">.TA</span> Tel Aviv Stock Exchange (Israel) <span class="opening_times">07:59-14:14</span> (Mon-Thu, Fri -10:34)
+<span id="_SR">.SR</span> Saudi Exchange / Tadawul (Saudi Arabia) <span class="opening_times">07:00-12:00</span> (Sun-Thu)
+<span id="_AD">.AD</span> Abu Dhabi Securities Exchange / ADX (UAE) <span class="opening_times">06:00-10:45</span>
+
+🌏 Asia & Oceania
+
+<span id="_T">.T</span> Tokyo Stock Exchange (Japan) <span class="opening_times">00:00-06:30</span> (Break: 02:30-03:30)
+<span id="_HK">.HK</span> Hong Kong Stock Exchange (Hong Kong) <span class="opening_times">01:30-08:00</span> (Break: 04:00-05:00)
+<span id="_SS">.SS</span> Shanghai Stock Exchange (China) <span class="opening_times">01:30-07:00</span> (Break: 03:30-05:00)
+<span id="_SZ">.SZ</span> Shenzhen Stock Exchange (China) <span class="opening_times">01:30-07:00</span> (Break: 03:30-05:00)
+<span id="_TW">.TW</span> Taiwan Stock Exchange (Taiwan) <span class="opening_times">01:00-05:30</span>
+<span id="_NS">.NS</span> National Stock Exchange of India (India) <span class="opening_times">03:45-10:00</span>
+<span id="_BO">.BO</span> Bombay Stock Exchange (India) <span class="opening_times">03:45-10:00</span>
+<span id="_KS">.KS</span> Korea Stock Exchange (South Korea) <span class="opening_times">00:00-06:30</span>
+<span id="_KQ">.KQ</span> KOSDAQ (South Korea) <span class="opening_times">00:00-06:30</span>
+<span id="_SI">.SI</span> Singapore Exchange (Singapore) <span class="opening_times">01:00-09:00</span> (Break: 04:00-05:00)
+<span id="_AX">.AX</span> Australian Securities Exchange (Australia) <span class="opening_times">00:00-06:00</span>
+<span id="_NZ">.NZ</span> New Zealand Exchange (New Zealand) <span class="opening_times">21:00-03:45</span> (Prev day)
+  </pre>
+</div>
+
+<div class="center"><small>Prices come from Yahoo Finance's public chart endpoint through the local proxy. Adjusted closes are used where available. For information only, not advice.</small></div>
+<div class="center"><small>&copy; Javier Rey</small></div>
+
+<script>
+// packages/main/view/tests/trading-pie-chart.html
+// http://localhost:3000/tests/trading-pie-chart.html?log=1&theme=dark&refresh=+5&currency=gbp
+// _@ts-check
+
+const $ = (id) => document.getElementById(id);
+document.title = document.title.replace('(GBP)', `(${CURRENCY})`);
+document.querySelectorAll('.ccy').forEach((el) => { el.textContent = CURRENCY; });
+
+// highlight each exchange's UTC trading hours green while open, red while closed (times only, no weekdays)
+const checkMarketHours = () => {
+  const now = new Date(), nowMin = now.getUTCHours() * 60 + now.getUTCMinutes();
+  document.querySelectorAll('span.opening_times').forEach((el) => {
+    const m = el.textContent.match(/(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})/);
+    if (!m) return;
+    const start = +m[1] * 60 + +m[2], end = +m[3] * 60 + +m[4];
+    const open = start <= end ? nowMin >= start && nowMin < end : nowMin >= start || nowMin < end; // end < start: crosses midnight (.NZ)
+    el.classList.toggle('mkt-open', open);
+    el.classList.toggle('mkt-closed', !open);
+  });
+};
+const PALETTES = {
+  light: ['#6b7280', '#2563eb', '#c2410c', '#15803d', '#7e22ce', '#0f766e'],
+  dark: ['#9ca3af', '#60a5fa', '#fb923c', '#4ade80', '#c084fc', '#2dd4bf'],
+};
+const colors = () => PALETTES[document.documentElement.dataset.theme];
+const PIE_IDS = ['p0', 'p1', 'p2', 'p3', 'p4', 'p5'];
+let chart;
+const applyColors = () => {
+  const palette = colors();
+  PIE_IDS.forEach((id, i) => { $(id).previousElementSibling.style.color = palette[i]; });
+  document.querySelectorAll('[data-pie]').forEach((el) => { el.style.color = palette[PIE_IDS.indexOf(el.dataset.pie)]; });
+  if (!chart) return;
+  chart.data.datasets.forEach((d) => { d.borderColor = d.backgroundColor = palette[PIE_IDS.indexOf(d.label)]; });
+  chart.update();
+};
+applyColors();
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+  document.documentElement.dataset.theme = resolveParams().theme;
+  applyColors();
+});
+let tooltipPressed = false;
+const chartCanvas = $('chart');
+
+const updatePressedTooltip = (event) => {
+  if (!chart || !tooltipPressed) return;
+  const active = chart.getElementsAtEventForMode(event, 'index', { intersect: false }, false);
+  const position = Chart.helpers.getRelativePosition(event, chart);
+  chart.tooltip.setActiveElements(active, position);
+  chart.update('none');
+};
+
+const clearPressedTooltip = () => {
+  tooltipPressed = false;
+  if (!chart) return;
+  chart.tooltip.setActiveElements([], { x: 0, y: 0 });
+  chart.update('none');
+};
+
+chartCanvas.addEventListener('pointerdown', (event) => {
+  if (event.pointerType === 'mouse' && event.button !== 0) return;
+  tooltipPressed = true;
+  chartCanvas.setPointerCapture(event.pointerId);
+  updatePressedTooltip(event);
+});
+chartCanvas.addEventListener('pointermove', updatePressedTooltip);
+chartCanvas.addEventListener('pointerup', clearPressedTooltip);
+chartCanvas.addEventListener('pointercancel', clearPressedTooltip);
+chartCanvas.addEventListener('lostpointercapture', clearPressedTooltip);
+
+// persist settings between visits
+const saved = (id) => { try { return localStorage.getItem('t212_'+id); } catch(e) { return null; } };
+for (const id of [...PIE_IDS, 'period', 'mode']) {
+  const v = saved(id);
+  if (v !== null) $(id).value = v;
+  $(id).addEventListener('change', () => { try { localStorage.setItem('t212_'+id, $(id).value); } catch(e) {} });
+}
+
+const setStatus = (m, err=false) => { $('status').textContent = m; $('status').className = err ? 'err' : ''; };
+
+// split a pie line into [ticker, weight, ...]; an inline # comment is cut off and quote characters (straight or curly) are dropped, e.g. "AAPL","16" # note -> AAPL 16
+const splitLine = (l) => l.replace(/#.*/, '').replace(/["'`\u2018\u2019\u201C\u201D]/g, '').trim().split(/[\s,;:]+/);
+const noteOf = (l) => { const i = l.indexOf('#'); return i < 0 ? '' : l.slice(i).trim(); }; // the inline comment, as written
+
+// a line starting with # is a comment (so is a * with no ticker after it): kept in the textarea as written, ignored by everything else
+const isComment = (l) => { const t = l.trim(); return t.startsWith('#') || (t.startsWith('*') && !splitLine(t.replace(/^\*+/, ''))[0]); };
+
+// a line starting with * (and having a ticker) is the pie's only holding, at 100%; the first one counts, every other line is ignored
+const starOf = (txt) => txt.split('\n').map((l) => l.trim()).find((l) => l.startsWith('*') && splitLine(l.replace(/^\*+/, ''))[0]);
+
+const parsePie = (txt) => {
+  const star = starOf(txt);
+  if (star) {
+    const [t, w] = splitLine(star.replace(/^\*+/, ''));
+    return [{ t: t.toUpperCase(), w: 1, rawW: parseFloat(w) || 0, note: noteOf(star) }];
+  }
+  const rows = txt.split('\n').map((l) => l.trim()).filter((l) => l && !isComment(l)).map((l) => {
+    const [t, w] = splitLine(l); return [t.toUpperCase(), parseFloat(w) || 0, noteOf(l)]; // a missing/non-numeric weight counts as 0
+  }).filter(([t, w]) => t && w >= 0);
+  const tot = rows.reduce((s, r) => s + r[1], 0);
+  return rows.map(([t, w, note]) => ({ t, w: tot ? w / tot : 0, rawW: w, note }));
+};
+
+// the weight is the 2nd token, so dots in tickers (MC.PA) don't count; "0.0" does
+const hasDecimals = (txt) => txt.split('\n').some((l) => !isComment(l) && (splitLine(l)[1] ?? '').includes('.'));
+
+const rebalancePies = () => {
+  for (const id of PIE_IDS) {
+    const textarea = $(id);
+    if (textarea.value.trim() === '*') { // a lone * asks for the pie's HTML default text, which is then rebalanced like any pie
+      textarea.value = textarea.defaultValue;
+      try { localStorage.setItem(`t212_${id}`, textarea.value); } catch(e) {}
+    }
+    if (starOf(textarea.value)) continue; // a starred pie is not touched: the star line only overrides what the chart reads
+    const holdings = parsePie(textarea.value).sort((a, b) => b.rawW - a.rawW);
+    if (!holdings.length) continue;
+    const unitsPerPercent = hasDecimals(textarea.value) ? 1e4 : 1; // whole percents unless an input has a decimal point
+    const totalUnits = 100 * unitsPerPercent;
+    const allZero = !holdings.some(({ rawW }) => rawW > 0);
+    const exactUnits = holdings.map(({ w }) => allZero ? 0 : w * totalUnits);
+    const units = exactUnits.map(Math.floor);
+    let remaining = allZero ? 0 : totalUnits - units.reduce((sum, value) => sum + value, 0);
+    const remainderOrder = exactUnits.map((value, index) => ({ index, remainder: value - units[index] }))
+      .sort((a, b) => b.remainder - a.remainder);
+    for (let i = 0; i < remaining; i++) units[remainderOrder[i].index]++;
+    const comments = textarea.value.split('\n').map((l) => l.trim()).filter((l) => l.startsWith('#')); // moved after the rebalanced lines, as written; bare * lines are dropped
+    textarea.value = [...holdings.map(({ t, note }, index) => `${t} ${Number((units[index] / unitsPerPercent).toFixed(4))}%${note ? ' ' + note : ''}`), ...comments].join('\n');
+    try { localStorage.setItem(`t212_${id}`, textarea.value); } catch(e) {}
+  }
+};
+
+const cache = {};
+
+// prices quoted in another currency are converted with the CURRENCY+ccy pair (units of ccy per 1 CURRENCY), e.g. GBPUSD=X
+const fxCcys = ['GBP', 'USD', 'EUR'].filter((c) => c !== CURRENCY);
+const fxSym = (c) => `${CURRENCY}${c}=X`;
+// price quoted in ccy -> CURRENCY (pence count as GBP/100); rate(c) gives that pair's rate, or a falsy value if unknown
+const toBase = (price, ccy, rate) => {
+  const pence = ccy === 'GBp' || ccy === 'GBX', c = pence ? 'GBP' : ccy, p = pence ? price / 100 : price;
+  if (c === CURRENCY) return p;
+  const r = rate(c);
+  return r ? p / r : null;
+};
+const viaProxy = async (url) => {
+  let response; const proxy = '/proxy?url=', ac = new AbortController(), to = setTimeout(() => ac.abort(), 12000);
+  try { response = await fetch(`${proxy}${encodeURIComponent(url)}`, { signal: ac.signal }); }
+  finally { clearTimeout(to); }
+  if (!response.ok) throw new Error(`Local proxy HTTP ${response.status}`);
+  const data = await response.json();
+  if (data && data.chart) return data;
+  throw new Error('Unexpected response from local proxy');
+};
+
+const pool = async (items, n, fn) => {
+  const q = [...items];
+  await Promise.all(Array.from({ length: n }, async () => { while (q.length) await fn(q.shift()); }));
+};
+
+const dayOf = (t, off) => new Date((t + off) * 1000).toISOString().slice(0, 10);
+
+// shared source provider chart request: returns the first result and its exchange timezone offset
+const fetchChart = async (sym, range, interval, noData) => {
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?range=${range}&interval=${interval}`;
+  let j; try { j = await viaProxy(url); } catch (e) { throw new Error(`${sym}: ${e.message}`); }
+  log(`${sym} ${range}/${interval}`, j); // @show/hide
+  const res = j.chart.result && j.chart.result[0];
+  if (!res || !res.timestamp) throw new Error(`${sym}: ${noData}`);
+  return { res, off: res.meta.gmtoffset || 0 };
+};
+
+const fetchSeries = async (sym) => {
+  const { res, off } = await fetchChart(sym, '2y', '1d', 'no data (check the ticker)');
+  const px = (res.indicators.adjclose && res.indicators.adjclose[0].adjclose) || res.indicators.quote[0].close;
+  const m = new Map(); res.timestamp.forEach((t, i) => { if (px[i] != null) m.set(dayOf(t, off), px[i]); });
+  // The source provider sometimes returns an empty latest daily bar (seen on .PA/.AS) while meta still holds that day's price
+  const { regularMarketPrice: last, regularMarketTime: lastTime } = res.meta;
+  if (last != null && lastTime) {
+    const day = dayOf(lastTime, off);
+    if (!m.has(day) && day === dayOf(res.timestamp.at(-1), off)) m.set(day, last);
+  }
+  // The source provider also leaves recent past daily bars empty (seen on .L): approximate them with that day's last 30m price
+  const latestDay = dayOf(res.timestamp.at(-1), off);
+  const gaps = res.timestamp.slice(-5).map((t) => dayOf(t, off)).filter((d) => d < latestDay && !m.has(d));
+  if (gaps.length) {
+    const intraday = await fetchIntradaySeries(sym).catch(() => null);
+    for (const d of gaps) {
+      const lastOfDay = intraday && [...intraday.m.values()].filter((q) => q.day === d).at(-1);
+      if (lastOfDay) m.set(d, lastOfDay.price);
+    }
+  }
+  return { ccy: res.meta.currency, m };
+};
+
+const fetchIntradaySeries = async (sym) => {
+  const { res, off } = await fetchChart(sym, '5d', '30m', 'no intraday data');
+  const close = res.indicators.quote[0].close, m = new Map();
+  res.timestamp.forEach((t, i) => {
+    if (close[i] != null) m.set(new Date(t * 1000).toISOString(), { price: close[i], day: dayOf(t, off) });
+  });
+  return { ccy: res.meta.currency, m };
+};
+
+const intradayAt = (series, time) => {
+  let price = null;
+  for (const [stamp, quote] of series.m) {
+    if (stamp > time) break;
+    price = quote.price;
+  }
+  return price;
+};
+
+// forward-fill an fx map over the given sorted dates
+const ffill = (m, dates) => {
+  const out = new Map(); let last = null;
+  const keys = [...m.keys()].sort(); let k = 0;
+  for (const d of dates) {
+    while (k < keys.length && keys[k] <= d) { last = m.get(keys[k]); k++; }
+    out.set(d, last);
+  }
+  return out;
+};
+
+const run = async () => {
+  const palette = colors();
+  const allPies = PIE_IDS.map((id, i) => {
+    const h = parsePie($(id).value);
+    return { name: id, color: palette[i], h: urlParams.includeZeros ? h : h.filter((x) => x.w > 0) };
+  }).filter((p) => p.h.some((x) => x.w > 0)); // all-zero pies count as empty
+  if (!allPies.length) return setStatus('Add some holdings first.', true);
+
+  const syms = [...new Set(allPies.flatMap((p) => p.h.map((x) => x.t)))];
+  const all = [...syms, ...fxCcys.map(fxSym)];
+  const data = cache; // survives between clicks: only missing series are fetched again
+  const need = all.filter((s) => !data[s]);
+  setStatus(`Have ${all.length - need.length} of ${all.length} series cached. Fetching ${need.length}...`);
+  const failed = [];
+  const loadSeries = async (s) => {
+    for (let a = 0; ; a++) {
+      try { return await fetchSeries(s); }
+      catch (e) { if (a === 1) throw e; await new Promise((r) => setTimeout(r, 1500)); }
+    }
+  };
+  await pool(need, 3, async (s) => {
+    try { data[s] = await loadSeries(s); }
+    catch (e) {
+      const base = s.replace(/\.[A-Za-z]{1,3}$/, ''); // SONY.T -> SONY
+      if (base === s) return failed.push(e.message);
+      try { data[s] = { ...await fetchSeries(base), via: base }; }
+      catch { failed.push(`${e.message} (also tried ${base})`); }
+    }
+  });
+  if (failed.length) return setStatus('Some requests failed:\n' + failed.join('\n') +
+    '\n\nCheck that the local server proxy is running.', true);
+
+  const unionDates = [...new Set(syms.flatMap((s) => [...data[s].m.keys()]))].sort();
+  const fx = Object.fromEntries(fxCcys.map((c) => [c, ffill(data[fxSym(c)].m, unionDates)]));
+  const inBase = {};
+  for (const s of syms) {
+    const { ccy, m } = data[s], g = new Map();
+    for (const [d, p] of m) {
+      const v = toBase(p, ccy, (c) => fx[c]?.get(d));
+      if (v != null) g.set(d, v);
+    }
+    inBase[s] = new Map([...ffill(g, unionDates)].filter(([, v]) => v != null));
+  }
+
+  const commonDates = (tickers) => unionDates.filter((d) => tickers.every((s) => inBase[s].has(d)));
+  const pies = allPies.filter((p) => commonDates(p.h.map((x) => x.t)).length >= 2);
+  const skipped = allPies.filter((p) => !pies.includes(p)).map((p) => {
+    const bad = p.h.filter((x) => inBase[x.t].size < 2).map((x) => x.t);
+    return bad.length ? `${p.name} (${bad.join(', ')})` : p.name;
+  });
+  if (!pies.length) return setStatus(`Not enough common trading dates for these tickers: ${skipped.join('; ')}.`, true);
+
+  const used = [...new Set(pies.flatMap((p) => p.h.map((x) => x.t)))];
+  const usedAll = [...used, ...fxCcys.map(fxSym)];
+  let dates = commonDates(used);
+  const N = parseInt($('period').value, 10);
+  dates = dates.slice(-N);
+  if (dates.length < 2) return setStatus('Not enough common trading dates for these tickers.', true);
+
+  let intradaySamples = 0;
+  if (N === 2 && dates.length === 2) {
+    setStatus('Fetching intraday prices between the last two days...');
+    const intraday = {}, intradayFailed = [];
+    await pool(usedAll, 3, async (sym) => {
+      try { intraday[sym] = await fetchIntradaySeries(data[sym].via ?? sym); }
+      catch (e) { intradayFailed.push(`${sym}: ${e.message}`); }
+    });
+    if (!intradayFailed.length) {
+      const timestampsForDay = (day) => usedAll.flatMap((sym) =>
+        [...intraday[sym].m].filter(([, quote]) => quote.day === day).map(([stamp]) => stamp));
+      const previousTimes = timestampsForDay(dates[0]), latestTimes = timestampsForDay(dates[1]);
+      const startTime = previousTimes.sort().at(-1), endTime = latestTimes.sort().at(-1);
+      const candidates = startTime && endTime
+        ? [...new Set(usedAll.flatMap((sym) => [...intraday[sym].m.keys()]))]
+          .filter((stamp) => stamp > startTime && stamp < endTime).sort()
+        : [];
+      const sampleCount = [11, 5].find((n) => candidates.length >= n) || 0; // prefer 11 samples, else 5
+      if (sampleCount) {
+        const sampleTimes = Array.from({ length: sampleCount }, (_, k) =>
+          candidates[Math.floor((k + 1) * candidates.length / (sampleCount + 1))]);
+        const sampleLabels = sampleTimes.map((stamp) => new Date(stamp).toLocaleString(undefined, {
+          month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
+        }));
+        const dayLabels = [`${dates[0]} close`, ...sampleLabels, `${dates[1]} latest`];
+        const valueAt = (sym, stamp) => {
+          const price = intradayAt(intraday[sym], stamp);
+          if (price == null) return null;
+          return toBase(price, intraday[sym].ccy, (c) => intraday[fxSym(c)] && intradayAt(intraday[fxSym(c)], stamp));
+        };
+        const sampledValues = Object.fromEntries(used.map((sym) => [sym, [
+          inBase[sym].get(dates[0]),
+          ...sampleTimes.map((stamp) => valueAt(sym, stamp)),
+          inBase[sym].get(dates[1]),
+        ]]));
+        if (Object.values(sampledValues).every((values) => values.every(Number.isFinite))) {
+          dates = dayLabels;
+          for (const sym of used) {
+            inBase[sym] = new Map(dates.map((label, index) => [label, sampledValues[sym][index]]));
+          }
+          intradaySamples = sampleCount;
+        }
+      }
+    }
+  }
+  const unavailableNote = N === 2 && !intradaySamples ? ' (intraday data unavailable)' : ''; // only Day mode uses intraday prices
+  const skippedNote = skipped.length ? `\nNot charted (not enough common trading dates): ${skipped.join('; ')}.` : '';
+  const viaNote = used.filter((s) => data[s].via).map((s) => `${s} (used ${data[s].via})`);
+  const fallbackNote = viaNote.length ? `\nNo data for the market symbol, used the plain symbol instead: ${viaNote.join(', ')}.` : '';
+  setStatus(`Window: ${dates[0]} to ${dates[dates.length - 1]}${unavailableNote}.${skippedNote}${fallbackNote}`, skipped.length > 0);
+
+  const rebal = $('mode').value === 'rb';
+  const curves = pies.map((p) => {
+    const v = [1];
+    for (let i = 1; i < dates.length; i++) {
+      if (rebal && !intradaySamples) {
+        const r = p.h.reduce((s, x) => s + x.w * (inBase[x.t].get(dates[i]) / inBase[x.t].get(dates[i - 1]) - 1), 0);
+        v.push(v[i - 1] * (1 + r));
+      } else {
+        v.push(p.h.reduce((s, x) => s + x.w * inBase[x.t].get(dates[i]) / inBase[x.t].get(dates[0]), 0));
+      }
+    }
+    return v;
+  });
+
+  // chart
+  if (chart) chart.destroy();
+  chart = new Chart($('chart'), {
+    type: 'line',
+    data: { labels: dates, datasets: pies.map((p, i) => ({
+      label: p.name, data: curves[i], borderColor: p.color, backgroundColor: p.color,
+      borderWidth: 2, pointRadius: dates.length > 60 ? 0 : 3, tension: .15 })) },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      events: [],
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        title: { display: true, text: `Growth of 1 (${CURRENCY})` },
+        tooltip: { animation: { duration: 0 }, animations: { opacity: { duration: 0 } }, callbacks: {
+          label: (c) => `${c.dataset.label}: ${c.parsed.y.toFixed(4)} (${((c.parsed.y - 1) * 100).toFixed(2)}%)`,
+          labelTextColor: (c) => c.parsed.y < 1 ? '#f87171' : '#4ade80' } }
+      },
+      scales: { y: { title: { display: true, text: 'Ratio to start' } } } }
+  });
+
+  // stats
+  const pct = (x) => (x * 100).toFixed(2) + '%', cls = (x) => x >= 0 ? 'pos' : 'neg';
+  const stat = (v) => {
+    let peak = v[0], mdd = 0; v.forEach((x) => { peak = Math.max(peak, x); mdd = Math.min(mdd, x / peak - 1); });
+    const r = v.slice(1).map((x, i) => x / v[i] - 1);
+    const mean = r.reduce((a, b) => a + b, 0) / r.length;
+    const sd = Math.sqrt(r.reduce((a, b) => a + (b - mean) ** 2, 0) / Math.max(1, r.length - 1));
+    return { tot: v[v.length - 1] - 1, mdd, vol: r.length >= 20 ? sd * Math.sqrt(252) : null,
+             worst: Math.min(...r), sharpe: r.length >= 20 && sd ? mean / sd * Math.sqrt(252) : null };
+  };
+  let html = `<div class="tablewrap"><table><tr><th>Pie</th><th>Return</th><th>Max drawdown</th><th>Worst day</th><th>Ann. volatility</th><th>Sharpe (rf=0)</th></tr>`;
+  pies.forEach((p, i) => { const s = stat(curves[i]);
+    html += `<tr><td data-pie="${p.name}" style="color:${p.color}">${p.name}</td><td class="${cls(s.tot)}">${pct(s.tot)}</td><td>${pct(s.mdd)}</td><td>${pct(s.worst)}</td>` +
+            `<td>${s.vol == null ? 'n/a (short window)' : pct(s.vol)}</td><td>${s.sharpe == null ? 'n/a' : s.sharpe.toFixed(2)}</td></tr>`; });
+  html += `</table></div>`;
+  pies.forEach((p) => {
+    html += `<b data-pie="${p.name}" style="color:${p.color}">${p.name}: holdings over the window</b><div class="tablewrap"><table><tr><th>Ticker</th><th>Growth</th><th>Weight</th><th>Contribution</th></tr>`;
+    p.h.forEach((x) => { const r = inBase[x.t].get(dates[dates.length - 1]) / inBase[x.t].get(dates[0]) - 1, c = r * x.w;
+      html += `<tr><td>${x.t}</td><td class="${cls(r)}">${(1 + r).toFixed(4)} (${pct(r)})</td><td>${(x.w * 100).toFixed(1)}%</td><td class="${x.w ? cls(c) : 'zero'}">${(1 + c).toFixed(4)} (${pct(c)})</td></tr>`; });
+    html += `</table></div>`;
+  });
+  $('out').innerHTML = html;
+};
+
+const loadAndChart = async () => {
+  checkMarketHours();
+  if (!PIE_IDS.some((id) => parsePie($(id).value).some((x) => x.w > 0))) return;
+  if ($('go').disabled) return;
+  $('go').disabled = true;
+  $('period').disabled = true;
+  $('mode').disabled = true;
+  try { await run(); } catch (e) { setStatus('Error: ' + e.message, true); }
+  $('go').disabled = false;
+  $('period').disabled = false;
+  $('mode').disabled = false;
+};
+
+const updateData = () => { if ($('go').disabled) return; rebalancePies(); loadAndChart(); };
+
+const refresh = () => {
+  loadAndChart();
+};
+
+$('period').addEventListener('change', updateData);
+$('mode').addEventListener('change', updateData);
+$('go').addEventListener('click', () => { !$('go').disabled && clear(cache); updateData(); });
+urlParams.refresh && setInterval(() => { !$('go').disabled && clear(cache); refresh(); }, urlParams.refresh * 60 * 1000);
+
+refresh();
+</script>
+</body>
+</html>

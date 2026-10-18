@@ -58,8 +58,8 @@ export const toSca = (v) => {
     : isBuf(v) ? new TextDecoder().decode(v) : v[Symbol.iterator] ? `[${v}]` : String(v);
 };
 export const toStr = (v) => isStr(v = toSca(v)) ? v : String(v ?? '');
-export const toBoo = (v) => !!v && !(isArr(v) && !v.length && !v.size) && !(isObj(v) && isEmp(v))
-  && !['null', 'undefined', 'NaN', 'false', '0', '!1', "''", '""', '[]', '{}'].includes(v);
+export const toBoo = (v) => !!v && !(isArr(v) && !v.length && !v.size) && !(isObj(v) && isEmp(v)) &&
+  !/^(|0|!1|f(alse)?|n(ull|an|o|one|il|\/a)?|undef(ined)?|off|disabled|-|''|""|\[]|{})$/i.test(v.trim?.() ?? 1);
 export const toEmp = (v) => isArr(v) ? [] : {};
 
 /* Value and arguments parsers: */
