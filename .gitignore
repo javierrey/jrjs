@@ -32,7 +32,6 @@ yarn.lock
 ehthumbs.db
 
 !/.github/
-/.github/copilot-instructions.md
 !/.specify/
 !.storybook/
 
