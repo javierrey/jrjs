@@ -252,17 +252,24 @@ const safePathFromUrl = (urlPath, viewDir = '') => {
 };
 
 /**
-A quoted url value takes the raw query up to its closing quote (or the end), quotes stripped.
+A quoted value takes the raw query up to its closing quote (or the end), quotes stripped.
+Text between a closing quote and the next `&` is dropped. Unquoted args are parsed as usual.
 @param {string} query @param {PlainObject} params
 */
-const proxyParams = (query, params) => {
-  const open = /[?&]url=("|'|%22|%27)/i.exec(query);
-  if (!open) { return params; }
-  const start = open.index + open[0].length, close = /^("|%22)$/i.test(open[1]) ? /"|%22/i : /'|%27/i;
-  const closed = close.exec(query.slice(start)), end = closed ? start + closed.index : query.length;
-  const rest = closed ? query.slice(end + closed[0].length) : '';
-  const others = parseArguments((query.slice(0, open.index) + rest).replace(/^[?&]*/, '?'));
-  return { ...others, url: query.slice(start, end), payload: params.payload };
+const quotedUrlParams = (query, params) => {
+  if (!/=("|'|%22|%27)/i.test(query)) { return params; }
+  const quoted = {}, plain = []; let rest = query.replace(/^\?/, '');
+  while (rest) {
+    const amp = rest.indexOf('&'), eq = rest.indexOf('=');
+    const open = eq > -1 && (amp < 0 || eq < amp) ? /^("|'|%22|%27)/i.exec(rest.slice(eq + 1)) : null;
+    if (!open) { plain.push(amp < 0 ? rest : rest.slice(0, amp)); rest = amp < 0 ? '' : rest.slice(amp + 1); continue; }
+    const start = eq + 1 + open[0].length, close = /^("|%22)$/i.test(open[1]) ? /"|%22/i : /'|%27/i;
+    const closed = close.exec(rest.slice(start)), end = closed ? start + closed.index : rest.length;
+    quoted[decodeURIComponent(rest.slice(0, eq)).trim()] = rest.slice(start, end);
+    const next = closed ? rest.indexOf('&', end + closed[0].length) : -1;
+    rest = next < 0 ? '' : rest.slice(next + 1);
+  }
+  return { ...parseArguments(`?${plain.join('&')}`), ...quoted, payload: params.payload };
 };
 
 /** Size is not from a valid file. @param {number} size @return {boolean} */
@@ -317,7 +324,8 @@ const resolveResource = async (request) => {
     }
   }
   if (nonFileSize(filesize)) { filepath = directFilepath; }
-  const params = route.at(-1) === 'proxy' && isService ? proxyParams(urlParts.query, parsedParams) : parsedParams;
+  const params = isService && route.at(-1) === 'proxy'
+    ? quotedUrlParams(urlParts.query, parsedParams) : parsedParams;
   const resource = { client, filepath, filesize, isService, params, ...urlParts };
   setClientRemarks(resource);
   return resource;

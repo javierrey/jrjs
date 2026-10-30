@@ -1,19 +1,21 @@
-// sa-server.js
-// javier.rey.eu@gmail.com
+// server.js // javier.rey.eu@gmail.com // 2026
 // Portable standalone server: static files, runnable services and a URL proxy.
-// Usage: `node sa-server.js --port=55555 --publicDir=./view --servicesDir=./services --log=false`
+// Usage: `node ./server.js --port=55555 --publicDir=./view --servicesDir=./services --log=false`
 // http://localhost:55555/proxy?url="https://query1.finance.yahoo.com/v8/finance/chart/REL.L?range=2y&interval=1d"
 // _@ts-check
 
 import http from 'node:http';
 import fs from 'node:fs';
-import path from 'node:path';
+import pathmod from 'node:path';
+import { Readable } from 'node:stream';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+
+const log = console.log;
 
 const toBoolean = (v) => !!v &&
   !/^(|0|!1|f(alse)?|n(ull|an|[o/].*)?|undef(ined)?|disabled?|off|-|''|""|\[]|{})$/i.test(v.trim?.() ?? 1);
-  
-const baseDir = path.dirname(fileURLToPath(import.meta.url));
+
+const baseDir = pathmod.dirname(fileURLToPath(import.meta.url));
 
 const args = Object.fromEntries(process.argv.slice(2).map((arg) => {
   const [key, value = 'true'] = arg.replace(/^--?/, '').split(/=(.*)/s, 2);
@@ -46,8 +48,8 @@ Object.entries(options).forEach(
   }
 );
 
-const publicRoot = path.resolve(baseDir, config.publicDir);
-const servicesRoot = path.resolve(baseDir, config.servicesDir);
+const publicRoot = pathmod.resolve(baseDir, config.publicDir);
+const servicesRoot = pathmod.resolve(baseDir, config.servicesDir);
 
 /* content types: */
 
@@ -69,7 +71,7 @@ const MAGIC_TYPES = [
   ['application/gzip', [0x1f, 0x8b]], ['application/wasm', [0x00, 0x61, 0x73, 0x6d]],
 ];
 
-const typeByExt = (file) => EXT_TYPES[path.extname(file).slice(1).toLowerCase()];
+const typeByExt = (file) => EXT_TYPES[pathmod.extname(file).slice(1).toLowerCase()];
 
 const isJsonText = (text) => { try { JSON.parse(text); return true; } catch { return false; } };
 
@@ -80,7 +82,8 @@ const sniffType = (content) => {
     if (magic) { return magic[0]; }
     const head = Buffer.from(content.subarray(0, 12)).toString('latin1');
     if (head.startsWith('RIFF') && head.slice(8) === 'WEBP') { return 'image/webp'; }
-    return content.subarray(0, 512).includes(0) ? 'application/octet-stream' : sniffType(Buffer.from(content).toString());
+    return content.subarray(0, 512).includes(0)
+      ? 'application/octet-stream' : sniffType(Buffer.from(content).toString());
   }
   if (typeof content === 'object') { return 'application/json'; }
   const text = String(content).trimStart();
@@ -99,8 +102,8 @@ const withCharset = (type) =>
 const statOf = (file) => { try { return fs.statSync(file); } catch { return null; } };
 
 const safeJoin = (root, urlPath) => {
-  const target = path.join(root, path.normalize('/' + urlPath));
-  return target === root || target.startsWith(root + path.sep) ? target : null;
+  const target = pathmod.join(root, pathmod.normalize('/' + urlPath));
+  return target === root || target.startsWith(root + pathmod.sep) ? target : null;
 };
 
 const readHead = (file, size = 512) => {
@@ -134,6 +137,7 @@ const send = (req, res, status, body, type) => {
   res.setHeader('content-type', withCharset(String(ctype)));
   if (body?.pipe) {
     res.writeHead(status);
+    if (req.method === 'HEAD') { body.destroy?.(); return res.end(); }
     return body.on('error', (error) => res.destroy(error)).pipe(res);
   }
   const data = toBuffer(body);
@@ -142,7 +146,9 @@ const send = (req, res, status, body, type) => {
 };
 
 const sendFile = (req, res, file, stat) => {
-  const headers = { 'content-type': withCharset(typeByExt(file) ?? sniffType(readHead(file))), 'accept-ranges': 'bytes' };
+  const headers = {
+    'content-type': withCharset(typeByExt(file) ?? sniffType(readHead(file))), 'accept-ranges': 'bytes',
+  };
   const range = /^bytes=(\d*)-(\d*)$/i.exec(req.headers.range ?? '');
   let start = 0, end = stat.size - 1, status = 200;
   if (range && (range[1] || range[2])) {
@@ -169,28 +175,33 @@ const proxy = async (params) => {
   const upstream = await fetch(target, { signal: AbortSignal.timeout(config.timeout) });
   return {
     status: upstream.status,
-    type: upstream.headers.get('content-type'),
-    body: Buffer.from(await upstream.arrayBuffer())
+    type: upstream.headers.get('content-type') ?? 'application/octet-stream',
+    body: upstream.body ? Readable.fromWeb(upstream.body) : null,
   };
 };
 
-// Proxy route: a quoted url value takes the raw query up to its closing quote, so it doesn't need encoding.
-const proxyParams = (url) => {
-  const search = url.search, open = /[?&]url=("|'|%22|%27)/i.exec(search);
-  if (!open) { return Object.fromEntries(url.searchParams); }
-  const start = open.index + open[0].length, close = /^("|%22)$/i.test(open[1]) ? /"|%22/i : /'|%27/i;
-  const closed = close.exec(search.slice(start)), end = closed ? start + closed.index : search.length;
-  const rest = closed ? search.slice(end + closed[0].length) : '';
-  return {
-    ...Object.fromEntries(new URLSearchParams(search.slice(0, open.index) + rest)),
-    url: search.slice(start, end),
-  };
+// Quoted values take the raw query up to their closing quote, so they don't need encoding.
+const quotedUrlParams = (query) => {
+  if (!/=("|'|%22|%27)/i.test(query)) { return Object.fromEntries(new URLSearchParams(query)); }
+  const quoted = {}, plain = []; let rest = query.replace(/^\?/, '');
+  while (rest) {
+    const amp = rest.indexOf('&'), eq = rest.indexOf('=');
+    const open = eq > -1 && (amp < 0 || eq < amp) ? /^("|'|%22|%27)/i.exec(rest.slice(eq + 1)) : null;
+    if (!open) { plain.push(amp < 0 ? rest : rest.slice(0, amp)); rest = amp < 0 ? '' : rest.slice(amp + 1); continue; }
+    const start = eq + 1 + open[0].length, close = /^("|%22)$/i.test(open[1]) ? /"|%22/i : /'|%27/i;
+    const closed = close.exec(rest.slice(start)), end = closed ? start + closed.index : rest.length;
+    quoted[decodeURIComponent(rest.slice(0, eq))] = rest.slice(start, end);
+    const next = closed ? rest.indexOf('&', end + closed[0].length) : -1;
+    rest = next < 0 ? '' : rest.slice(next + 1);
+  }
+  return { ...Object.fromEntries(new URLSearchParams(plain.join('&'))), ...quoted };
 };
 
 const findService = (pathname) => {
   const base = safeJoin(servicesRoot, pathname);
   if (!base) { return null; }
-  const candidates = pathname.endsWith('/') ? [path.join(base, config.serviceFile)] : [`${base}.js`, path.join(base, config.serviceFile)];
+  const candidates = pathname.endsWith('/')
+    ? [pathmod.join(base, config.serviceFile)] : [`${base}.js`, pathmod.join(base, config.serviceFile)];
   return candidates.find((file) => statOf(file)?.isFile()) ?? null;
 };
 
@@ -204,13 +215,13 @@ const runService = async (file, params, req, res) => {
 /* server: */
 
 const handler = async (req, res) => {
-  const url = new URL(req.url ?? '/', 'http://localhost');
-  let pathname;
-  try { pathname = decodeURIComponent(url.pathname); } catch { return send(req, res, 400, 'bad request', 'text/plain'); }
+  const url = new URL(req.url ?? '/', 'http://localhost'); let pathname;
+  try { pathname = decodeURIComponent(url.pathname); }
+  catch { return send(req, res, 400, 'bad request', 'text/plain'); }
   const params = { ...Object.fromEntries(url.searchParams), payload: await readPayload(req) };
 
   if (pathname.replace(/\/$/, '') === config.proxyRoute) {
-    const { status, type, body } = await proxy(proxyParams(url));
+    const { status, type, body } = await proxy(quotedUrlParams(url.search));
     return send(req, res, status, body, type ?? undefined);
   }
 
@@ -221,7 +232,7 @@ const handler = async (req, res) => {
       res.writeHead(308, { location: `${url.pathname}/${url.search}` });
       return res.end();
     }
-    const indexPath = path.join(/** @type {string} */ (publicPath), config.indexFile), indexStat = statOf(indexPath);
+    const indexPath = pathmod.join(/** @type {string} */ (publicPath), config.indexFile), indexStat = statOf(indexPath);
     if (indexStat?.isFile()) { return sendFile(req, res, indexPath, indexStat); }
   }
 
@@ -231,22 +242,25 @@ const handler = async (req, res) => {
     return res.headersSent || res.writableEnded ? undefined : send(req, res, 200, result);
   }
 
-  pathname === '/favicon.ico' ? send(req, res, 204, null, 'text/plain') : send(req, res, 404, 'not found', 'text/plain');
+  pathname === '/favicon.ico'
+    ? send(req, res, 204, null, 'text/plain') : send(req, res, 404, 'not found', 'text/plain');
 };
 
 const server = http.createServer(async (req, res) => {
   if (config.log) {
-    res.on('finish', () => console.log(`${new Date().toISOString()} ${req.method} ${req.url} ${res.statusCode}`));
+    res.on('finish', () => log(`${new Date().toISOString()} ${req.method} ${req.url} ${res.statusCode}`));
   }
   try { await handler(req, res); } catch (error) {
     if (config.log && !(error.status < 500)) { console.error(error); }
     if (res.headersSent) { return res.destroy(); }
-    send(req, res, error.status ?? (error.code === 'ENOENT' ? 404 : 500), error.message ?? 'server error', 'text/plain');
+    const status = error.status ?? (error.code === 'ENOENT' ? 404 : 500);
+    send(req, res, status, error.message ?? 'server error', 'text/plain');
   }
 });
 
 server.timeout = config.timeout;
 server.listen(config.port, config.host, () => {
-  console.log(`Server listening on http://${config.host}:${config.port} (public "${publicRoot}", services "${servicesRoot}")`);
+  log(`Server listening on http://${config.host}:${config.port}`);
+  log(`Public "${publicRoot}", services "${servicesRoot}"`);
 });
 
