@@ -1,8 +1,9 @@
 // sa-server.js
-// _@ts-check
+// javier.rey.eu@gmail.com
 // Portable standalone server: static files, runnable services and a URL proxy.
 // Usage: `node sa-server.js --port=55555 --publicDir=./view --servicesDir=./services --log=false`
 // http://localhost:55555/proxy?url=https%3A%2F%2Fquery1.finance.yahoo.com%2Fv8%2Ffinance%2Fchart%2FREL.L%3Frange%3D2y%26interval%3D1d
+// _@ts-check
 
 import http from 'node:http';
 import fs from 'node:fs';
