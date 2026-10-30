@@ -13,6 +13,15 @@ author: javier.rey.eu@gmail.com
 @typedef {{ (...args: any[]): any, [key: string]: any }} FunctionObject;
 */
 
+/** Nested object keys structure.
+@template {PropertyKey[]} PKA
+@typedef {
+  PKA extends [infer First extends PropertyKey, ...infer Rest extends PropertyKey[]]
+    ? { [key in First]: Rest extends [] ? unknown : NestedObject<Rest> }
+    : unknown
+} NestedObject;
+*/
+
 /* Types functionality: */
 
 /** AsyncFunction constructor (globalThis.AsyncFunction does not exist). */
@@ -59,7 +68,7 @@ export const toSca = (v) => {
 };
 export const toStr = (v) => isStr(v = toSca(v)) ? v : String(v ?? '');
 export const toBoo = (v) => !!v && !(isArr(v) && !v.length && !v.size) && !(isObj(v) && isEmp(v)) &&
-  !/^(|0|!1|f(alse)?|n(ull|an|o|one|il|\/a)?|undef(ined)?|off|disabled|-|''|""|\[]|{})$/i.test(v.trim?.() ?? 1);
+  !/^(|0|!1|f(alse)?|n(ull|an|[o/].*)?|undef(ined)?|disabled?|off|-|''|""|\[]|{})$/i.test(v.trim?.() ?? 1);
 export const toEmp = (v) => isArr(v) ? [] : {};
 
 /* Value and arguments parsers: */
@@ -218,7 +227,7 @@ export const Log = (config = {}) => {
   config = typeof config === 'string' ? { name: config } : typeof config === 'number' ? { level: config } : config;
   config = Object.seal({
     name: '', level: 3, trace: 0, pretty: 0, limit: 1e4, redact: ['pass', 'auth'],
-    hub: typeof environ === 'undefined' ? {} : environ.hub ?? {}, ...config,
+    hub: typeof environ === 'undefined' ? {} : environ?.hub ?? {}, ...config,
   });
   const redactStr = `(${config.redact.join('|')})`, redactRE = new RegExp(`(^|[-_.])${redactStr}`, 'i');
   const jsonRedactRE = new RegExp(`["-_.]${redactStr}.*":`, 'i'), formatCharsRE = /(?:\\[\\ntfv])+/g;
@@ -588,6 +597,7 @@ export const hydrate = (tgt, ...srcs) => {
 /**
 Gets a property value in an unknown type object if present, or undefined otherwise.
 Accepts a list of nested keys: `getProperty(object, 'items', 0, 'title', 'en-US')`
+@param {unknown} object @param {PropertyKey[]} keys @return {unknown}
 */
 export const getProperty = (object, ...keys) => {
   for (const key of keys) {
@@ -600,6 +610,8 @@ export const getProperty = (object, ...keys) => {
 /**
 Asserts an unknown type object has a nested property key. Accepts a list of nested keys:
 `hasProperty(obj, 'data', 'count') && typeof obj.data.count === 'number' && obj.data.count++`
+@template {PropertyKey[]} PKA
+@param {unknown} object @param {PKA} keys @return {object is NestedObject<PKA>}
 */
 export const hasProperty = (object, ...keys) => {
   for (const key of keys) {

@@ -4,26 +4,32 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Trading 212 Pie Comparison - Yahoo Finance</title>
+<link rel="icon" href="data:"/>
 <script>
+// packages/main/view/tests/trading-pie-chart.html
+// http://localhost:3000/tests/trading-pie-chart.html?log=1&theme=dark&currency=gbp&refresh=1&retries=+2
 const clear = (o) => Object.keys(o ?? {}).forEach((k) => delete o[k]);
 const toBoolean = (v) => !!v &&
-  !/^(|0|!1|f(alse)?|n(ull|an|o|one|il|\/a)?|undef(ined)?|off|disabled|-|''|""|\[]|{})$/i.test(v.trim?.() ?? 1);
+  !/^(|0|!1|f(alse)?|n(ull|an|[o/].*)?|undef(ined)?|disabled?|off|-|''|""|\[]|{})$/i.test(v.trim?.() ?? 1);
 const resolveParams = () => {
-  const params = new URLSearchParams(location.search), theme = params.get('theme');
-  const currency = (params.get('currency') ?? '').trim(), refresh = (params.get('refresh') ?? '').trim();
-  const rawRefresh = /(?:^|[?&])refresh=([^&]*)/.exec(location.search)?.[1] ?? ''; // URLSearchParams turns a plain + into a space, so read the raw text
+  const params = new URLSearchParams(location.search);
+  const theme = params.get('theme'), currency = (params.get('currency') ?? '').trim();
   return {
-    theme: theme === 'light' || theme === 'dark' ? theme : matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
     log: toBoolean(params.get('log')),
-    refresh: Math.abs(parseFloat(refresh)) || 0, // minutes
-    includeZeros: /^(\+|%2b)/i.test(rawRefresh), // a leading + (+5, %2B5, or just +) also queries and shows zero-weight holdings
-    currency: /^[a-z]{3}$/i.test(currency) ? currency.toUpperCase() : 'GBP', // USD, EUR, GBP
+    theme: theme === 'light' || theme === 'dark' ? theme : matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
+    currency: /^[a-z]{3}$/i.test(currency) ? currency.toUpperCase() : '',
+    refresh: toBoolean(params.get('refresh')),
+    retries: parseInt(params.get('retries'), 10) || 0,
   };
 };
 const urlParams = resolveParams();
-const CURRENCY = urlParams.currency;
+const CURRENCY = urlParams.currency || 'GBP'; // @def GBP, USD, EUR
+const RETRIES = Math.min(urlParams.retries || 0, 3); // @def max 3
 const log = urlParams.log ? console.log : () => {};
 document.documentElement.dataset.theme = urlParams.theme;
+const REFRESH_INTERVAL = 5 * 60 * 1000, HOURS_HIGHLIGHT = 30; // @def 0, 5 // 30, 60 minutes
+const SHOW_ZEROS = false; // @def false, true
+const TIME_OFFSET = new Date().getTimezoneOffset();
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
@@ -50,8 +56,8 @@ document.documentElement.dataset.theme = urlParams.theme;
   .pos { color:#16a34a; } .neg { color:#dc2626; } .zero { color:var(--mut); }
   small { color:var(--mut); }
   .center { text-align:center; }
-  .mkt-open { color:#15803d; } .mkt-closed { color:#b91c1c; }
-  :root[data-theme=dark] .mkt-open { color:#4ade80; } :root[data-theme=dark] .mkt-closed { color:#f87171; }
+  .mkt-open { color:#15803d; } .mkt-closing { color:#c2410c; } .mkt-closed { color:#6b7280; } .mkt-opening { color:#2563eb; }
+  :root[data-theme=dark] .mkt-open { color:#4ade80; } :root[data-theme=dark] .mkt-closing { color:#fb923c; } :root[data-theme=dark] .mkt-closed { color:#9ca3af; } :root[data-theme=dark] .mkt-opening { color:#60a5fa; }
   span[id^="_"] { color:#c2410c; }
   :root[data-theme=dark] span[id^="_"] { color:#fb923c; }
 </style>
@@ -69,6 +75,7 @@ VALL.L 1%
 VUAA.L 1%
 WLDS.L 1%
 VDPG.L 1%
+VJPB.L 1%
 LCJG.L 1%
 FLXC.L 1%
 IRSA.L 1%
@@ -79,7 +86,7 @@ IRSA.L 1%
 SBUX 68%
 MCD 24%
 V 12% # *
-# JPM 1% # 50
+JPM 1% # 50
 NVO 1%
 AAPL 1%
 MSFT 1%
@@ -87,6 +94,7 @@ GOOGL 1%
 NVDA 1%
 * JNJ 1%
 SHOP 1%
+# LTM 1%
     </textarea>
   </div>
   <div><label>P2 [ticker %]</label>
@@ -129,6 +137,7 @@ SAMPO.HE 1%
 189A.F 1%
 ARBK 1%
 FAB 1%
+# AMS 1%
     </textarea>
   </div>
   <div><label>P4 [ticker %]</label>
@@ -148,10 +157,21 @@ FPH 1%
   </div>
   <div><label>P5 [ticker %]</label>
     <textarea id="p5">
-* SBUX 1%
-OREGE.PA 1%
-TEVA 1%
-TM 1%
+REL.L 26%
+BNZL.L 25%
+ITH.L 25%
+BA.L 12%
+MKS.L 8%
+AZN.L 2%
+HSBA.L 1%
+LLOY.L 1%
+#EAAS.L 1%
+#BARC.L 1%
+#RR.L 1%
+#SBUX 1%
+#OREGE.PA 1%
+#TEVA 1%
+#TM 1%
     </textarea>
   </div>
 </div>
@@ -176,64 +196,67 @@ TM 1%
 <div id="stock_locations">
   <pre>
 
-<b>Stock Exchange codes and UTC times</b>
+<script>document.write(
+  `<b>Stock Exchange market code extensions and UTC times (local timezone offset ${TIME_OFFSET})</b>`
+);</script>
 
 🍁 North & South America
 
-<span id="__US">(US)</span> NYSE / Nasdaq (United States) <span class="opening_times">14:30-21:00</span>
-<span id="_PK">.PK</span> US Pink Sheets / OTC Markets <span class="opening_times">14:30-21:00</span>
-<span id="_TO">.TO</span> Toronto Stock Exchange (Canada) <span class="opening_times">14:30-21:00</span>
-<span id="_V">.V</span> TSX Venture Exchange (Canada) <span class="opening_times">14:30-21:00</span>
-<span id="_MX">.MX</span> Bolsa Mexicana de Valores (Mexico) <span class="opening_times">14:30-21:00</span>
-<span id="_SA">.SA</span> B3 / São Paulo Stock Exchange (Brazil) <span class="opening_times">13:00-20:00</span>
-<span id="_SN">.SN</span> Santiago Stock Exchange (Chile) <span class="opening_times">13:30-20:00</span>
-<span id="_BA">.BA</span> Buenos Aires Stock Exchange (Argentina) <span class="opening_times">14:00-20:00</span>
+<span id="__US">(US)</span> NYSE / Nasdaq (United States) 14:30-21:00
+<span id="_PK">.PK</span> US Pink Sheets / OTC Markets 14:30-21:00
+<span id="_TO">.TO</span> Toronto Stock Exchange (Canada) 14:30-21:00
+<span id="_V">.V</span> TSX Venture Exchange (Canada) 14:30-21:00
+<span id="_MX">.MX</span> Bolsa Mexicana de Valores (Mexico) 14:30-21:00
+<span id="_SA">.SA</span> B3 / São Paulo Stock Exchange (Brazil) 13:00-20:00
+<span id="_SN">.SN</span> Santiago Stock Exchange (Chile) 13:30-20:00
+<span id="_BA">.BA</span> Buenos Aires Stock Exchange (Argentina) 14:00-20:00
 
 🌍 Europe
 
-<span id="_L">.L</span> London Stock Exchange (UK) <span class="opening_times">08:00-16:30</span>
-<span id="_IR">.IR</span> Euronext Dublin (Ireland) <span class="opening_times">08:00-16:30</span>
-<span id="_PA">.PA</span> Euronext Paris (France) <span class="opening_times">08:00-16:30</span>
-<span id="_DE">.DE</span> Xetra / Frankfurt Stock Exchange (Germany) <span class="opening_times">08:00-16:30</span>
-<span id="_SW">.SW</span> SIX Swiss Exchange (Switzerland) <span class="opening_times">08:00-16:30</span>
-<span id="_AS">.AS</span> Euronext Amsterdam (Netherlands) <span class="opening_times">08:00-16:30</span>
-<span id="_MI">.MI</span> Borsa Italiana / Milan (Italy) <span class="opening_times">08:00-16:30</span>
-<span id="_MC">.MC</span> Bolsa de Madrid (Spain) <span class="opening_times">08:00-16:30</span>
-<span id="_BR">.BR</span> Euronext Brussels (Belgium) <span class="opening_times">08:00-16:30</span>
-<span id="_LS">.LS</span> Euronext Lisbon (Portugal) <span class="opening_times">08:00-16:30</span>
-<span id="_OL">.OL</span> Oslo Stock Exchange (Norway) <span class="opening_times">08:00-16:30</span>
-<span id="_ST">.ST</span> Nasdaq Stockholm (Sweden) <span class="opening_times">08:00-16:30</span>
-<span id="_CO">.CO</span> Nasdaq Copenhagen (Denmark) <span class="opening_times">08:00-16:30</span>
-<span id="_HE">.HE</span> Nasdaq Helsinki (Finland) <span class="opening_times">08:00-16:30</span>
+<span id="_L">.L</span> London Stock Exchange (UK) 08:00-16:30
+<span id="_IR">.IR</span> Euronext Dublin (Ireland) 08:00-16:30
+<span id="_PA">.PA</span> Euronext Paris (France) 08:00-16:30
+<span id="_DE">.DE</span> Xetra / Frankfurt Stock Exchange (Germany) 08:00-16:30
+<span id="_SW">.SW</span> SIX Swiss Exchange (Switzerland) 08:00-16:30
+<span id="_AS">.AS</span> Euronext Amsterdam (Netherlands) 08:00-16:30
+<span id="_MI">.MI</span> Borsa Italiana / Milan (Italy) 08:00-16:30
+<span id="_MC">.MC</span> Bolsa de Madrid (Spain) 08:00-16:30
+<span id="_BR">.BR</span> Euronext Brussels (Belgium) 08:00-16:30
+<span id="_LS">.LS</span> Euronext Lisbon (Portugal) 08:00-16:30
+<span id="_OL">.OL</span> Oslo Stock Exchange (Norway) 08:00-16:30
+<span id="_ST">.ST</span> Nasdaq Stockholm (Sweden) 08:00-16:30
+<span id="_CO">.CO</span> Nasdaq Copenhagen (Denmark) 08:00-16:30
+<span id="_HE">.HE</span> Nasdaq Helsinki (Finland) 08:00-16:30
 
-🗺️ Eastern Europe, Eurasia & Middle East
+🗺️ Eastern Europe, Eurasia, Middle East & Africa
 
-<span id="_WA">.WA</span> Warsaw Stock Exchange (Poland) <span class="opening_times">08:00-15:50</span>
-<span id="_PR">.PR</span> Prague Stock Exchange (Czech Republic) <span class="opening_times">08:00-15:20</span>
-<span id="_BU">.BU</span> Budapest Stock Exchange (Hungary) <span class="opening_times">08:00-16:00</span>
-<span id="_RO">.RO</span> Bucharest Stock Exchange (Romania) <span class="opening_times">07:45-15:00</span>
-<span id="_IS">.IS</span> Borsa Istanbul (Turkey) <span class="opening_times">07:00-15:00</span>
-<span id="_ME">.ME</span> Moscow Exchange / MOEX (Russia) <span class="opening_times">06:00-16:00</span>
-<span id="_KZ">.KZ</span> Kazakhstan Stock Exchange / KASE (Kazakhstan) <span class="opening_times">06:30-12:30</span>
-<span id="_KV">.KV</span> Ukraine Stock Exchange / UX (Ukraine) <span class="opening_times">08:00-14:15</span>
-<span id="_TA">.TA</span> Tel Aviv Stock Exchange (Israel) <span class="opening_times">07:59-14:14</span> (Mon-Thu, Fri -10:34)
-<span id="_SR">.SR</span> Saudi Exchange / Tadawul (Saudi Arabia) <span class="opening_times">07:00-12:00</span> (Sun-Thu)
-<span id="_AD">.AD</span> Abu Dhabi Securities Exchange / ADX (UAE) <span class="opening_times">06:00-10:45</span>
+<span id="_WA">.WA</span> Warsaw Stock Exchange (Poland) 08:00-15:50
+<span id="_PR">.PR</span> Prague Stock Exchange (Czech Republic) 08:00-15:20
+<span id="_BU">.BU</span> Budapest Stock Exchange (Hungary) 08:00-16:00
+<span id="_RO">.RO</span> Bucharest Stock Exchange (Romania) 07:45-15:00
+<span id="_IS">.IS</span> Borsa Istanbul (Turkey) 07:00-15:00
+<span id="_ME">.ME</span> Moscow Exchange / MOEX (Russia) 06:00-16:00
+<span id="_KZ">.KZ</span> Kazakhstan Stock Exchange / KASE (Kazakhstan) 06:30-12:30
+<span id="_KV">.KV</span> Ukraine Stock Exchange / UX (Ukraine) 08:00-14:15
+<span id="_TA">.TA</span> Tel Aviv Stock Exchange (Israel) 07:59-14:14 (Mon-Thu, Fri -10:34)
+<span id="_SR">.SR</span> Saudi Exchange / Tadawul (Saudi Arabia) 07:00-12:00 (Sun-Thu)
+<span id="_AD">.AD</span> Abu Dhabi Securities Exchange / ADX (UAE) 06:00-10:45
+<span id="_JO">.JO</span> Johannesburg Stock Exchange (South Africa) 07:00-15:00
 
 🌏 Asia & Oceania
 
-<span id="_T">.T</span> Tokyo Stock Exchange (Japan) <span class="opening_times">00:00-06:30</span> (Break: 02:30-03:30)
-<span id="_HK">.HK</span> Hong Kong Stock Exchange (Hong Kong) <span class="opening_times">01:30-08:00</span> (Break: 04:00-05:00)
-<span id="_SS">.SS</span> Shanghai Stock Exchange (China) <span class="opening_times">01:30-07:00</span> (Break: 03:30-05:00)
-<span id="_SZ">.SZ</span> Shenzhen Stock Exchange (China) <span class="opening_times">01:30-07:00</span> (Break: 03:30-05:00)
-<span id="_TW">.TW</span> Taiwan Stock Exchange (Taiwan) <span class="opening_times">01:00-05:30</span>
-<span id="_NS">.NS</span> National Stock Exchange of India (India) <span class="opening_times">03:45-10:00</span>
-<span id="_BO">.BO</span> Bombay Stock Exchange (India) <span class="opening_times">03:45-10:00</span>
-<span id="_KS">.KS</span> Korea Stock Exchange (South Korea) <span class="opening_times">00:00-06:30</span>
-<span id="_KQ">.KQ</span> KOSDAQ (South Korea) <span class="opening_times">00:00-06:30</span>
-<span id="_SI">.SI</span> Singapore Exchange (Singapore) <span class="opening_times">01:00-09:00</span> (Break: 04:00-05:00)
-<span id="_AX">.AX</span> Australian Securities Exchange (Australia) <span class="opening_times">00:00-06:00</span>
-<span id="_NZ">.NZ</span> New Zealand Exchange (New Zealand) <span class="opening_times">21:00-03:45</span> (Prev day)
+<span id="_T">.T</span> Tokyo Stock Exchange (Japan) 00:00-06:30 (Break: 02:30-03:30)
+<span id="_HK">.HK</span> Hong Kong Stock Exchange (Hong Kong) 01:30-08:00 (Break: 04:00-05:00)
+<span id="_SS">.SS</span> Shanghai Stock Exchange (China) 01:30-07:00 (Break: 03:30-05:00)
+<span id="_SZ">.SZ</span> Shenzhen Stock Exchange (China) 01:30-07:00 (Break: 03:30-05:00)
+<span id="_TW">.TW</span> Taiwan Stock Exchange (Taiwan) 01:00-05:30
+<span id="_NS">.NS</span> National Stock Exchange of India (India) 03:45-10:00
+<span id="_BO">.BO</span> Bombay Stock Exchange (India) 03:45-10:00
+<span id="_KS">.KS</span> Korea Stock Exchange (South Korea) 00:00-06:30
+<span id="_KQ">.KQ</span> KOSDAQ (South Korea) 00:00-06:30
+<span id="_SI">.SI</span> Singapore Exchange (Singapore) 01:00-09:00 (Break: 04:00-05:00)
+<span id="_AX">.AX</span> Australian Securities Exchange (Australia) 00:00-06:00
+<span id="_NZ">.NZ</span> New Zealand Exchange (New Zealand) 21:00-03:45 (Prev day)
   </pre>
 </div>
 
@@ -241,17 +264,26 @@ TM 1%
 <div class="center"><small>&copy; Javier Rey</small></div>
 
 <script>
-// packages/main/view/tests/trading-pie-chart.html
-// http://localhost:3000/tests/trading-pie-chart.html?log=1&theme=dark&refresh=+5&currency=gbp
 // _@ts-check
 
 const $ = (id) => document.getElementById(id);
 document.title = document.title.replace('(GBP)', `(${CURRENCY})`);
 document.querySelectorAll('.ccy').forEach((el) => { el.textContent = CURRENCY; });
 
-// highlight each exchange's UTC trading hours green while open, red while closed (times only, no weekdays)
+// the exchange list is plain text lines like "... 08:00-16:30": on load, wrap the first time range of each line in an opening_times
+// span, its start time in an inner opening_time span, and its dash plus closing time in an inner closing_time span
+const markOpeningTimes = () => {
+  const pre = document.querySelector('#stock_locations pre');
+  if (!pre) return;
+  pre.innerHTML = pre.innerHTML.split('\n').map((line) => line.replace(/(\d{1,2}:\d{2})(\s*-\s*\d{1,2}:\d{2})/,
+    '<span class="opening_times"><span class="opening_time">$1</span><span class="closing_time">$2</span></span>')).join('\n');
+};
+markOpeningTimes();
+
+// highlight each exchange's UTC trading hours green while open and grey while closed (times only, no weekdays);
+// the closing time alone turns orange in the last MARKET_HIGHLIGHT_MINUTES minutes, and the start time alone turns blue in the MARKET_HIGHLIGHT_MINUTES minutes before opening
 const checkMarketHours = () => {
-  const now = new Date(), nowMin = now.getUTCHours() * 60 + now.getUTCMinutes();
+  const now = new Date(), nowMin = (now.getHours() * 60 + now.getMinutes() + TIME_OFFSET + 1440) % 1440; // local clock to UTC
   document.querySelectorAll('span.opening_times').forEach((el) => {
     const m = el.textContent.match(/(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})/);
     if (!m) return;
@@ -259,6 +291,8 @@ const checkMarketHours = () => {
     const open = start <= end ? nowMin >= start && nowMin < end : nowMin >= start || nowMin < end; // end < start: crosses midnight (.NZ)
     el.classList.toggle('mkt-open', open);
     el.classList.toggle('mkt-closed', !open);
+    el.querySelector('.closing_time').classList.toggle('mkt-closing', open && (end - nowMin + 1440) % 1440 < HOURS_HIGHLIGHT); // minutes left until the close
+    el.querySelector('.opening_time').classList.toggle('mkt-opening', !open && (start - nowMin + 1440) % 1440 < HOURS_HIGHLIGHT); // minutes left until the open
   });
 };
 const PALETTES = {
@@ -466,7 +500,7 @@ const run = async () => {
   const palette = colors();
   const allPies = PIE_IDS.map((id, i) => {
     const h = parsePie($(id).value);
-    return { name: id, color: palette[i], h: urlParams.includeZeros ? h : h.filter((x) => x.w > 0) };
+    return { name: id, color: palette[i], h: SHOW_ZEROS ? h : h.filter((x) => x.w > 0) };
   }).filter((p) => p.h.some((x) => x.w > 0)); // all-zero pies count as empty
   if (!allPies.length) return setStatus('Add some holdings first.', true);
 
@@ -476,20 +510,19 @@ const run = async () => {
   const need = all.filter((s) => !data[s]);
   setStatus(`Have ${all.length - need.length} of ${all.length} series cached. Fetching ${need.length}...`);
   const failed = [];
-  const loadSeries = async (s) => {
-    for (let a = 0; ; a++) {
-      try { return await fetchSeries(s); }
-      catch (e) { if (a === 1) throw e; await new Promise((r) => setTimeout(r, 1500)); }
+  const attempt = async (s) => { // one attempt as typed, then up to RETRIES: the plain symbol for a suffixed ticker, else the same symbol
+    const base = s.replace(/\.[A-Za-z]{1,3}$/, ''); // SONY.T -> SONY
+    let first;
+    for (let a = 0; a <= RETRIES; a++) {
+      const sym = a > 0 && base !== s ? base : s;
+      if (base === s ? a >= 1 : a >= 2) await new Promise((r) => setTimeout(r, 1500)); // wait only before repeating the same symbol
+      try { const res = await fetchSeries(sym); return sym === s ? res : { ...res, via: sym }; }
+      catch (e) { first ??= e; }
     }
+    throw new Error(base !== s && RETRIES >= 1 ? `${first.message} (also tried ${base})` : first.message);
   };
   await pool(need, 3, async (s) => {
-    try { data[s] = await loadSeries(s); }
-    catch (e) {
-      const base = s.replace(/\.[A-Za-z]{1,3}$/, ''); // SONY.T -> SONY
-      if (base === s) return failed.push(e.message);
-      try { data[s] = { ...await fetchSeries(base), via: base }; }
-      catch { failed.push(`${e.message} (also tried ${base})`); }
-    }
+    try { data[s] = await attempt(s); } catch (e) { failed.push(e.message); }
   });
   if (failed.length) return setStatus('Some requests failed:\n' + failed.join('\n') +
     '\n\nCheck that the local server proxy is running.', true);
@@ -538,7 +571,7 @@ const run = async () => {
         ? [...new Set(usedAll.flatMap((sym) => [...intraday[sym].m.keys()]))]
           .filter((stamp) => stamp > startTime && stamp < endTime).sort()
         : [];
-      const sampleCount = [11, 5].find((n) => candidates.length >= n) || 0; // prefer 11 samples, else 5
+      const sampleCount = [11, 5].find((n) => candidates.length >= n) || 0;
       if (sampleCount) {
         const sampleTimes = Array.from({ length: sampleCount }, (_, k) =>
           candidates[Math.floor((k + 1) * candidates.length / (sampleCount + 1))]);
@@ -566,7 +599,7 @@ const run = async () => {
       }
     }
   }
-  const unavailableNote = N === 2 && !intradaySamples ? ' (intraday data unavailable)' : ''; // only Day mode uses intraday prices
+  const unavailableNote = N === 2 && !intradaySamples ? ' (intraday data unavailable)' : '';
   const skippedNote = skipped.length ? `\nNot charted (not enough common trading dates): ${skipped.join('; ')}.` : '';
   const viaNote = used.filter((s) => data[s].via).map((s) => `${s} (used ${data[s].via})`);
   const fallbackNote = viaNote.length ? `\nNo data for the market symbol, used the plain symbol instead: ${viaNote.join(', ')}.` : '';
@@ -596,6 +629,7 @@ const run = async () => {
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      animation: false,
       events: [],
       interaction: { mode: 'index', intersect: false },
       plugins: {
@@ -632,7 +666,6 @@ const run = async () => {
 };
 
 const loadAndChart = async () => {
-  checkMarketHours();
   if (!PIE_IDS.some((id) => parsePie($(id).value).some((x) => x.w > 0))) return;
   if ($('go').disabled) return;
   $('go').disabled = true;
@@ -646,16 +679,17 @@ const loadAndChart = async () => {
 
 const updateData = () => { if ($('go').disabled) return; rebalancePies(); loadAndChart(); };
 
-const refresh = () => {
-  loadAndChart();
+const refresh = (force = false) => {
+  checkMarketHours();
+  if (force || urlParams.refresh) { !$('go').disabled && clear(cache); loadAndChart(); }
 };
 
 $('period').addEventListener('change', updateData);
 $('mode').addEventListener('change', updateData);
 $('go').addEventListener('click', () => { !$('go').disabled && clear(cache); updateData(); });
-urlParams.refresh && setInterval(() => { !$('go').disabled && clear(cache); refresh(); }, urlParams.refresh * 60 * 1000);
+refresh(true);
+setInterval(refresh, REFRESH_INTERVAL);
 
-refresh();
 </script>
 </body>
 </html>
