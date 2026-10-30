@@ -2,7 +2,7 @@
 // javier.rey.eu@gmail.com
 // Portable standalone server: static files, runnable services and a URL proxy.
 // Usage: `node sa-server.js --port=55555 --publicDir=./view --servicesDir=./services --log=false`
-// http://localhost:55555/proxy?url=https%3A%2F%2Fquery1.finance.yahoo.com%2Fv8%2Ffinance%2Fchart%2FREL.L%3Frange%3D2y%26interval%3D1d
+// http://localhost:55555/proxy?url="https://query1.finance.yahoo.com/v8/finance/chart/REL.L?range=2y&interval=1d"
 // _@ts-check
 
 import http from 'node:http';
@@ -167,7 +167,24 @@ const proxy = async (params) => {
   try { target = new URL(params.url); } catch { throw httpError(400, 'invalid url'); }
   if (!/^https?:$/.test(target.protocol)) { throw httpError(400, 'only http(s) urls are allowed'); }
   const upstream = await fetch(target, { signal: AbortSignal.timeout(config.timeout) });
-  return { status: upstream.status, type: upstream.headers.get('content-type'), body: Buffer.from(await upstream.arrayBuffer()) };
+  return {
+    status: upstream.status,
+    type: upstream.headers.get('content-type'),
+    body: Buffer.from(await upstream.arrayBuffer())
+  };
+};
+
+// Proxy route: a quoted url value takes the raw query up to its closing quote, so it doesn't need encoding.
+const proxyParams = (url) => {
+  const search = url.search, open = /[?&]url=("|'|%22|%27)/i.exec(search);
+  if (!open) { return Object.fromEntries(url.searchParams); }
+  const start = open.index + open[0].length, close = /^("|%22)$/i.test(open[1]) ? /"|%22/i : /'|%27/i;
+  const closed = close.exec(search.slice(start)), end = closed ? start + closed.index : search.length;
+  const rest = closed ? search.slice(end + closed[0].length) : '';
+  return {
+    ...Object.fromEntries(new URLSearchParams(search.slice(0, open.index) + rest)),
+    url: search.slice(start, end),
+  };
 };
 
 const findService = (pathname) => {
@@ -193,7 +210,7 @@ const handler = async (req, res) => {
   const params = { ...Object.fromEntries(url.searchParams), payload: await readPayload(req) };
 
   if (pathname.replace(/\/$/, '') === config.proxyRoute) {
-    const { status, type, body } = await proxy(params);
+    const { status, type, body } = await proxy(proxyParams(url));
     return send(req, res, status, body, type ?? undefined);
   }
 
