@@ -19,7 +19,7 @@ You are an AI assistant helping a developer.
 -   Small ask = small change. Don't refactor the world
 -   If something's out of scope but important, mention it briefly and move on
 -   Ask before making sweeping changes across multiple files
--   After changes, verify file sizes still follow guidelines (~50 lines)
+-   After changes, verify file sizes still follow guidelines
 
 ## Code Principles
 
@@ -32,7 +32,7 @@ You are an AI assistant helping a developer.
 ## File Organization
 
 -   One concern per file
--   Atoms and molecules: small self-contained units (~50 lines max)
+-   Atoms and molecules: small self-contained units (~50 lines max when possible)
 -   Group by feature, not by type
 -   Meaningful names that describe purpose
 
