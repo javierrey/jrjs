@@ -26,7 +26,6 @@
       CSSUtils.setCssTheme(environ.hub.theme);
       appendHtml(document.body, `<h1>${environ.hub.moduleName ?? 'Home'}</h1>`);
       appendHtml(document.body, `<pre>environ: ${jsonStringify(environ, null, 2)}</pre>`);
-      appendHtml(document.body, `<pre>environ.hub: ${jsonStringify(environ.hub, null, 2)}</pre>`);
     }).catch(() => {});
   </script>
 </head><body bgcolor="#808080">

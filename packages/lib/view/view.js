@@ -101,7 +101,7 @@ export const loadHtml = (url, elem, position, norun) => {
       + `\n<!--/loadHtml-->\n`;
     insertHtml(cont, elem, position, norun);
   };
-  callFetch(url, cb, 'text');
+  callFetch(UrlFun.rebaseUrl(url, document.baseURI), cb, 'text');
 };
 
 /* * */
@@ -178,6 +178,9 @@ export const CSSUtils = (() => {
 
   const initRegistry = () => (!registry.themes?.length || !registry.theme) && updateRegistry();
 
+  /** @param {string} name */
+  const getDocumentCssVariable = (name, pseudo = '') => document.documentElement.style.getPropertyValue(name);
+
   /** @param {string} name, @param {HTMLElement | CSSStyleDeclaration} style */
   const getCssVariable = (name, style, pseudo = '') => {
     style ??= document.documentElement;
@@ -210,10 +213,11 @@ export const CSSUtils = (() => {
 
   const toggleCssTheme = (themeIndex = -1) => {
     initRegistry();
+    const getCssVar = (k, v) => getDocumentCssVariable(k) || getCssVariable(k, v);
     const regTheme = `-${registry.theme}-`;
     const variables = Object.entries(registry.variables);
     const themeVariable = variables.find(([k, v]) => k.includes(regTheme)) ?? [];
-    const themeValue = getCssVariable(themeVariable[0], themeVariable[1]);
+    const themeValue = getCssVar(themeVariable[0], themeVariable[1]);
     let currentIndex = registry.themes.findIndex((theme) => themeValue.includes(`-${theme}-`));
     if (currentIndex < 0) { currentIndex = 0; }
     const valueSearch = `-${registry.themes[currentIndex]}-`;
@@ -222,9 +226,10 @@ export const CSSUtils = (() => {
     if (themeIndex === currentIndex) { return; }
     const valueReplacer = `-${registry.themes[themeIndex]}-`;
     variables.forEach(([varName, varRule]) => {
-      const currentValue = getCssVariable(varName, varRule);
+      if (!varName.includes(regTheme)) { return; }
+      const currentValue = getCssVar(varName, varRule);
       const newValue = currentValue.replace(valueSearch, valueReplacer);
-      setCssVariable(varName, newValue, varRule);
+      setCssVariable(varName, newValue);
     });
   };
 
@@ -236,15 +241,17 @@ export const CSSUtils = (() => {
 
   const getCssTheme = () => {
     initRegistry();
-    const themeVariable = Object.entries(registry.variables ?? {}).find(([k, v]) => k.includes(`-${registry.theme}-`)) ?? [];
-    const themeValue = getCssVariable(themeVariable[0], themeVariable[1]);
+    const themeVariable = Object.entries(registry.variables ?? {})
+      .find(([k, v]) => k.includes(`-${registry.theme}-`)) ?? [];
+    const themeValue = getCssVariable(themeVariable[0], document.documentElement.style)
+      || getCssVariable(themeVariable[0], themeVariable[1]);
     return registry.themes?.find((theme) => themeValue?.includes(`-${theme}-`)) ?? '';
   };
 
   /** public static members */
   const members = {
     typename, registry, updateRegistry, toggleCssTheme, setCssTheme, getCssTheme,
-    getCssVariable, setCssVariable, getElementStyle,
+    getDocumentCssVariable, getCssVariable, setCssVariable, getElementStyle,
   };
 
   return Object.freeze(members);

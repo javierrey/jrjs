@@ -655,7 +655,7 @@ export const UrlFun = (() => {
   const typename = 'UrlFun';
 
   /** Default URL base for resolving relative URLs. */
-  const DEFAULT_BASE = globalThis.location ?? 'file:///';
+  const DEFAULT_BASE = globalThis.location?.origin ?? 'file:///';
 
   /** Rebase RegExps. */
   const REBASE_DOC_RE = /(?<=["'`]|url\()(?:\.{1,2}\/|\/{1,2})(?![\\()[\]{}?*+|.,"'])[^ "'`)]*(?=["'`)])/gi;
