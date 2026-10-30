@@ -187,7 +187,10 @@ const quotedUrlParams = (query) => {
   while (rest) {
     const amp = rest.indexOf('&'), eq = rest.indexOf('=');
     const open = eq > -1 && (amp < 0 || eq < amp) ? /^("|'|%22|%27)/i.exec(rest.slice(eq + 1)) : null;
-    if (!open) { plain.push(amp < 0 ? rest : rest.slice(0, amp)); rest = amp < 0 ? '' : rest.slice(amp + 1); continue; }
+    if (!open) {
+      plain.push(amp < 0 ? rest : rest.slice(0, amp)); rest = amp < 0 ? '' : rest.slice(amp + 1);
+      continue;
+    }
     const start = eq + 1 + open[0].length, close = /^("|%22)$/i.test(open[1]) ? /"|%22/i : /'|%27/i;
     const closed = close.exec(rest.slice(start)), end = closed ? start + closed.index : rest.length;
     quoted[decodeURIComponent(rest.slice(0, eq))] = rest.slice(start, end);
@@ -206,7 +209,7 @@ const findService = (pathname) => {
 };
 
 const runService = async (file, params, req, res) => {
-  const { mtimeMs } = /** @type {fs.Stats} */ (statOf(file));
+  const { mtimeMs } = statOf(file);
   const { default: service } = await import(`${pathToFileURL(file).href}?v=${mtimeMs}`);
   if (typeof service !== 'function') { throw httpError(500, 'service has no default export function'); }
   return service(params, req, res);
@@ -232,7 +235,7 @@ const handler = async (req, res) => {
       res.writeHead(308, { location: `${url.pathname}/${url.search}` });
       return res.end();
     }
-    const indexPath = pathmod.join(/** @type {string} */ (publicPath), config.indexFile), indexStat = statOf(indexPath);
+    const indexPath = pathmod.join(publicPath, config.indexFile), indexStat = statOf(indexPath);
     if (indexStat?.isFile()) { return sendFile(req, res, indexPath, indexStat); }
   }
 
@@ -263,4 +266,3 @@ server.listen(config.port, config.host, () => {
   log(`Server listening on http://${config.host}:${config.port}`);
   log(`Public "${publicRoot}", services "${servicesRoot}"`);
 });
-
