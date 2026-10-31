@@ -178,9 +178,6 @@ export const CSSUtils = (() => {
 
   const initRegistry = () => (!registry.themes?.length || !registry.theme) && updateRegistry();
 
-  /** @param {string} name */
-  const getDocumentCssVariable = (name, pseudo = '') => document.documentElement.style.getPropertyValue(name);
-
   /** @param {string} name, @param {HTMLElement | CSSStyleDeclaration} style */
   const getCssVariable = (name, style, pseudo = '') => {
     style ??= document.documentElement;
@@ -211,13 +208,15 @@ export const CSSUtils = (() => {
     return { computed, map, get, set, del, add, remove, update, replace };
   };
 
+  /** @param {string} name, @param {HTMLElement | CSSStyleDeclaration} style */
+  const getCssStyleVariable = (name, style) =>
+    document.documentElement.style.getPropertyValue(name) || getCssVariable(name, style);
+
   const toggleCssTheme = (themeIndex = -1) => {
     initRegistry();
-    const getCssVar = (k, v) => getDocumentCssVariable(k) || getCssVariable(k, v);
-    const regTheme = `-${registry.theme}-`;
-    const variables = Object.entries(registry.variables);
+    const regTheme = `-${registry.theme}-`, variables = Object.entries(registry.variables);
     const themeVariable = variables.find(([k, v]) => k.includes(regTheme)) ?? [];
-    const themeValue = getCssVar(themeVariable[0], themeVariable[1]);
+    const themeValue = getCssStyleVariable(themeVariable[0], themeVariable[1]);
     let currentIndex = registry.themes.findIndex((theme) => themeValue.includes(`-${theme}-`));
     if (currentIndex < 0) { currentIndex = 0; }
     const valueSearch = `-${registry.themes[currentIndex]}-`;
@@ -227,7 +226,7 @@ export const CSSUtils = (() => {
     const valueReplacer = `-${registry.themes[themeIndex]}-`;
     variables.forEach(([varName, varRule]) => {
       if (!varName.includes(regTheme)) { return; }
-      const currentValue = getCssVar(varName, varRule);
+      const currentValue = getCssStyleVariable(varName, varRule);
       const newValue = currentValue.replace(valueSearch, valueReplacer);
       setCssVariable(varName, newValue);
     });
@@ -243,15 +242,14 @@ export const CSSUtils = (() => {
     initRegistry();
     const themeVariable = Object.entries(registry.variables ?? {})
       .find(([k, v]) => k.includes(`-${registry.theme}-`)) ?? [];
-    const themeValue = getCssVariable(themeVariable[0], document.documentElement.style)
-      || getCssVariable(themeVariable[0], themeVariable[1]);
+    const themeValue = getCssStyleVariable(themeVariable[0], themeVariable[1]);
     return registry.themes?.find((theme) => themeValue?.includes(`-${theme}-`)) ?? '';
   };
 
   /** public static members */
   const members = {
     typename, registry, updateRegistry, toggleCssTheme, setCssTheme, getCssTheme,
-    getDocumentCssVariable, getCssVariable, setCssVariable, getElementStyle,
+    getCssVariable, setCssVariable, getElementStyle,
   };
 
   return Object.freeze(members);
