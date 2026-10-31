@@ -657,6 +657,9 @@ export const UrlFun = (() => {
   /** Default URL base for resolving relative URLs. */
   const DEFAULT_BASE = globalThis.location?.origin ?? 'file:///';
 
+  /** Document URL base if present. */
+  const DOCUMENT_BASE = globalThis.document?.baseURI ?? DEFAULT_BASE;
+
   /** Rebase RegExps. */
   const REBASE_DOC_RE = /(?<=["'`]|url\()(?:\.{1,2}\/|\/{1,2})(?![\\()[\]{}?*+|.,"'])[^ "'`)]*(?=["'`)])/gi;
   const REBASE_HTML_LINKS_RE = /(?<=(?:[\s:-](?:href|src|url)\s*[=(]\s*["']))[^"']*(?=["'])/gi;
@@ -666,7 +669,7 @@ export const UrlFun = (() => {
   const newUrl = (url = null, base = null) => new URL(url ?? '', base ?? DEFAULT_BASE);
 
   /** Rebases a URL from the current location base, or optionally from a custom base. */
-  const rebaseUrl = (url, base = null) => newUrl(url ?? '', newUrl(base)).href;
+  const rebaseUrl = (url, base = null) => newUrl(url ?? '', newUrl(base ?? DOCUMENT_BASE)).href;
 
   /** Rebases all quoted URLs in a text document, optionally from a custom base. */
   const rebaseDoc = (code, base = null) => code.replace(REBASE_DOC_RE, (m) => rebaseUrl(m, base));

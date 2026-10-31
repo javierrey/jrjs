@@ -101,7 +101,7 @@ export const loadHtml = (url, elem, position, norun) => {
       + `\n<!--/loadHtml-->\n`;
     insertHtml(cont, elem, position, norun);
   };
-  callFetch(UrlFun.rebaseUrl(url, document.baseURI), cb, 'text');
+  callFetch(url, cb, 'text');
 };
 
 /* * */
