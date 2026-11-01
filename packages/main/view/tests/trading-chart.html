@@ -6,8 +6,8 @@
 <title>Trading 212 Pie Comparison - Yahoo Finance</title>
 <link rel="icon" href="data:"/>
 <script>
-// packages/main/view/tests/trading-pie-chart.html
-// http://localhost:3000/tests/trading-pie-chart.html?log=1&theme=dark&currency=gbp&refresh=1&retries=+2
+// packages/main/view/tests/trading-chart.html
+// http://localhost:3000/tests/trading-chart.html?log=1&theme=dark&currency=gbp&refresh=1&retries=+2
 const clear = (o) => Object.keys(o ?? {}).forEach((k) => delete o[k]);
 const toBoolean = (v) => !!v &&
   !/^(|0|!1|f(alse)?|n(ull|an|[o/].*)?|undef(ined)?|disabled?|off|-|''|""|\[]|{})$/i.test(v.trim?.() ?? 1);
@@ -45,6 +45,7 @@ const TIME_OFFSET = new Date().getTimezoneOffset();
   .row { display:flex; gap:12px; flex-wrap:wrap; align-items:end; margin-top:6px; } .row > div { flex:1; min-width:140px; }
   .row > .fit { flex:0 0 auto; min-width:0; }
   button { background:var(--acc); color:#fff; border:0; border-radius:8px; padding:10px 18px; font-size:14px; cursor:pointer; }
+  button.pending { background:#f97316; }
   button:disabled { opacity:.5; }
   #status { margin:12px 0; color:var(--mut); font-size:13px; white-space:pre-wrap; }
   #status.err { color:#c2410c; }
@@ -349,8 +350,12 @@ const saved = (id) => { try { return localStorage.getItem('t212_'+id); } catch(e
 for (const id of [...PIE_IDS, 'period', 'mode']) {
   const v = saved(id);
   if (v !== null) $(id).value = v;
-  $(id).addEventListener('change', () => { try { localStorage.setItem('t212_'+id, $(id).value); } catch(e) {} });
+  $(id).addEventListener('change', () => {
+    try { localStorage.setItem('t212_'+id, $(id).value); } catch(e) {}
+    $('go').classList.add('pending');
+  });
 }
+PIE_IDS.forEach((id) => $(id).addEventListener('input', () => $('go').classList.add('pending')));
 
 const setStatus = (m, err=false) => { $('status').textContent = m; $('status').className = err ? 'err' : ''; };
 
@@ -361,10 +366,14 @@ const noteOf = (l) => { const i = l.indexOf('#'); return i < 0 ? '' : l.slice(i)
 // a line starting with # is a comment (so is a * with no ticker after it): kept in the textarea as written, ignored by everything else
 const isComment = (l) => { const t = l.trim(); return t.startsWith('#') || (t.startsWith('*') && !splitLine(t.replace(/^\*+/, ''))[0]); };
 
+const emptyStarOf = (txt) => txt.split('\n').map((l) => l.trim())
+  .find((l) => l.startsWith('*') && !splitLine(l.replace(/^\*+/, ''))[0]);
+
 // a line starting with * (and having a ticker) is the pie's only holding, at 100%; the first one counts, every other line is ignored
 const starOf = (txt) => txt.split('\n').map((l) => l.trim()).find((l) => l.startsWith('*') && splitLine(l.replace(/^\*+/, ''))[0]);
 
 const parsePie = (txt) => {
+  if (emptyStarOf(txt)) return [];
   const star = starOf(txt);
   if (star) {
     const [t, w] = splitLine(star.replace(/^\*+/, ''));
@@ -387,7 +396,7 @@ const rebalancePies = () => {
       textarea.value = textarea.defaultValue;
       try { localStorage.setItem(`t212_${id}`, textarea.value); } catch(e) {}
     }
-    if (starOf(textarea.value)) continue; // a starred pie is not touched: the star line only overrides what the chart reads
+    if (starOf(textarea.value) || emptyStarOf(textarea.value)) continue; // starred or invalid pies are not touched
     const holdings = parsePie(textarea.value).sort((a, b) => b.rawW - a.rawW);
     if (!holdings.length) continue;
     const unitsPerPercent = hasDecimals(textarea.value) ? 1e4 : 1; // whole percents unless an input has a decimal point
@@ -498,11 +507,18 @@ const ffill = (m, dates) => {
 
 const run = async () => {
   const palette = colors();
+  const noData = PIE_IDS.filter((id) => emptyStarOf($(id).value));
   const allPies = PIE_IDS.map((id, i) => {
     const h = parsePie($(id).value);
     return { name: id, color: palette[i], h: SHOW_ZEROS ? h : h.filter((x) => x.w > 0) };
   }).filter((p) => p.h.some((x) => x.w > 0)); // all-zero pies count as empty
-  if (!allPies.length) return setStatus('Add some holdings first.', true);
+  if (!allPies.length) {
+    if (noData.length) {
+      chart?.destroy(); chart = null; $('out').innerHTML = '';
+      return setStatus(`No data (empty * line): ${noData.join(', ')}.`, true);
+    }
+    return setStatus('Add some holdings first.', true);
+  }
 
   const syms = [...new Set(allPies.flatMap((p) => p.h.map((x) => x.t)))];
   const all = [...syms, ...fxCcys.map(fxSym)];
@@ -603,7 +619,9 @@ const run = async () => {
   const skippedNote = skipped.length ? `\nNot charted (not enough common trading dates): ${skipped.join('; ')}.` : '';
   const viaNote = used.filter((s) => data[s].via).map((s) => `${s} (used ${data[s].via})`);
   const fallbackNote = viaNote.length ? `\nNo data for the market symbol, used the plain symbol instead: ${viaNote.join(', ')}.` : '';
-  setStatus(`Window: ${dates[0]} to ${dates[dates.length - 1]}${unavailableNote}.${skippedNote}${fallbackNote}`, skipped.length > 0);
+  const noDataNote = noData.length ? `\nNo data (empty * line): ${noData.join(', ')}.` : '';
+  setStatus(`Window: ${dates[0]} to ${dates[dates.length - 1]}${unavailableNote}.${skippedNote}${fallbackNote}${noDataNote}`,
+    skipped.length > 0 || noData.length > 0);
 
   const rebal = $('mode').value === 'rb';
   const curves = pies.map((p) => {
@@ -666,7 +684,7 @@ const run = async () => {
 };
 
 const loadAndChart = async () => {
-  if (!PIE_IDS.some((id) => parsePie($(id).value).some((x) => x.w > 0))) return;
+  if (!PIE_IDS.some((id) => emptyStarOf($(id).value) || parsePie($(id).value).some((x) => x.w > 0))) return;
   if ($('go').disabled) return;
   $('go').disabled = true;
   $('period').disabled = true;
@@ -684,9 +702,11 @@ const refresh = (force = false) => {
   if (force || urlParams.refresh) { !$('go').disabled && clear(cache); loadAndChart(); }
 };
 
-$('period').addEventListener('change', updateData);
-$('mode').addEventListener('change', updateData);
-$('go').addEventListener('click', () => { !$('go').disabled && clear(cache); updateData(); });
+$('go').addEventListener('click', () => {
+  if ($('go').disabled) return;
+  $('go').classList.remove('pending');
+  clear(cache); updateData();
+});
 refresh(true);
 setInterval(refresh, REFRESH_INTERVAL);
 

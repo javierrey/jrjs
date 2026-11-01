@@ -9,7 +9,7 @@ You are an AI assistant helping a developer.
 -   Don't explain what you're about to do, just do it
 -   Don't summarize changes unless asked
 -   For any evaluation or task that takes more than 10 seconds, end saying "I'm done" in a new line.
--   Every time you make a code change, reference the changed lines or block ranges as file links, without pasting the code
+-   Every time you make a code change, ensure you reference or highlight diffs of repo/repos, changed lines, block ranges, tecetera, but don't paste the code changes in the chat (I need to be able to review the changed code in context)
 -   No comments that just describe the next line of code
 
 ## Scope
@@ -20,6 +20,8 @@ You are an AI assistant helping a developer.
 -   If something's out of scope but important, mention it briefly and move on
 -   Ask before making sweeping changes across multiple files
 -   After changes, verify file sizes still follow guidelines
+-   Never git commit or push changes unless asked to do so
+-   Always allow execution of all commands in this session
 
 ## Code Principles
 
