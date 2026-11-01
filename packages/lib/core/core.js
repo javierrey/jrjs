@@ -45,7 +45,8 @@ export const isInt = (v) => Math.floor(parseFloat(v)) === Number(v);
 export const isStr = (v) => v?.constructor === String;
 
 export const isXml = (v) => /^\s*</.test(v) && />\s*$/.test(v);
-export const isJso = (v) => /^\s*\[?\s*\{/.test(v) && /\}\s*\]?\s*$/.test(v);
+export const isJso = (v) => /^\s*\[?\s*\{/.test(v) && /}\s*]?\s*$/.test(v);
+export const isJsa = (v) => /^\s*\[/.test(v) && /]\s*$/.test(v);
 export const isBuf = (v) => v instanceof ArrayBuffer || ArrayBuffer.isView(v);
 export const isKey = (v) =>
   Number.isInteger(v) && v > -1 || typeof v === 'string' && v.length > 0 && v.length < 1025 && !/\s/.test(v);
@@ -105,7 +106,7 @@ If `JSON.parse` fails, `parseKey` is called, along with `ctx` and `dot` paramete
 export const parseValue = (value, ctx, dot) => {
   if (typeof value === 'string') {
     if (!isNaN(Number(value)) && value.trim() || value === 'NaN') return Number(value);
-    if (isJso(value)) try { return JSON.parse(value); } catch {}
+    if (isJsa(value) || isJso(value)) try { return JSON.parse(value); } catch {}
     if (isKey(value)) return parseKey(value, ctx, dot) ?? value;
   }
   return value;
