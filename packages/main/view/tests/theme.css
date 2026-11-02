@@ -1,2 +1,8 @@
-/* theme.css */
+/* main/view/tests/theme.css */
+
+:root {
+  /* Define: */
+  --main-view-tests-theme-css: 1;
+}
+
 body { background-color: #ffcccc; }

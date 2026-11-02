@@ -5,7 +5,7 @@ import {
   environ, log, when, jsonStringify, CSSUtils,
   ge, gt, qs, qa, appendHtml,
 } from '../hub.js';
-when(() => document.body && CSSUtils.getCssVariable('--lib-view-md-css'))
+when(() => document.body && CSSUtils.getCssVariable('--jrjs-view-md-css'))
 .then(() => CSSUtils.setCssTheme(environ.hub.theme))
 .catch(() => {});
 

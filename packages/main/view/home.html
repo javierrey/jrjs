@@ -21,7 +21,7 @@
       environ, log, when, jsonStringify, CSSUtils,
       ge, gt, qs, qa, appendHtml,
     } from './hub.js';
-    when(() => document.body && CSSUtils.getCssVariable('--lib-view-view-css'))
+    when(() => document.body && CSSUtils.getCssVariable('--jrjs-view-view-css'))
     .then(() => {
       CSSUtils.setCssTheme(environ.hub.theme);
       appendHtml(document.body, `<h1>${environ.hub.moduleName ?? 'Home'}</h1>`);

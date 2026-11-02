@@ -896,7 +896,7 @@ export const throttle = (fun, delay = 300) => {
   };
 };
 
-/** Simple fetch wrapper with an optional callback. */
+/** Simple fetch wrapper with an optional callback. @return {Promise<any>} */
 export const callFetch = (url, callback = null, resolver = null, options = null) => {
   let content, error;
   return fetch(url, options ?? {})

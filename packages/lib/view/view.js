@@ -92,6 +92,8 @@ export const insertHtml = (html, elem = document.body, position = '', norun = fa
 /**
 Loads content from a `url` and inserts it into an HTML parent element.
 New scripts in the content are also loaded and run, unless `norun` is true.
+@param {string} url @param {HTMLElement} [elem] @param {string} [position] @param {boolean} [norun]
+@return {Promise<any>}
 */
 export const loadHtml = (url, elem, position, norun) => {
   const cb = (uri, cont, err) => {
@@ -101,7 +103,7 @@ export const loadHtml = (url, elem, position, norun) => {
       + `\n<!--/loadHtml-->\n`;
     insertHtml(cont, elem, position, norun);
   };
-  callFetch(url, cb, 'text');
+  return callFetch(url, cb, 'text');
 };
 
 /* * */
