@@ -227,7 +227,7 @@ export const Log = (config = {}) => {
   const METHODS = ['log', 'error', 'warn', 'info', 'debug'], DAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
   config = typeof config === 'string' ? { name: config } : typeof config === 'number' ? { level: config } : config;
   config = Object.seal({
-    name: '', level: 3, trace: 0, pretty: 0, limit: 1e4, redact: ['pass', 'auth'],
+    name: '', level: 3, trace: 0, pretty: 0, limit: 1e4, redact: ['pass', 'auth', 'secret'],
     hub: typeof environ === 'undefined' ? {} : environ?.hub ?? {}, ...config,
   });
   const redactStr = `(${config.redact.join('|')})`, redactRE = new RegExp(`(^|[-_.])${redactStr}`, 'i');
@@ -896,17 +896,14 @@ export const throttle = (fun, delay = 300) => {
   };
 };
 
-/** Simple fetch wrapper with an optional callback. @return {Promise<any>} */
-export const callFetch = (url, callback = null, resolver = null, options = null) => {
-  let content, error;
-  return fetch(url, options ?? {})
-    .then((response) => {
-      if (!response.ok) throw Error(`${response.status} ${response.statusText}`);
-      return response[resolver ?? 'text']?.();
-    })
-    .then((cont) => (content = cont))
-    .catch((err) => (error = err))
-    .finally(() => callback?.(url, content, error));
+/** Simple fetch wrapper. @param {Object} options @return {Promise<any>} */
+export const callFetch = (url, options = {}) => {
+  const t = AbortSignal.timeout(50e3), r = options.resolver ?? 'text'; delete options.resolver;
+  options.signal = options.signal ? AbortSignal.any([options.signal, t]) : t;
+  return fetch(url, options).then((response) => {
+    if (!response.ok) throw Error(`${response.status} ${response.statusText}`);
+    return r === 'body' ? response.body : response[r]?.();
+  });
 };
 
 /** Exposes local members to the specified environment, globalThis by default. Overwrites existing references. */

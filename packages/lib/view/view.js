@@ -96,14 +96,17 @@ New scripts in the content are also loaded and run, unless `norun` is true.
 @return {Promise<any>}
 */
 export const loadHtml = (url, elem, position, norun) => {
-  const cb = (uri, cont, err) => {
-    uri = UrlFun.closeDirUrl(uri); cont ??= '';
-    cont = `\n<!--loadHtml "${uri}" "${cont.length} C" "${err ?? ''}"-->\n`
-      + UrlFun.rebaseHtml(/[^?#]+\.md([?#]|$)/i.test(uri) ? mdToHtml(cont) : cont, uri)
+  const cb = ({ url, content, error }) => {
+    url = UrlFun.closeDirUrl(url); content ??= '';
+    content = `\n<!--loadHtml "${url}" "${content.length} C" "${error ?? ''}"-->\n`
+      + UrlFun.rebaseHtml(/[^?#]+\.md([?#]|$)/i.test(url) ? mdToHtml(content) : content, url)
       + `\n<!--/loadHtml-->\n`;
-    insertHtml(cont, elem, position, norun);
+    insertHtml(content, elem, position, norun);
   };
-  return callFetch(url, cb, 'text');
+  return callFetch(url, { resolver: 'text' }).then(
+    (content) => cb({ url, content }),
+    (error) => cb({ url, error }),
+  );
 };
 
 /* * */
