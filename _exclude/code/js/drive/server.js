@@ -167,19 +167,6 @@ const sendFile = (req, res, file, stat) => {
 
 /* services: */
 
-const proxy = async (params) => {
-  if (!params.url) { throw httpError(400, 'missing "url" parameter'); }
-  let target;
-  try { target = new URL(params.url); } catch { throw httpError(400, 'invalid url'); }
-  if (!/^https?:$/.test(target.protocol)) { throw httpError(400, 'only http(s) urls are allowed'); }
-  const upstream = await fetch(target, { signal: AbortSignal.timeout(config.timeout) });
-  return {
-    status: upstream.status,
-    type: upstream.headers.get('content-type') ?? 'application/octet-stream',
-    body: upstream.body ? Readable.fromWeb(upstream.body) : null,
-  };
-};
-
 // Quoted values take the raw query up to their closing quote, so they don't need encoding.
 const quotedUrlParams = (query) => {
   if (!/=("|'|%22|%27)/i.test(query)) { return Object.fromEntries(new URLSearchParams(query)); }
@@ -198,6 +185,19 @@ const quotedUrlParams = (query) => {
     rest = next < 0 ? '' : rest.slice(next + 1);
   }
   return { ...Object.fromEntries(new URLSearchParams(plain.join('&'))), ...quoted };
+};
+
+const proxy = async (params) => {
+  if (!params.url) { throw httpError(400, 'missing "url" parameter'); }
+  let target;
+  try { target = new URL(params.url); } catch { throw httpError(400, 'invalid url'); }
+  if (!/^https?:$/.test(target.protocol)) { throw httpError(400, 'only http(s) urls are allowed'); }
+  const upstream = await fetch(target, { signal: AbortSignal.timeout(config.timeout) });
+  return {
+    status: upstream.status,
+    type: upstream.headers.get('content-type') ?? 'application/octet-stream',
+    body: upstream.body ? Readable.fromWeb(upstream.body) : null,
+  };
 };
 
 const findService = (pathname) => {

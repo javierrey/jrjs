@@ -1,10 +1,12 @@
 // lib/drive/services/proxy/index.js
 // @ts-check
 
+import { Readable } from 'node:stream';
+
 /**
 @typedef {import('../../../core/core.js').Scalar} Scalar;
 @typedef {import('../../../core/core.js').PlainObject} PlainObject;
-@typedef {PlainObject | Uint8Array | string} FetchResponse
+@typedef {PlainObject | Uint8Array | string | Readable} FetchResponse
 */
 
 /**
@@ -29,14 +31,11 @@ const proxy = async (url, options = {}) => {
   const response = await fetch(target, fetchOptions);
   const contentType = response.headers.get('content-type')?.split(';', 1)[0].trim().toLowerCase() ?? '';
   if (contentType.endsWith('json')) { return response.json(); }
-  if (['text/javascript', 'application/javascript', 'application/ecmascript'].includes(contentType)) {
-    const text = await response.text();
-    try { return JSON.parse(text); } catch { return text; }
-  }
   if (!contentType || contentType.startsWith('text/') || contentType.endsWith('+xml') || [
+    'text/javascript', 'application/javascript', 'application/ecmascript',
     'application/xml', 'application/xhtml+xml', 'application/x-www-form-urlencoded',
   ].includes(contentType)) { return response.text(); }
-  return new Uint8Array(await response.arrayBuffer());
+  return response.body ? Readable.fromWeb(response.body) : Readable.from([]);
 };
 
 /** @param {PlainObject} [params] @return {Promise<FetchResponse>} */
