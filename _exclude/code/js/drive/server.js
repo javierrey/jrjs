@@ -1,7 +1,9 @@
 // server.js // javier.rey.eu@gmail.com // 2026
 // Portable standalone server: static files, runnable services and a URL proxy.
-// Usage: `node ./server.js --port=55555 --publicDir=./view --servicesDir=./services --log=false`
+// Usage: node ./server.js --port=55555 --publicDir=./view --servicesDir=./services --log=false
 // http://localhost:55555/proxy?url="https://query1.finance.yahoo.com/v8/finance/chart/REL.L?range=2y&interval=1d"
+// Usage: node _exclude/code/js/drive/server.js --publicDir=../../../../packages/main/view --servicesDir=../../../../packages/main/drive/services --log=1
+// http://localhost:55555/proxy?url="http://localhost:55555/tests/trading-chart.html?log=0&theme=dark&currency=gbp&refresh=&retries="&a1=v 1&a2=v 2
 // _@ts-check
 
 import http from 'node:http';
@@ -187,12 +189,8 @@ const quotedUrlParams = (query) => {
   return { ...Object.fromEntries(new URLSearchParams(plain.join('&'))), ...quoted };
 };
 
-const proxy = async (params) => {
-  if (!params.url) { throw httpError(400, 'missing "url" parameter'); }
-  let target;
-  try { target = new URL(params.url); } catch { throw httpError(400, 'invalid url'); }
-  if (!/^https?:$/.test(target.protocol)) { throw httpError(400, 'only http(s) urls are allowed'); }
-  const upstream = await fetch(target, { signal: AbortSignal.timeout(config.timeout) });
+const proxy = async (params = {}) => {
+  const upstream = await fetch(params.url, { signal: AbortSignal.timeout(config.timeout) });
   return {
     status: upstream.status,
     type: upstream.headers.get('content-type') ?? 'application/octet-stream',

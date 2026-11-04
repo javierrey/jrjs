@@ -896,13 +896,13 @@ export const throttle = (fun, delay = 300) => {
   };
 };
 
-/** Simple fetch wrapper. @param {Object} options @return {Promise<any>} */
+/** Simple fetch wrapper. @param {PlainObject} options @return {Promise<any>} */
 export const callFetch = (url, options = {}) => {
-  const t = AbortSignal.timeout(50e3), r = options.resolver ?? 'text'; delete options.resolver;
-  options.signal = options.signal ? AbortSignal.any([options.signal, t]) : t;
+  const resolver = options.resolver ?? 'text'; delete options.resolver;
+  if (!options.signal) { options.signal = AbortSignal.timeout(50e3); }
   return fetch(url, options).then((response) => {
     if (!response.ok) throw Error(`${response.status} ${response.statusText}`);
-    return r === 'body' ? response.body : response[r]?.();
+    return resolver === 'body' ? response.body : response[resolver]?.();
   });
 };
 
